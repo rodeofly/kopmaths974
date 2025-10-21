@@ -21,6 +21,7 @@
     "mathlive": "^0.104.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-router-dom": "file:vendor/react-router-dom",
     "roughjs": "^4.6.6",
     "seedrandom": "^3.0.5"
   },
