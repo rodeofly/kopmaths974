@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import renderMathInElement from "katex/contrib/auto-render";
 import "mathlive";
 
+import translateLatexToHtml from "./utils/latexToHtml";
+
 type ExerciceInstance = {
   applyNewSeed: () => void;
   nouvelleVersion: () => void;
@@ -48,7 +50,7 @@ function App() {
         const html =
           exercice.contenu ?? exercice.listeQuestions?.join("\n") ?? "";
         if (mounted) {
-          setContenu(html);
+          setContenu(translateLatexToHtml(html));
         }
       } catch (err) {
         console.error("Erreur lors du chargement de l'exercice", err);

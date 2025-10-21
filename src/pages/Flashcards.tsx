@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import renderMathInElement from "katex/contrib/auto-render";
 import "mathlive";
 
+import translateLatexToHtml from "../utils/latexToHtml";
+
 type ExerciceInstance = {
   applyNewSeed: () => void;
   nouvelleVersion: () => void;
@@ -35,16 +37,19 @@ const MAX_SESSIONS = 50;
 const FALLBACK_ANSWER = "Aucune correction disponible pour cette carte.";
 
 function splitFlashcardContent(rawHtml: string, fallbackAnswer: string) {
-  if (!rawHtml) {
-    return { question: "", answer: fallbackAnswer };
+  const sanitizedHtml = translateLatexToHtml(rawHtml);
+  const sanitizedFallback = translateLatexToHtml(fallbackAnswer);
+
+  if (!sanitizedHtml) {
+    return { question: "", answer: sanitizedFallback };
   }
 
   if (typeof window === "undefined" || typeof window.DOMParser === "undefined") {
-    return { question: rawHtml, answer: fallbackAnswer };
+    return { question: sanitizedHtml, answer: sanitizedFallback };
   }
 
   const parser = new window.DOMParser();
-  const doc = parser.parseFromString(rawHtml, "text/html");
+  const doc = parser.parseFromString(sanitizedHtml, "text/html");
   const answerNode = doc.querySelector(
     ".correction, .corrige, .reponse, .solution, .answer"
   );
@@ -54,11 +59,11 @@ function splitFlashcardContent(rawHtml: string, fallbackAnswer: string) {
     answerNode.remove();
     return {
       question: doc.body.innerHTML.trim(),
-      answer: extracted || fallbackAnswer
+      answer: extracted || sanitizedFallback
     };
   }
 
-  return { question: rawHtml, answer: fallbackAnswer };
+  return { question: sanitizedHtml, answer: sanitizedFallback };
 }
 
 function extractPlainText(html: string) {
