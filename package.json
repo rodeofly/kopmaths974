@@ -1,0 +1,32 @@
+{
+  "name": "kopmaths974",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf node_modules .vite dist"
+  },
+  "dependencies": {
+    "@cortex-js/compute-engine": "^0.30.2",
+    "apigeom": "git+https://forge.apps.education.fr/coopmaths/apigeom.git",
+    "crypto-js": "^4.2.0",
+    "decimal.js": "^10.6.0",
+    "earcut": "^2.2.4",
+    "katex": "^0.16.10",
+    "mathjs": "^11.8.2",
+    "mathlive": "^0.104.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "roughjs": "^4.6.6",
+    "seedrandom": "^3.0.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "sass-embedded": "^1.77.8",
+    "typescript": "^5.3.3",
+    "vite": "^5.4.1"
+  }
+}
