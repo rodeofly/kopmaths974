@@ -18,3 +18,60 @@ body {
 a {
   color: inherit;
 }
+
+.mathalea-numbered-list {
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.mathalea-numbered-list > li {
+  margin-left: 0;
+}
+
+.mathalea-question-interactive {
+  position: relative;
+  margin-top: 1rem;
+  border-left: 4px solid #cbd5f5;
+  background-color: #f1f5f9;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.mathalea-question--correct {
+  border-left-color: #22c55e;
+  background-color: #ecfdf5;
+}
+
+.mathalea-question--incorrect {
+  border-left-color: #f97316;
+  background-color: #fff7ed;
+}
+
+.mathalea-question--incomplete {
+  border-left-color: #6366f1;
+  background-color: #eef2ff;
+}
+
+.mathalea-question-feedback {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+}
+
+.mathalea-question-feedback--correct {
+  color: #047857;
+}
+
+.mathalea-question-feedback--incorrect {
+  color: #c2410c;
+}
+
+.mathalea-question-feedback--incomplete {
+  color: #4f46e5;
+}
