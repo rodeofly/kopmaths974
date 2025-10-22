@@ -275,7 +275,7 @@ function Flashcards() {
   const hasAnswer = answerHtml.trim().length > 0;
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
+    <main id="main-content" className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
         <header>
           <h1 className="text-3xl font-bold">Flashcards MathALEA</h1>
