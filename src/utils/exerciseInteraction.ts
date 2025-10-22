@@ -1,0 +1,846 @@
+import type { MathfieldElement } from "mathlive";
+
+type InteractionStatus = "correct" | "incorrect" | "incomplet";
+
+type StoredAttempt = {
+  value: string | string[];
+  status: InteractionStatus;
+  timestamp: number;
+  durationSinceStartMs: number;
+  durationSinceFirstInteractionMs?: number;
+};
+
+type StoredQuestionState = {
+  id: string;
+  order: number;
+  status: InteractionStatus;
+  lastValue: string | string[];
+  attempts: StoredAttempt[];
+};
+
+type StoredExerciseState = {
+  exerciseId: string;
+  startedAt: number;
+  updatedAt: number;
+  questions: Record<string, StoredQuestionState>;
+};
+
+type ExpectedAnswer = string | string[];
+
+type QuestionType =
+  | "singleChoice"
+  | "multipleChoice"
+  | "text"
+  | "number"
+  | "math"
+  | "select";
+
+type QuestionItem = {
+  id: string;
+  order: number;
+  type: QuestionType;
+  container: HTMLElement;
+  elements: Array<HTMLElement>;
+  feedback: HTMLElement;
+  expected?: ExpectedAnswer;
+  firstInteractionAt?: number;
+};
+
+type EvaluationResult = {
+  status: InteractionStatus;
+  hasValue: boolean;
+  evaluated: boolean;
+};
+
+type InitializeOptions = {
+  container: HTMLElement;
+  exerciseId: string;
+  exercice?: unknown;
+  rawContent?: string;
+};
+
+type CleanupFn = () => void;
+
+const STORAGE_PREFIX = "kopmaths:exercise:";
+const QUESTION_CLASS = "mathalea-question-interactive";
+const STATUS_CLASSES: Record<InteractionStatus, string> = {
+  correct: "mathalea-question--correct",
+  incorrect: "mathalea-question--incorrect",
+  incomplet: "mathalea-question--incomplete"
+};
+
+const FEEDBACK_MESSAGES: Record<InteractionStatus, string> = {
+  correct: "✅ Bonne réponse !",
+  incorrect: "❌ Essaie encore !",
+  incomplet: "ℹ️ Réponse enregistrée."
+};
+
+const PENDING_MESSAGE = "🕑 En attente de réponse.";
+const UNAVAILABLE_MESSAGE =
+  "ℹ️ Réponse enregistrée (validation indisponible).";
+
+function sanitizeHtml(raw: string): string {
+  return raw
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeString(value: string): string {
+  return value
+    .replace(/\s+/g, " ")
+    .replace(/,/g, ".")
+    .trim()
+    .toLowerCase();
+}
+
+function toStringValue(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "string") return sanitizeHtml(value).trim();
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map(toStringValue).join(" | ");
+  }
+  if (typeof value === "object" && "value" in value) {
+    return toStringValue((value as { value: unknown }).value);
+  }
+  return String(value);
+}
+
+function parseExpectedEntry(entry: unknown): ExpectedAnswer | undefined {
+  if (entry == null) return undefined;
+
+  if (Array.isArray(entry)) {
+    const flattened = entry
+      .map(item => toStringValue(item))
+      .map(item => item.trim())
+      .filter(Boolean);
+    if (flattened.length === 0) {
+      return undefined;
+    }
+    return flattened.length === 1 ? flattened[0] : flattened;
+  }
+
+  if (typeof entry === "object") {
+    if ("value" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).value);
+    }
+    if ("texte" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).texte);
+    }
+    if ("reponse" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).reponse);
+    }
+    if ("reponses" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).reponses);
+    }
+    if ("valeur" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).valeur);
+    }
+    if ("valeurs" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).valeurs);
+    }
+    if ("answer" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).answer);
+    }
+    if ("answers" in (entry as Record<string, unknown>)) {
+      return parseExpectedEntry((entry as Record<string, unknown>).answers);
+    }
+  }
+
+  if (typeof entry === "string") {
+    const sanitized = sanitizeHtml(entry);
+    if (!sanitized) return undefined;
+
+    const splitted = sanitized
+      .split(/\s*[;\n\|]+\s*/)
+      .map(part => part.trim())
+      .filter(Boolean);
+
+    if (splitted.length > 1) {
+      return splitted;
+    }
+
+    return sanitized.trim();
+  }
+
+  if (typeof entry === "number" || typeof entry === "boolean") {
+    return String(entry);
+  }
+
+  return undefined;
+}
+
+function extractExpectedAnswers(exercice: unknown): ExpectedAnswer[] {
+  if (!exercice || typeof exercice !== "object") {
+    return [];
+  }
+
+  const obj = exercice as Record<string, unknown>;
+
+  const arrayCandidates = [
+    obj.autoCorrection,
+    obj.autocorrection,
+    obj.reponses,
+    obj.reponse,
+    obj.answers,
+    obj.solutions,
+    obj.solution,
+    obj.listeCorrections,
+    obj.listeSolutions,
+    obj.listeReponses,
+    obj.listeResponses
+  ];
+
+  for (const candidate of arrayCandidates) {
+    if (Array.isArray(candidate)) {
+      const parsed = candidate
+        .map(entry => parseExpectedEntry(entry))
+        .filter((entry): entry is ExpectedAnswer => entry !== undefined);
+      if (parsed.length > 0) {
+        return parsed;
+      }
+    }
+  }
+
+  const stringCandidates = [
+    obj.correction,
+    obj.corrections,
+    obj.contenuCorrige,
+    obj.contenuCorrection,
+    obj.solution,
+    obj.solutions
+  ];
+
+  for (const candidate of stringCandidates) {
+    if (typeof candidate === "string") {
+      const sanitized = sanitizeHtml(candidate);
+      if (!sanitized) continue;
+      const split = sanitized
+        .split(/\s*(?:\n|;|\|)\s*/)
+        .map(value => value.trim())
+        .filter(Boolean);
+      if (split.length > 0) {
+        return split;
+      }
+    }
+  }
+
+  return [];
+}
+
+function getQuestionContainer(element: Element, root: HTMLElement): HTMLElement {
+  const selectors = [
+    "[data-question]",
+    "[data-question-id]",
+    ".question",
+    ".questions",
+    ".qcm",
+    ".ligne",
+    "li",
+    "p",
+    "div"
+  ];
+
+  for (const selector of selectors) {
+    const candidate = element.closest<HTMLElement>(selector);
+    if (candidate && root.contains(candidate)) {
+      return candidate;
+    }
+  }
+
+  return element.parentElement instanceof HTMLElement
+    ? element.parentElement
+    : root;
+}
+
+function ensureFeedbackElement(container: HTMLElement): HTMLElement {
+  const existing = container.querySelector<HTMLElement>(
+    ":scope > .mathalea-question-feedback"
+  );
+  if (existing) {
+    return existing;
+  }
+  const feedback = container.ownerDocument.createElement("div");
+  feedback.className = "mathalea-question-feedback";
+  container.appendChild(feedback);
+  return feedback;
+}
+
+function getStorageKey(exerciseId: string): string {
+  return `${STORAGE_PREFIX}${exerciseId}`;
+}
+
+function loadStoredState(exerciseId: string): StoredExerciseState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(getStorageKey(exerciseId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredExerciseState;
+    if (!parsed || typeof parsed !== "object") return null;
+    if (parsed.exerciseId !== exerciseId) return null;
+    return parsed;
+  } catch (error) {
+    console.warn("Impossible de lire l'état de l'exercice", error);
+    return null;
+  }
+}
+
+function saveStoredState(state: StoredExerciseState) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      getStorageKey(state.exerciseId),
+      JSON.stringify(state)
+    );
+  } catch (error) {
+    console.warn("Impossible d'enregistrer l'état de l'exercice", error);
+  }
+}
+
+function compareStringValues(a: string, b: string): boolean {
+  const normalizedA = normalizeString(a);
+  const normalizedB = normalizeString(b);
+  if (!normalizedA && !normalizedB) return true;
+
+  const numberA = Number(normalizedA);
+  const numberB = Number(normalizedB);
+  if (!Number.isNaN(numberA) && !Number.isNaN(numberB)) {
+    return Math.abs(numberA - numberB) < 1e-6;
+  }
+
+  return normalizedA === normalizedB;
+}
+
+function compareArrayValues(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const normalizedA = a.map(normalizeString).sort();
+  const normalizedB = b.map(normalizeString).sort();
+  return normalizedA.every((value, index) => value === normalizedB[index]);
+}
+
+function evaluateAnswer(
+  value: string | string[],
+  expected: ExpectedAnswer | undefined,
+  questionType: QuestionType
+): EvaluationResult {
+  const hasValue = Array.isArray(value) ? value.length > 0 : value.trim().length > 0;
+  if (!hasValue) {
+    return { status: "incomplet", hasValue: false, evaluated: false };
+  }
+
+  if (expected === undefined) {
+    return { status: "incomplet", hasValue: true, evaluated: false };
+  }
+
+  if (Array.isArray(expected)) {
+    const valuesArray = Array.isArray(value) ? value : [value];
+    const isCorrect = compareArrayValues(valuesArray, expected);
+    return {
+      status: isCorrect ? "correct" : "incorrect",
+      hasValue: true,
+      evaluated: true
+    };
+  }
+
+  const stringValue = Array.isArray(value) ? value.join(" ") : value;
+  const isCorrect = compareStringValues(stringValue, expected);
+  return {
+    status: isCorrect ? "correct" : "incorrect",
+    hasValue: true,
+    evaluated: true
+  };
+}
+
+function readMathFieldValue(element: HTMLElement): string {
+  const mathField = element as MathfieldElement & { getValue?: () => string };
+  if (typeof mathField.getValue === "function") {
+    return mathField.getValue();
+  }
+  if ("value" in mathField) {
+    const value = (mathField as MathfieldElement & { value?: string }).value;
+    if (typeof value === "string") {
+      return value;
+    }
+  }
+  return element.textContent?.trim() ?? "";
+}
+
+function getQuestionValue(question: QuestionItem): string | string[] {
+  switch (question.type) {
+    case "singleChoice": {
+      const input = question.elements.find(
+        el => el instanceof HTMLInputElement && el.checked
+      ) as HTMLInputElement | undefined;
+      return input?.value ?? "";
+    }
+    case "multipleChoice": {
+      const values: string[] = [];
+      question.elements.forEach(element => {
+        if (element instanceof HTMLInputElement && element.checked) {
+          values.push(element.value ?? "true");
+        }
+      });
+      return values;
+    }
+    case "select": {
+      const element = question.elements[0];
+      if (element instanceof HTMLSelectElement) {
+        if (element.multiple) {
+          return Array.from(element.selectedOptions).map(option => option.value);
+        }
+        return element.value;
+      }
+      return "";
+    }
+    case "number": {
+      const element = question.elements[0];
+      if (element instanceof HTMLInputElement) {
+        return element.value;
+      }
+      return "";
+    }
+    case "math": {
+      const element = question.elements[0];
+      return element ? readMathFieldValue(element) : "";
+    }
+    case "text":
+    default: {
+      const element = question.elements[0];
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        return element.value;
+      }
+      return element?.textContent?.trim() ?? "";
+    }
+  }
+}
+
+function detectExpectedFromDom(question: QuestionItem): ExpectedAnswer | undefined {
+  for (const element of question.elements) {
+    const dataset = (element as HTMLElement).dataset;
+    const direct = dataset.answer ?? dataset.solution ?? dataset.correct;
+    if (direct) {
+      return parseExpectedEntry(direct);
+    }
+    const attributeValue =
+      element.getAttribute("data-answer") ??
+      element.getAttribute("data-solution") ??
+      element.getAttribute("data-correct");
+    if (attributeValue) {
+      return parseExpectedEntry(attributeValue);
+    }
+
+    const parentWithData = element.closest<HTMLElement>(
+      "[data-answer], [data-solution], [data-correct]"
+    );
+    if (parentWithData) {
+      const value =
+        parentWithData.dataset.answer ??
+        parentWithData.dataset.solution ??
+        parentWithData.dataset.correct ??
+        parentWithData.getAttribute("data-answer") ??
+        parentWithData.getAttribute("data-solution") ??
+        parentWithData.getAttribute("data-correct");
+      if (value) {
+        return parseExpectedEntry(value);
+      }
+    }
+
+    const labelled = element.closest<HTMLElement>(
+      ".bonne, .bon, .correct, .reponse-correcte, .solution"
+    );
+    if (labelled) {
+      if (question.type === "multipleChoice") {
+        const values = question.elements
+          .filter(el =>
+            el.closest<HTMLElement>(
+              ".bonne, .bon, .correct, .reponse-correcte, .solution"
+            )
+          )
+          .map(el =>
+            el instanceof HTMLInputElement ? el.value : el.textContent ?? ""
+          )
+          .filter(Boolean);
+        if (values.length > 0) {
+          return values;
+        }
+      }
+      if (question.type === "singleChoice") {
+        const input = question.elements.find(el => labelled.contains(el));
+        if (input instanceof HTMLInputElement) {
+          return input.value;
+        }
+        const text = labelled.textContent?.trim();
+        if (text) {
+          return text;
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+function updateQuestionStatus(
+  question: QuestionItem,
+  status: InteractionStatus,
+  message: string
+) {
+  question.container.classList.add(QUESTION_CLASS);
+  Object.values(STATUS_CLASSES).forEach(className => {
+    question.container.classList.remove(className);
+  });
+  question.container.classList.add(STATUS_CLASSES[status]);
+  question.feedback.textContent = message;
+  question.feedback.classList.remove(
+    "mathalea-question-feedback--correct",
+    "mathalea-question-feedback--incorrect",
+    "mathalea-question-feedback--incomplete"
+  );
+  const modifier =
+    status === "correct"
+      ? "mathalea-question-feedback--correct"
+      : status === "incorrect"
+        ? "mathalea-question-feedback--incorrect"
+        : "mathalea-question-feedback--incomplete";
+  question.feedback.classList.add(modifier);
+}
+
+function restoreInitialStatus(question: QuestionItem) {
+  question.container.classList.add(QUESTION_CLASS);
+  Object.values(STATUS_CLASSES).forEach(className => {
+    question.container.classList.remove(className);
+  });
+  question.feedback.textContent = PENDING_MESSAGE;
+  question.feedback.classList.remove(
+    "mathalea-question-feedback--correct",
+    "mathalea-question-feedback--incorrect",
+    "mathalea-question-feedback--incomplete"
+  );
+  question.feedback.classList.add("mathalea-question-feedback--incomplete");
+}
+
+function createQuestion(
+  id: string,
+  type: QuestionType,
+  element: HTMLElement,
+  container: HTMLElement,
+  order: number
+): QuestionItem {
+  const feedback = ensureFeedbackElement(container);
+  container.classList.add(QUESTION_CLASS);
+  if (!container.dataset.mathaleaQuestionId) {
+    container.dataset.mathaleaQuestionId = id;
+  }
+  const question: QuestionItem = {
+    id,
+    order,
+    type,
+    container,
+    elements: [element],
+    feedback
+  };
+  restoreInitialStatus(question);
+  return question;
+}
+
+function gatherQuestions(
+  root: HTMLElement,
+  expectedAnswers: ExpectedAnswer[],
+  exerciseId: string
+): QuestionItem[] {
+  const questions: QuestionItem[] = [];
+  const radioGroups = new Map<string, QuestionItem>();
+  const checkboxGroups = new Map<string, QuestionItem>();
+  let autoIndex = 0;
+
+  const interactiveElements = Array.from(
+    root.querySelectorAll<HTMLElement>("input, textarea, select, math-field")
+  );
+
+  interactiveElements.forEach(element => {
+    if (element instanceof HTMLInputElement) {
+      const type = element.type;
+      if (type === "hidden" || type === "submit" || type === "button") {
+        return;
+      }
+
+      if (type === "radio" || type === "checkbox") {
+        const groupMap = type === "radio" ? radioGroups : checkboxGroups;
+        const container = getQuestionContainer(element, root);
+        const keyFromName = element.name || container.dataset.mathaleaQuestionId;
+        const key = keyFromName || `${exerciseId}-${type}-${autoIndex}`;
+        let question = groupMap.get(key);
+        if (!question) {
+          question = createQuestion(
+            key,
+            type === "radio" ? "singleChoice" : "multipleChoice",
+            element,
+            container,
+            questions.length
+          );
+          const expected =
+            detectExpectedFromDom(question) ?? expectedAnswers[question.order];
+          if (expected !== undefined) {
+            question.expected = expected;
+          }
+          questions.push(question);
+          groupMap.set(key, question);
+          autoIndex += 1;
+        } else {
+          question.elements.push(element);
+        }
+        return;
+      }
+
+      const container = getQuestionContainer(element, root);
+      const id =
+        element.id ||
+        element.name ||
+        container.dataset.mathaleaQuestionId ||
+        `${exerciseId}-input-${autoIndex}`;
+      const question = createQuestion(
+        id,
+        type === "number" ? "number" : "text",
+        element,
+        container,
+        questions.length
+      );
+      const expected =
+        detectExpectedFromDom(question) ?? expectedAnswers[question.order];
+      if (expected !== undefined) {
+        question.expected = expected;
+      }
+      questions.push(question);
+      autoIndex += 1;
+      return;
+    }
+
+    if (element instanceof HTMLTextAreaElement) {
+      const container = getQuestionContainer(element, root);
+      const id =
+        element.id ||
+        element.name ||
+        container.dataset.mathaleaQuestionId ||
+        `${exerciseId}-textarea-${autoIndex}`;
+      const question = createQuestion(
+        id,
+        "text",
+        element,
+        container,
+        questions.length
+      );
+      const expected =
+        detectExpectedFromDom(question) ?? expectedAnswers[question.order];
+      if (expected !== undefined) {
+        question.expected = expected;
+      }
+      questions.push(question);
+      autoIndex += 1;
+      return;
+    }
+
+    if (element instanceof HTMLSelectElement) {
+      const container = getQuestionContainer(element, root);
+      const id =
+        element.id ||
+        element.name ||
+        container.dataset.mathaleaQuestionId ||
+        `${exerciseId}-select-${autoIndex}`;
+      const question = createQuestion(
+        id,
+        "select",
+        element,
+        container,
+        questions.length
+      );
+      const expected =
+        detectExpectedFromDom(question) ?? expectedAnswers[question.order];
+      if (expected !== undefined) {
+        question.expected = expected;
+      }
+      questions.push(question);
+      autoIndex += 1;
+      return;
+    }
+
+    if (element.tagName.toLowerCase() === "math-field") {
+      const container = getQuestionContainer(element, root);
+      const id =
+        (element.getAttribute("id") ??
+          element.getAttribute("name") ??
+          container.dataset.mathaleaQuestionId ??
+          `${exerciseId}-math-${autoIndex}`);
+      const question = createQuestion(
+        id,
+        "math",
+        element,
+        container,
+        questions.length
+      );
+      const expected =
+        detectExpectedFromDom(question) ?? expectedAnswers[question.order];
+      if (expected !== undefined) {
+        question.expected = expected;
+      }
+      questions.push(question);
+      autoIndex += 1;
+      return;
+    }
+  });
+
+  return questions;
+}
+
+function attachListeners(
+  question: QuestionItem,
+  handler: () => void
+): Array<() => void> {
+  const removers: Array<() => void> = [];
+  question.elements.forEach(element => {
+    let eventName: keyof HTMLElementEventMap = "change";
+    if (
+      question.type === "text" ||
+      question.type === "number" ||
+      question.type === "math"
+    ) {
+      eventName = "input";
+    }
+    const listener = () => handler();
+    element.addEventListener(eventName, listener);
+    if (question.type === "math") {
+      element.addEventListener("change", listener);
+    }
+    removers.push(() => {
+      element.removeEventListener(eventName, listener);
+      if (question.type === "math") {
+        element.removeEventListener("change", listener);
+      }
+    });
+  });
+  return removers;
+}
+
+export function initializeExerciseInteraction(
+  options: InitializeOptions
+): CleanupFn {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const { container, exerciseId, exercice } = options;
+  const expectedAnswers = extractExpectedAnswers(exercice);
+  const questions = gatherQuestions(container, expectedAnswers, exerciseId);
+
+  const storedState =
+    loadStoredState(exerciseId) ?? {
+      exerciseId,
+      startedAt: Date.now(),
+      updatedAt: Date.now(),
+      questions: {}
+    };
+
+  const sessionStart =
+    typeof performance !== "undefined" ? performance.now() : Date.now();
+  const removers: Array<() => void> = [];
+
+  questions.forEach(question => {
+    const existing = storedState.questions[question.id];
+    if (existing) {
+      const lastAttempt = existing.attempts[existing.attempts.length - 1];
+      if (lastAttempt) {
+        const message =
+          lastAttempt.status === "incomplet" && lastAttempt.value
+            ? UNAVAILABLE_MESSAGE
+            : FEEDBACK_MESSAGES[lastAttempt.status] ?? PENDING_MESSAGE;
+        updateQuestionStatus(question, lastAttempt.status, message);
+      } else {
+        restoreInitialStatus(question);
+      }
+    } else {
+      storedState.questions[question.id] = {
+        id: question.id,
+        order: question.order,
+        status: "incomplet",
+        lastValue: "",
+        attempts: []
+      };
+      restoreInitialStatus(question);
+    }
+
+    const listeners = attachListeners(question, () => {
+      const now =
+        typeof performance !== "undefined" ? performance.now() : Date.now();
+      if (question.firstInteractionAt === undefined) {
+        question.firstInteractionAt = now;
+      }
+      const value = getQuestionValue(question);
+      const evaluation = evaluateAnswer(value, question.expected, question.type);
+
+      const hasExpected = question.expected !== undefined;
+      const message = evaluation.hasValue
+        ? evaluation.evaluated
+          ? FEEDBACK_MESSAGES[evaluation.status]
+          : UNAVAILABLE_MESSAGE
+        : PENDING_MESSAGE;
+
+      updateQuestionStatus(question, evaluation.status, message);
+
+      const durationSinceStart = Math.max(
+        0,
+        Math.round(now - sessionStart)
+      );
+      const durationSinceFirstInteraction =
+        question.firstInteractionAt !== undefined
+          ? Math.max(0, Math.round(now - question.firstInteractionAt))
+          : undefined;
+
+      const serializedValue = Array.isArray(value)
+        ? value.map(part => part)
+        : value;
+
+      const questionState = storedState.questions[question.id];
+      questionState.status = evaluation.status;
+      questionState.lastValue = serializedValue;
+      questionState.attempts.push({
+        value: serializedValue,
+        status: evaluation.status,
+        timestamp: Date.now(),
+        durationSinceStartMs: durationSinceStart,
+        durationSinceFirstInteractionMs: durationSinceFirstInteraction
+      });
+      storedState.updatedAt = Date.now();
+
+      // If we still do not have an expected answer, try to infer it from the DOM once.
+      if (!hasExpected) {
+        const inferred = detectExpectedFromDom(question);
+        if (inferred !== undefined) {
+          question.expected = inferred;
+        }
+      }
+
+      saveStoredState(storedState);
+    });
+
+    removers.push(...listeners);
+  });
+
+  return () => {
+    removers.forEach(remove => remove());
+    questions.forEach(question => {
+      question.container.classList.remove(QUESTION_CLASS);
+      Object.values(STATUS_CLASSES).forEach(className => {
+        question.container.classList.remove(className);
+      });
+      if (question.feedback.parentElement === question.container) {
+        question.container.removeChild(question.feedback);
+      }
+    });
+  };
+}
+
+export type { InteractionStatus, StoredExerciseState };
