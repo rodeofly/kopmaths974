@@ -1010,11 +1010,13 @@ function App() {
   }, []);
 
   const mainClassName = "min-h-screen bg-slate-100 text-slate-900";
-  const layoutContainerClassName = "mx-auto flex max-w-6xl flex-col gap-6 p-6";
+  const layoutContainerClassName = "mx-auto max-w-6xl space-y-6 p-6";
   const asidePanelClassName = "space-y-4 self-start lg:sticky lg:top-28";
   const catalogueCardClassName = "rounded-lg bg-white p-4 shadow";
   const treeScrollContainerClassName = "mt-4 max-h-[60vh] overflow-y-auto pr-1";
   const treeListClassName = "space-y-2";
+  const contentGridClassName =
+    "grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start";
 
   useEffect(() => {
     debugCss("layout-classes", {
@@ -1023,7 +1025,8 @@ function App() {
       aside: asidePanelClassName,
       catalogueCard: catalogueCardClassName,
       treeScrollContainer: treeScrollContainerClassName,
-      treeList: treeListClassName
+      treeList: treeListClassName,
+      contentGrid: contentGridClassName
     });
   }, [
     mainClassName,
@@ -1031,7 +1034,8 @@ function App() {
     asidePanelClassName,
     catalogueCardClassName,
     treeScrollContainerClassName,
-    treeListClassName
+    treeListClassName,
+    contentGridClassName
   ]);
 
   useEffect(() => {
@@ -1229,7 +1233,7 @@ function App() {
           </p>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
+        <div className={contentGridClassName}>
           <aside className={asidePanelClassName}>
             <div className={catalogueCardClassName}>
               <h2 className="text-lg font-semibold">Catalogue d'exercices</h2>
