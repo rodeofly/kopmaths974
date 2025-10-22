@@ -105,6 +105,48 @@ type OrderedListContent = {
   latex: string;
 };
 
+function sanitizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map(entry => {
+      if (typeof entry === "string") {
+        return entry;
+      }
+
+      if (entry == null) {
+        return "";
+      }
+
+      return String(entry);
+    })
+    .map(entry => entry.trim())
+    .filter(Boolean);
+}
+
+function getCategoryTitlesFrom(
+  definition: ExerciseDefinition | { categoryTitles?: unknown; categories?: unknown } | null | undefined
+): string[] {
+  if (!definition) {
+    return [];
+  }
+
+  const record = definition as { categoryTitles?: unknown; categories?: unknown };
+  const categoryTitles = sanitizeStringArray(record.categoryTitles);
+  if (categoryTitles.length > 0) {
+    return categoryTitles;
+  }
+
+  const categories = sanitizeStringArray(record.categories);
+  if (categories.length > 0) {
+    return categories;
+  }
+
+  return [];
+}
+
 function normalizeListItems(items: string[]): string[] {
   return items
     .map(item => (typeof item === "string" ? item : ""))
@@ -943,6 +985,16 @@ function App() {
     [selectedExerciseId]
   );
 
+  const selectedCategoryTitles = useMemo(
+    () => getCategoryTitlesFrom(selectedDefinition),
+    [selectedDefinition]
+  );
+
+  const selectedThemeTrailLabel = useMemo(
+    () => selectedCategoryTitles.slice(1).join(" · "),
+    [selectedCategoryTitles]
+  );
+
   const handleToggleCategory = useCallback((fullPath: string, nextOpen: boolean) => {
     setExpandedCategories(prev => ({
       ...prev,
@@ -1011,11 +1063,8 @@ function App() {
               definition.label ??
               `Exercice ${node.definitionId}`;
             const isActive = node.definitionId === selectedExerciseId;
-            const themeTrail = definition.categoryTitles
-              .slice(1)
-              .map(part => part.trim())
-              .filter(Boolean)
-              .join(" · ");
+            const definitionCategoryTitles = getCategoryTitlesFrom(definition);
+            const themeTrail = definitionCategoryTitles.slice(1).join(" · ");
 
             return (
               <li key={node.fullPath}>
@@ -1110,11 +1159,8 @@ function App() {
                         exercise.label ??
                         `Exercice ${exercise.id}`;
                       const isActive = exercise.id === selectedExerciseId;
-                      const themeTrail = exercise.categoryTitles
-                        .slice(1)
-                        .map(part => part.trim())
-                        .filter(Boolean)
-                        .join(" · ");
+                      const exerciseCategoryTitles = getCategoryTitlesFrom(exercise);
+                      const themeTrail = exerciseCategoryTitles.slice(1).join(" · ");
                       return (
                         <li key={exercise.id}>
                           <button
@@ -1174,13 +1220,9 @@ function App() {
                           selectedDefinition.title ??
                           `Exercice ${selectedDefinition.id}`}
                       </h2>
-                      {selectedDefinition.categoryTitles.slice(1).some(part => part.trim()) && (
+                      {selectedThemeTrailLabel && (
                         <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
-                          {selectedDefinition.categoryTitles
-                            .slice(1)
-                            .map(part => part.trim())
-                            .filter(Boolean)
-                            .join(" · ")}
+                          {selectedThemeTrailLabel}
                         </p>
                       )}
                       <p className="mt-1 text-sm text-slate-600">
