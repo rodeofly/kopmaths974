@@ -190,9 +190,7 @@ function Flashcards() {
     async function loadExercise() {
       setLoading(true);
       try {
-        const module: ExerciceModule = await import(
-          "@mathalea/exercices/6e/6N5-3"
-        );
+        const module: ExerciceModule = await import("@exos/6e/6N5-3");
 
         if (!active) return;
 
