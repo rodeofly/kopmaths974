@@ -14,20 +14,12 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-<<<<<<< Updated upstream
-      "@mathalea": path.resolve(__dirname, "src/mathalea"),
-      "apigeom/src": path.resolve(__dirname, "node_modules/apigeom/src"),
-      "apigeom": path.resolve(__dirname, "node_modules/apigeom/src/index.ts"),
-    },
-    extensions: [".ts", ".js"],
-=======
     "@": path.resolve(__dirname, "./src"),
     "@mathalea": path.resolve(__dirname, "../mathalea/src"),
     "@exos": path.resolve(__dirname, "../mathalea/src/exercices"),
     "apigeom": path.resolve(__dirname, "node_modules/apigeom"),
   },
     extensions: [".ts", ".js", ".svelte"],
->>>>>>> Stashed changes
   },
 
   optimizeDeps: {
