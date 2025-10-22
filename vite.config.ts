@@ -59,10 +59,8 @@ export default defineConfig({
   },
 
   css: {
-    // ⚙️ Assure explicitement que Vite utilise PostCSS (pour Tailwind v4)
     transformer: "postcss",
-    // ⚠️ Assurez-vous que l'extension correspond exactement au nom de votre fichier
-    postcss: "./postcss.config.js",
+    postcss: "./postcss.config.cjs",  
   },
 
   build: {
