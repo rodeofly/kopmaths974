@@ -1,13 +1,13 @@
-// tailwind.config.js
+// tailwind.config.cjs
 
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./index.html",
     // Vos fichiers locaux
     "./src/**/*.{js,ts,jsx,tsx,svelte}",
     
-    // 💡 REVIENT AU CHEMIN INTERNE (où les fichiers doivent être copiés)
+    // 💡 Chemin local vers mathalea (sources copiées)
     "./src/mathalea/**/*.{js,ts,jsx,tsx,svelte}", 
   ],
   theme: {
