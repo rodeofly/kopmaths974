@@ -59,6 +59,46 @@ const delimiters = [
   { left: "\\[", right: "\\]", display: true }
 ];
 
+
+const DEBUG_PREFIX = "[KopMaths]";
+const DEBUG_APP_PREFIX = `${DEBUG_PREFIX}[App]`;
+
+function debugLog(...args: unknown[]): void {
+  if (typeof console !== "undefined" && typeof console.debug === "function") {
+    console.debug(DEBUG_APP_PREFIX, ...args);
+  }
+}
+
+function debugInfo(...args: unknown[]): void {
+  if (typeof console !== "undefined" && typeof console.info === "function") {
+    console.info(DEBUG_APP_PREFIX, ...args);
+  }
+}
+
+function debugWarn(...args: unknown[]): void {
+  if (typeof console !== "undefined" && typeof console.warn === "function") {
+    console.warn(DEBUG_APP_PREFIX, ...args);
+  }
+}
+
+function startDebugTimer(label: string): void {
+  if (typeof console !== "undefined" && typeof console.time === "function") {
+    console.time(label);
+  }
+}
+
+function endDebugTimer(label: string): void {
+  if (typeof console !== "undefined" && typeof console.timeEnd === "function") {
+    console.timeEnd(label);
+  }
+}
+
+debugInfo("Catalogue initial chargé", {
+  definitions: EXERCISES.length,
+  rootCategories: Object.keys(EXERCISE_TREE).length,
+  fingerprint: TREE_DATA.fingerprint
+});
+
 type OrderedListContent = {
   rawHtml: string;
   html: string;
@@ -74,7 +114,12 @@ function normalizeListItems(items: string[]): string[] {
 
 function buildOrderedListContent(items: string[]): OrderedListContent {
   const trimmed = normalizeListItems(items);
+  debugLog("Construction liste ordonnée", {
+    total: items.length,
+    retenus: trimmed.length
+  });
   if (trimmed.length === 0) {
+    debugWarn("Liste ordonnée vide après normalisation", { items });
     return { rawHtml: "", html: "", latex: "" };
   }
 
@@ -194,6 +239,21 @@ function extractCorrectionData(exercice: ExerciceInstance) {
     (exercice.autocorrection as unknown);
   addUnique(autoSource, autoValues, autoSeen, autoRawValues);
 
+  debugLog("Extraction des corrections", {
+    correctionCount: correctionValues.length,
+    autoCorrectionCount: autoValues.length,
+    rawPreview: correctionRawValues.slice(0, 2),
+    autoPreview: autoRawValues.slice(0, 2)
+  });
+
+  if (correctionValues.length === 0 && autoValues.length === 0) {
+    const titrePotentiel = extractExerciseTitle(exercice);
+    debugWarn("Aucune correction détectée pour l'exercice", {
+      titre: titrePotentiel,
+      cles: Object.keys(exercice)
+    });
+  }
+
   return {
     corrections: correctionValues,
     autoCorrections: autoValues,
@@ -209,12 +269,21 @@ function buildQuestionContent(exercice: ExerciceInstance): OrderedListContent {
       )
     : [];
 
+  debugLog("Construction du contenu d'énoncé", {
+    mode: questions.length > 0 ? "liste" : "contenu",
+    questionCount: questions.length,
+    hasContenu: typeof exercice.contenu === "string" && exercice.contenu.trim().length > 0
+  });
+
   if (questions.length > 0) {
     return buildOrderedListContent(questions);
   }
 
   const contenu =
     typeof exercice.contenu === "string" ? exercice.contenu : "";
+  if (!contenu) {
+    debugWarn("Aucun contenu d'énoncé détecté", { clefs: Object.keys(exercice) });
+  }
   return {
     rawHtml: contenu,
     html: translateLatexToHtml(contenu),
@@ -403,11 +472,28 @@ function App() {
 
   const hasLatexData = latexExportSections.length > 0;
 
+
+
   const loadExercise = useCallback(
     async (
       definition: ExerciseDefinition,
       options: { applyOverrides?: boolean; withNewSeed?: boolean } = {}
     ) => {
+      const timerLabel = `${DEBUG_APP_PREFIX} ${definition.id}`;
+      const groupLabel = `${DEBUG_APP_PREFIX} Chargement exercice ${definition.id}`;
+      let groupOpened = false;
+      if (typeof console !== "undefined" && typeof console.groupCollapsed === "function") {
+        console.groupCollapsed(groupLabel);
+        groupOpened = true;
+      }
+
+      debugInfo("Début du chargement de l'exercice", {
+        id: definition.id,
+        relativePath: definition.relativePath,
+        options
+      });
+      startDebugTimer(timerLabel);
+
       currentDefinitionRef.current = definition;
       setSelectedExerciseId(definition.id);
       setLoading(true);
@@ -418,34 +504,86 @@ function App() {
         const cacheKey = definition.relativePath;
         let module = moduleCacheRef.current.get(cacheKey);
         if (!module) {
+          debugLog("Module absent du cache, tentative de chargement dynamique", {
+            id: definition.id,
+            relativePath: definition.relativePath
+          });
           const loader = getExerciseLoader(definition.relativePath) as
             | (() => Promise<ExerciceModule>)
             | undefined;
           if (loader) {
+            debugLog("Utilisation du loader Vite pour l'exercice", {
+              relativePath: definition.relativePath
+            });
             module = await loader();
           } else {
+            debugWarn("Loader Vite introuvable, recours à un import dynamique", {
+              importPath: definition.importPath
+            });
             try {
               module = (await import(
                 /* @vite-ignore */ definition.importPath
               )) as ExerciceModule;
             } catch (dynamicImportError) {
+              debugWarn("Échec de l'import dynamique", dynamicImportError);
               throw new Error(
                 `Impossible de charger l'exercice ${definition.importPath}`
               );
             }
           }
-          if (requestId !== requestIdRef.current) return;
+          if (requestId !== requestIdRef.current) {
+            debugLog("Demande obsolète détectée, abandon du chargement", {
+              requestId,
+              courant: requestIdRef.current
+            });
+            return;
+          }
           moduleCacheRef.current.set(cacheKey, module);
+        } else {
+          debugLog("Module trouvé dans le cache", {
+            id: definition.id,
+            relativePath: definition.relativePath
+          });
+        }
+
+        if (!module) {
+          throw new Error(
+            `Le module de l'exercice ${definition.id} est vide après chargement.`
+          );
         }
 
         const ExerciseClass = module.default;
+        if (typeof ExerciseClass !== "function") {
+          debugWarn("Module d'exercice sans export par défaut exploitable", {
+            id: definition.id,
+            cles: Object.keys(module as Record<string, unknown>)
+          });
+          throw new Error(
+            `Export par défaut introuvable pour ${definition.importPath}`
+          );
+        }
         const exercice = new ExerciseClass();
+
+        debugLog("Instance d'exercice initialisée", {
+          clefs: Object.keys(exercice as Record<string, unknown>),
+          titre: extractExerciseTitle(exercice)
+        });
 
         const shouldActivate = Boolean(
           (exercice as Record<string, unknown>).interactifReady ||
             (exercice as Record<string, unknown>).interactifObligatoire
         );
         (exercice as Record<string, unknown>).interactif = shouldActivate;
+
+        debugLog("Détermination du mode interactif", {
+          shouldActivate,
+          interactifReady: Boolean(
+            (exercice as Record<string, unknown>).interactifReady
+          ),
+          interactifObligatoire: Boolean(
+            (exercice as Record<string, unknown>).interactifObligatoire
+          )
+        });
 
         if (typeof window !== "undefined") {
           window.MathALEA = {
@@ -457,6 +595,10 @@ function App() {
         const baseFields = buildParameterFields(
           exercice as Record<string, unknown>
         );
+        debugLog("Paramètres détectés (initial)", {
+          count: baseFields.length,
+          chemins: baseFields.map(field => field.path)
+        });
 
         let valuesToApply = createValueMap(baseFields);
         if (options.applyOverrides) {
@@ -466,6 +608,7 @@ function App() {
           };
         }
 
+        debugLog("Valeurs de paramètres appliquées", valuesToApply);
         applyParameterValues(
           exercice as Record<string, unknown>,
           baseFields,
@@ -473,9 +616,11 @@ function App() {
         );
 
         if (options.withNewSeed ?? true) {
+          debugLog("Application d'une nouvelle graine aléatoire");
           exercice.applyNewSeed?.();
         }
 
+        debugLog("Génération d'une nouvelle version de l'exercice");
         exercice.nouvelleVersion?.();
 
         const finalFields = buildParameterFields(
@@ -484,6 +629,10 @@ function App() {
         setParameterFields(finalFields);
         const finalValues = createValueMap(finalFields);
         updateParameterValues(finalValues);
+        debugLog("Paramètres finaux enregistrés", {
+          count: finalFields.length,
+          chemins: finalFields.map(field => field.path)
+        });
 
         const {
           corrections,
@@ -493,7 +642,19 @@ function App() {
         } = extractCorrectionData(exercice);
         const questionContent = buildQuestionContent(exercice);
 
-        if (requestId !== requestIdRef.current) return;
+        if (requestId !== requestIdRef.current) {
+          debugLog("Demande obsolète détectée après extraction des données", {
+            requestId,
+            courant: requestIdRef.current
+          });
+          return;
+        }
+
+        debugLog("Mise à jour de l'état React avec l'exercice chargé", {
+          questionLatex: questionContent.latex?.slice(0, 120) ?? "",
+          correctionCount: corrections.length,
+          autoCorrectionCount: autoCorrections.length
+        });
 
         exerciceRef.current = exercice;
         setIsInteractive(Boolean((exercice as Record<string, unknown>).interactif));
@@ -527,14 +688,32 @@ function App() {
           (window as Record<string, unknown>).currentExercice = exercice;
           console.info("Exercice complet :", exercice);
         }
+
+        debugInfo("Chargement de l'exercice terminé", {
+          id: definition.id,
+          corrections: corrections.length,
+          autoCorrections: autoCorrections.length,
+          interactif: shouldActivate
+        });
       } catch (err) {
-        if (requestId !== requestIdRef.current) return;
+        if (requestId !== requestIdRef.current) {
+          debugLog("Demande obsolète détectée lors de la gestion d'erreur", {
+            requestId,
+            courant: requestIdRef.current
+          });
+          return;
+        }
+        debugWarn("Erreur lors du chargement de l'exercice", err);
         console.error("Erreur lors du chargement de l'exercice", err);
         setError(err instanceof Error ? err.message : String(err));
       } finally {
         if (requestId === requestIdRef.current) {
           setLoading(false);
         }
+        if (groupOpened && typeof console !== "undefined" && typeof console.groupEnd === "function") {
+          console.groupEnd();
+        }
+        endDebugTimer(timerLabel);
       }
     },
     [updateParameterValues]
@@ -633,30 +812,69 @@ function App() {
   );
 
   useEffect(() => {
-    if (!questionHtml || !questionContainerRef.current) return;
-    renderMathInElement(questionContainerRef.current, {
-      delimiters,
-      throwOnError: false,
-      strict: "ignore"
-    });
+    if (!questionHtml) {
+      debugLog("Aucun HTML de question à rendre");
+      return;
+    }
+    if (!questionContainerRef.current) {
+      debugWarn("Conteneur d'énoncé introuvable pour le rendu LaTeX");
+      return;
+    }
+
+    try {
+      renderMathInElement(questionContainerRef.current, {
+        delimiters,
+        throwOnError: false,
+        strict: "ignore"
+      });
+      debugLog("Rendu LaTeX de l'énoncé terminé", { longueur: questionHtml.length });
+    } catch (renderError) {
+      debugWarn("Erreur lors du rendu LaTeX de l'énoncé", renderError);
+    }
   }, [questionHtml]);
 
   useEffect(() => {
-    if (!correctionHtml || !correctionContainerRef.current) return;
-    renderMathInElement(correctionContainerRef.current, {
-      delimiters,
-      throwOnError: false,
-      strict: "ignore"
-    });
+    if (!correctionHtml) {
+      debugLog("Aucune correction HTML à rendre");
+      return;
+    }
+    if (!correctionContainerRef.current) {
+      debugWarn("Conteneur de correction introuvable pour le rendu LaTeX");
+      return;
+    }
+
+    try {
+      renderMathInElement(correctionContainerRef.current, {
+        delimiters,
+        throwOnError: false,
+        strict: "ignore"
+      });
+      debugLog("Rendu LaTeX de la correction terminé", { longueur: correctionHtml.length });
+    } catch (renderError) {
+      debugWarn("Erreur lors du rendu LaTeX de la correction", renderError);
+    }
   }, [correctionHtml]);
 
   useEffect(() => {
-    if (!autoCorrectionHtml || !autoCorrectionContainerRef.current) return;
-    renderMathInElement(autoCorrectionContainerRef.current, {
-      delimiters,
-      throwOnError: false,
-      strict: "ignore"
-    });
+    if (!autoCorrectionHtml) {
+      debugLog("Aucune auto-correction HTML à rendre");
+      return;
+    }
+    if (!autoCorrectionContainerRef.current) {
+      debugWarn("Conteneur d'auto-correction introuvable pour le rendu LaTeX");
+      return;
+    }
+
+    try {
+      renderMathInElement(autoCorrectionContainerRef.current, {
+        delimiters,
+        throwOnError: false,
+        strict: "ignore"
+      });
+      debugLog("Rendu LaTeX de l'auto-correction terminé", { longueur: autoCorrectionHtml.length });
+    } catch (renderError) {
+      debugWarn("Erreur lors du rendu LaTeX de l'auto-correction", renderError);
+    }
   }, [autoCorrectionHtml]);
 
   useEffect(() => {
