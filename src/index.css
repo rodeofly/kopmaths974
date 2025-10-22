@@ -18,3 +18,44 @@ body {
 a {
   color: inherit;
 }
+
+.mathalea-question-interactive {
+  border-radius: 0.75rem;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mathalea-question-interactive.mathalea-question--correct {
+  background-color: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.35);
+}
+
+.mathalea-question-interactive.mathalea-question--incorrect {
+  background-color: rgba(239, 68, 68, 0.1);
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.35);
+}
+
+.mathalea-question-interactive.mathalea-question--incomplete {
+  background-color: rgba(234, 179, 8, 0.12);
+  box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.25);
+}
+
+.mathalea-question-feedback {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mathalea-question-feedback--correct {
+  color: #047857;
+}
+
+.mathalea-question-feedback--incorrect {
+  color: #b91c1c;
+}
+
+.mathalea-question-feedback--incomplete {
+  color: #854d0e;
+}
