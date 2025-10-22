@@ -14,11 +14,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-    "@": path.resolve(__dirname, "./src"),
-    "@mathalea": path.resolve(__dirname, "../mathalea/src"),
-    "@exos": path.resolve(__dirname, "../mathalea/src/exercices"),
-    "apigeom": path.resolve(__dirname, "node_modules/apigeom"),
-  },
+      "@": path.resolve(__dirname, "./src"),
+      "@mathalea": path.resolve(__dirname, "./src/mathalea"),
+      "@exos": path.resolve(__dirname, "./src/mathalea/exercices"),
+      "apigeom": path.resolve(__dirname, "node_modules/apigeom"),
+    },
     extensions: [".ts", ".js", ".svelte"],
   },
 
@@ -33,7 +33,7 @@ export default defineConfig({
       "katex",
       "earcut",
       "roughjs",
-      "@mathalea/lib/2d/elements/ObjetMathalea2D"
+      "@mathalea/modules/2dGeneralites"
     ],
     esbuildOptions: {
       target: "esnext", // ✅ idem pour la phase dev
@@ -44,7 +44,7 @@ export default defineConfig({
     fs: {
       allow: [
         path.resolve(__dirname, ".."), // autorise l’accès au parent
-        path.resolve(__dirname, "../mathalea"), // autorise l’accès à mathalea
+        path.resolve(__dirname, "src/mathalea"), // autorise l’accès à MathALEA local
         path.resolve(__dirname, "node_modules"),
       ],
     },
