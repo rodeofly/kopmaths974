@@ -44,6 +44,8 @@ type ExerciceModule = {
   default: new () => ExerciceInstance;
 };
 
+type CopyKey = "question" | "correction" | "autoCorrection";
+
 const TREE_DATA = loadExerciseTree();
 const EXERCISE_TREE = TREE_DATA.tree;
 const EXERCISES = TREE_DATA.definitions;
@@ -57,26 +59,40 @@ const delimiters = [
   { left: "\\[", right: "\\]", display: true }
 ];
 
-function buildOrderedListRaw(items: string[]): string {
-  const trimmed = items
+type OrderedListContent = {
+  rawHtml: string;
+  html: string;
+  latex: string;
+};
+
+function normalizeListItems(items: string[]): string[] {
+  return items
     .map(item => (typeof item === "string" ? item : ""))
     .map(item => item.trim())
     .filter(Boolean);
-  if (trimmed.length === 0) return "";
-  return `<ol class="mathalea-numbered-list">${trimmed
-    .map(item => `<li>${item}</li>`)
-    .join("")}</ol>`;
 }
 
-function buildOrderedListHtml(items: string[]): string {
-  const trimmed = items
-    .map(item => (typeof item === "string" ? item : ""))
-    .map(item => item.trim())
-    .filter(Boolean);
-  if (trimmed.length === 0) return "";
-  return `<ol class="mathalea-numbered-list">${trimmed
+function buildOrderedListContent(items: string[]): OrderedListContent {
+  const trimmed = normalizeListItems(items);
+  if (trimmed.length === 0) {
+    return { rawHtml: "", html: "", latex: "" };
+  }
+
+  const latex = trimmed.join("\n\n");
+  const rawItems = trimmed.map(item => `<li>${item}</li>`).join("");
+  const htmlItems = trimmed
     .map(item => `<li>${translateLatexToHtml(item)}</li>`)
-    .join("")}</ol>`;
+    .join("");
+
+  return {
+    rawHtml: `<ol class="mathalea-numbered-list">${rawItems}</ol>`,
+    html: `<ol class="mathalea-numbered-list">${htmlItems}</ol>`,
+    latex
+  };
+}
+
+function normalizeLatexForComparison(value: string): string {
+  return value.replace(/\s+/g, " ").trim();
 }
 
 function flattenToStrings(
@@ -129,38 +145,64 @@ function flattenToStrings(
 
 function extractCorrectionData(exercice: ExerciceInstance) {
   const correctionValues: string[] = [];
+  const correctionRawValues: string[] = [];
   const correctionSeen = new Set<string>();
   const autoValues: string[] = [];
+  const autoRawValues: string[] = [];
   const autoSeen = new Set<string>();
 
   const addUnique = (
     source: unknown,
     target: string[],
-    seen: Set<string>
+    seen: Set<string>,
+    rawTarget: string[]
   ) => {
     flattenToStrings(source).forEach(entry => {
-      const cleaned = entry.replace(/\s+/g, " ").trim();
+      const raw = entry.trim();
+      if (!raw) return;
+      const cleaned = raw.replace(/\s+/g, " ").trim();
       if (!cleaned) return;
       if (!seen.has(cleaned)) {
         seen.add(cleaned);
         target.push(cleaned);
+        rawTarget.push(raw);
       }
     });
   };
 
-  addUnique(exercice.listeCorrections, correctionValues, correctionSeen);
-  addUnique(exercice.correction, correctionValues, correctionSeen);
-  addUnique(exercice.contenuCorrige, correctionValues, correctionSeen);
+  addUnique(
+    exercice.listeCorrections,
+    correctionValues,
+    correctionSeen,
+    correctionRawValues
+  );
+  addUnique(
+    exercice.correction,
+    correctionValues,
+    correctionSeen,
+    correctionRawValues
+  );
+  addUnique(
+    exercice.contenuCorrige,
+    correctionValues,
+    correctionSeen,
+    correctionRawValues
+  );
 
   const autoSource =
     (exercice.autoCorrection as unknown) ??
     (exercice.autocorrection as unknown);
-  addUnique(autoSource, autoValues, autoSeen);
+  addUnique(autoSource, autoValues, autoSeen, autoRawValues);
 
-  return { corrections: correctionValues, autoCorrections: autoValues };
+  return {
+    corrections: correctionValues,
+    autoCorrections: autoValues,
+    rawCorrections: correctionRawValues,
+    rawAutoCorrections: autoRawValues
+  };
 }
 
-function buildQuestionContent(exercice: ExerciceInstance) {
+function buildQuestionContent(exercice: ExerciceInstance): OrderedListContent {
   const questions = Array.isArray(exercice.listeQuestions)
     ? exercice.listeQuestions.filter(
         (question): question is string => typeof question === "string"
@@ -168,17 +210,15 @@ function buildQuestionContent(exercice: ExerciceInstance) {
     : [];
 
   if (questions.length > 0) {
-    return {
-      rawHtml: buildOrderedListRaw(questions),
-      html: buildOrderedListHtml(questions)
-    };
+    return buildOrderedListContent(questions);
   }
 
   const contenu =
     typeof exercice.contenu === "string" ? exercice.contenu : "";
   return {
     rawHtml: contenu,
-    html: translateLatexToHtml(contenu)
+    html: translateLatexToHtml(contenu),
+    latex: contenu
   };
 }
 
@@ -207,6 +247,9 @@ function App() {
   const parameterValuesRef = useRef<ParameterValueMap>({});
   const currentDefinitionRef = useRef<ExerciseDefinition | null>(null);
   const requestIdRef = useRef(0);
+  const copyTimeoutsRef = useRef<
+    Partial<Record<CopyKey, ReturnType<typeof setTimeout>>>
+  >({});
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExerciseId, setSelectedExerciseId] = useState<string | null>(
@@ -216,8 +259,12 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [questionHtml, setQuestionHtml] = useState("");
   const [questionRawHtml, setQuestionRawHtml] = useState("");
+  const [questionLatex, setQuestionLatex] = useState("");
   const [correctionItems, setCorrectionItems] = useState<string[]>([]);
   const [autoCorrectionItems, setAutoCorrectionItems] = useState<string[]>([]);
+  const [correctionLatexItems, setCorrectionLatexItems] = useState<string[]>([]);
+  const [autoCorrectionLatexItems, setAutoCorrectionLatexItems] =
+    useState<string[]>([]);
   const [showCorrection, setShowCorrection] = useState(false);
   const [parameterFields, setParameterFields] = useState<ParameterField[]>([]);
   const [parameterValues, setParameterValues] = useState<ParameterValueMap>({});
@@ -235,6 +282,9 @@ function App() {
       return Object.fromEntries(entries);
     }
   );
+  const [copyFeedback, setCopyFeedback] = useState<
+    Partial<Record<CopyKey, "copied" | "error">>
+  >({});
 
   const updateParameterValues = useCallback((map: ParameterValueMap) => {
     parameterValuesRef.current = map;
@@ -279,14 +329,79 @@ function App() {
   }, [correctionItems, autoCorrectionItems, isInteractive]);
 
   const correctionHtml = useMemo(
-    () => buildOrderedListHtml(displayedCorrections),
+    () => buildOrderedListContent(displayedCorrections).html,
     [displayedCorrections]
   );
 
   const autoCorrectionHtml = useMemo(
-    () => buildOrderedListHtml(autoCorrectionItems),
+    () => buildOrderedListContent(autoCorrectionItems).html,
     [autoCorrectionItems]
   );
+
+  const displayedCorrectionLatex = useMemo(() => {
+    const seen = new Set<string>();
+    const combined: string[] = [];
+
+    correctionLatexItems.forEach(item => {
+      const trimmed = item.trim();
+      if (!trimmed) return;
+      const normalized = normalizeLatexForComparison(trimmed);
+      if (!normalized || seen.has(normalized)) return;
+      seen.add(normalized);
+      combined.push(trimmed);
+    });
+
+    if (!isInteractive) {
+      autoCorrectionLatexItems.forEach(item => {
+        const trimmed = item.trim();
+        if (!trimmed) return;
+        const normalized = normalizeLatexForComparison(trimmed);
+        if (!normalized || seen.has(normalized)) return;
+        seen.add(normalized);
+        combined.push(trimmed);
+      });
+    }
+
+    return combined.join("\n\n");
+  }, [correctionLatexItems, autoCorrectionLatexItems, isInteractive]);
+
+  const autoCorrectionLatexExport = useMemo(
+    () =>
+      autoCorrectionLatexItems
+        .map(item => item.trim())
+        .filter(Boolean)
+        .join("\n\n"),
+    [autoCorrectionLatexItems]
+  );
+
+  const questionLatexExport = useMemo(
+    () => questionLatex.trim(),
+    [questionLatex]
+  );
+
+  const latexExportSections = useMemo(
+    () =>
+      [
+        {
+          key: "question" as const,
+          label: "Énoncé",
+          value: questionLatexExport
+        },
+        {
+          key: "correction" as const,
+          label: "Correction",
+          value: displayedCorrectionLatex.trim()
+        },
+        {
+          key: "autoCorrection" as const,
+          label: "Auto-correction",
+          value: autoCorrectionLatexExport
+        }
+      ].filter(section => section.value.trim().length > 0),
+    [questionLatexExport, displayedCorrectionLatex, autoCorrectionLatexExport]
+  );
+
+  const hasLatexData = latexExportSections.length > 0;
 
   const loadExercise = useCallback(
     async (
@@ -370,7 +485,12 @@ function App() {
         const finalValues = createValueMap(finalFields);
         updateParameterValues(finalValues);
 
-        const { corrections, autoCorrections } = extractCorrectionData(exercice);
+        const {
+          corrections,
+          autoCorrections,
+          rawCorrections,
+          rawAutoCorrections
+        } = extractCorrectionData(exercice);
         const questionContent = buildQuestionContent(exercice);
 
         if (requestId !== requestIdRef.current) return;
@@ -379,8 +499,12 @@ function App() {
         setIsInteractive(Boolean((exercice as Record<string, unknown>).interactif));
         setQuestionRawHtml(questionContent.rawHtml);
         setQuestionHtml(questionContent.html);
+        setQuestionLatex(questionContent.latex ?? "");
         setCorrectionItems(corrections);
         setAutoCorrectionItems(autoCorrections);
+        setCorrectionLatexItems(rawCorrections);
+        setAutoCorrectionLatexItems(rawAutoCorrections);
+        setCopyFeedback({});
         setShowCorrection(!shouldActivate);
 
         const title = extractExerciseTitle(exercice);
@@ -456,6 +580,58 @@ function App() {
     loadExercise(definition, { applyOverrides: true, withNewSeed: true });
   }, [loadExercise]);
 
+  const clearCopyTimeout = useCallback((key: CopyKey) => {
+    const timeoutId = copyTimeoutsRef.current[key];
+    if (timeoutId != null) {
+      clearTimeout(timeoutId);
+      delete copyTimeoutsRef.current[key];
+    }
+  }, []);
+
+  const scheduleCopyFeedbackReset = useCallback(
+    (key: CopyKey) => {
+      if (typeof window === "undefined") return;
+      clearCopyTimeout(key);
+      const timeoutId = window.setTimeout(() => {
+        setCopyFeedback(prev => {
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        delete copyTimeoutsRef.current[key];
+      }, 2000);
+      copyTimeoutsRef.current[key] = timeoutId;
+    },
+    [clearCopyTimeout]
+  );
+
+  const handleCopyLatex = useCallback(
+    async (key: CopyKey, content: string) => {
+      const text = content.trim();
+      if (!text) return;
+
+      try {
+        if (typeof navigator === "undefined" || !navigator.clipboard) {
+          throw new Error("Clipboard API unavailable");
+        }
+        await navigator.clipboard.writeText(text);
+        setCopyFeedback(prev => ({
+          ...prev,
+          [key]: "copied"
+        }));
+      } catch (err) {
+        console.warn("Impossible de copier le contenu LaTeX", err);
+        setCopyFeedback(prev => ({
+          ...prev,
+          [key]: "error"
+        }));
+      } finally {
+        scheduleCopyFeedbackReset(key);
+      }
+    },
+    [scheduleCopyFeedbackReset]
+  );
+
   useEffect(() => {
     if (!questionHtml || !questionContainerRef.current) return;
     renderMathInElement(questionContainerRef.current, {
@@ -508,6 +684,17 @@ function App() {
         interactionCleanupRef.current();
         interactionCleanupRef.current = null;
       }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Object.values(copyTimeoutsRef.current).forEach(timeoutId => {
+        if (timeoutId != null) {
+          clearTimeout(timeoutId);
+        }
+      });
+      copyTimeoutsRef.current = {};
     };
   }, []);
 
@@ -624,7 +811,7 @@ function App() {
   );
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
+    <main id="main-content" className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
         <header>
           <h1 className="text-3xl font-bold">Kop Maths 974</h1>
@@ -634,7 +821,7 @@ function App() {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
-          <aside className="space-y-4">
+          <aside className="space-y-4 self-start lg:sticky lg:top-28">
             <div className="rounded-lg bg-white p-4 shadow">
               <h2 className="text-lg font-semibold">Catalogue d'exercices</h2>
               <label className="mt-4 block text-sm font-medium text-slate-700">
@@ -978,6 +1165,57 @@ function App() {
                     </p>
                   )}
                 </section>
+
+                {hasLatexData && (
+                  <section className="rounded-lg bg-white p-6 shadow">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="text-lg font-semibold">Export LaTeX</h3>
+                      <p className="text-xs text-slate-500">
+                        Copiez le contenu brut pour l'intégrer dans vos documents.
+                      </p>
+                    </div>
+                    <div className="mt-4 space-y-4">
+                      {latexExportSections.map(section => (
+                        <div key={section.key} className="space-y-2">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <h4 className="text-sm font-semibold text-slate-700">
+                              {section.label}
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              {copyFeedback[section.key] === "copied" && (
+                                <span className="text-xs font-semibold text-emerald-600">
+                                  Copié !
+                                </span>
+                              )}
+                              {copyFeedback[section.key] === "error" && (
+                                <span className="text-xs font-semibold text-red-600">
+                                  Copie impossible
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleCopyLatex(section.key, section.value)}
+                                disabled={!section.value.trim()}
+                                className="inline-flex items-center gap-2 rounded border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                Copier
+                              </button>
+                            </div>
+                          </div>
+                          <textarea
+                            value={section.value}
+                            readOnly
+                            rows={Math.min(
+                              12,
+                              Math.max(3, section.value.split(/\n/).length + 1)
+                            )}
+                            className="w-full resize-y rounded border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-mono leading-relaxed text-slate-700 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </>
             ) : (
               <section className="rounded-lg bg-white p-6 text-sm text-slate-600 shadow">
