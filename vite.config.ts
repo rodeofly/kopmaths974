@@ -51,8 +51,9 @@ export default defineConfig({
   },
 
   build: {
-    target: "esnext", // ✅ pour autoriser top-level await
+    target: "esnext",
     chunkSizeWarningLimit: 2000,
+    reportCompressedSize: false, // ✅ empêche le calcul gzip (source du crash)
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
       external: [
