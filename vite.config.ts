@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import path from "path";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
 
@@ -10,6 +11,7 @@ process.env.TAILWIND_DISABLE_LIGHTNINGCSS = "true";
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     react(),
     svelte({
       preprocess: sveltePreprocess({
