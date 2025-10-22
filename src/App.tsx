@@ -3,7 +3,6 @@ import renderMathInElement from "katex/contrib/auto-render";
 import "mathlive";
 
 import translateLatexToHtml from "./utils/latexToHtml";
-import { initializeExerciseInteraction } from "./utils/exerciseInteraction";
 
 type ExerciceInstance = {
   applyNewSeed: () => void;
@@ -25,8 +24,6 @@ const delimiters = [
 
 function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const interactionCleanupRef = useRef<(() => void) | null>(null);
-  const exerciceRef = useRef<ExerciceInstance | null>(null);
   const [contenu, setContenu] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +47,6 @@ function App() {
         const exercice = new ExerciseClass();
         exercice.applyNewSeed();
         exercice.nouvelleVersion();
-        exerciceRef.current = exercice;
         const html =
           exercice.contenu ?? exercice.listeQuestions?.join("\n") ?? "";
         if (mounted) {
@@ -78,30 +74,11 @@ function App() {
   useEffect(() => {
     if (!contenu || !containerRef.current) return;
 
-    const container = containerRef.current;
-    renderMathInElement(container, {
+    renderMathInElement(containerRef.current, {
       delimiters,
       throwOnError: false,
       strict: "ignore"
     });
-
-    if (interactionCleanupRef.current) {
-      interactionCleanupRef.current();
-      interactionCleanupRef.current = null;
-    }
-
-    interactionCleanupRef.current = initializeExerciseInteraction({
-      container,
-      exerciseId: "6e/6N5-3",
-      exercice: exerciceRef.current
-    });
-
-    return () => {
-      if (interactionCleanupRef.current) {
-        interactionCleanupRef.current();
-        interactionCleanupRef.current = null;
-      }
-    };
   }, [contenu]);
 
   return (
