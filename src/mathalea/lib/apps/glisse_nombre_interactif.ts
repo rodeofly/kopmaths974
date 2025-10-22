@@ -1,4 +1,4 @@
-import GlisseNombreElement from 'glisse-nombre'
+import GlisseNombreElement from './GlisseNombreElement'
 import { context } from '../../modules/context'
 
 /**
@@ -9,7 +9,7 @@ if (customElements.get('glisse-nombre') === undefined) {
 }
 
 type GlisseNombreInteractifOptions = {
-  number?: number // pour préremplir le nombre (par défaut 0)
+  number?: number | string // pour préremplir le nombre (par défaut 0)
   addZeros?: boolean // pour afficher les zéros automatiquement (par défaut à true)
   animation?: number // pour désactiver le déplacement manuel et animer une multiplication
   showCalculus?: boolean // pour afficher ✕ ou ÷ 10, 100... (par défaut à true)
@@ -18,6 +18,9 @@ type GlisseNombreInteractifOptions = {
   initialPower?: number // pour choisir la colonne de départ des calculs (par défaut à 0)
   removeLeftZeros?: boolean // pour ne pas afficher les zéros à gauche du premier chiffre non nul par exemple n'afficher que le chiffre des centièmes dans 0,01 (par défaut à false)
 }
+
+const escapeAttribute = (value: string | number | boolean) =>
+  String(value).replace(/"/g, '&quot;')
 
 /**
  * Retourne le code HTML pour afficher un glisse-nombre interactif
@@ -38,24 +41,24 @@ export function glisseNombreInteractif(
   if (!context.isHtml) {
     return '' // La sortie LaTeX n'est pas encore gérée
   }
-  let optionsString: string = ''
+  let optionsString = ''
   if (options) {
     if (options.number !== undefined)
-      optionsString += `number="${options.number}" `
+      optionsString += `number="${escapeAttribute(options.number)}" `
     if (options.addZeros !== undefined)
-      optionsString += `add-zeros="${options.addZeros}" `
+      optionsString += `add-zeros="${escapeAttribute(options.addZeros)}" `
     if (options.animation !== undefined)
-      optionsString += `animation="${options.animation}" `
+      optionsString += `animation="${escapeAttribute(options.animation)}" `
     if (options.showCalculus !== undefined)
-      optionsString += `show-calculus="${options.showCalculus}" `
+      optionsString += `show-calculus="${escapeAttribute(options.showCalculus)}" `
     if (options.showComma1 !== undefined)
-      optionsString += `show-comma1="${options.showComma1}" `
+      optionsString += `show-comma1="${escapeAttribute(options.showComma1)}" `
     if (options.showComma2 !== undefined)
-      optionsString += `show-comma2="${options.showComma2}" `
+      optionsString += `show-comma2="${escapeAttribute(options.showComma2)}" `
     if (options.removeLeftZeros !== undefined)
-      optionsString += `remove-left-zeros="${options.removeLeftZeros}" `
+      optionsString += `remove-left-zeros="${escapeAttribute(options.removeLeftZeros)}" `
     if (options.initialPower !== undefined)
-      optionsString += `initial-power="${options.initialPower}" `
+      optionsString += `initial-power="${escapeAttribute(options.initialPower)}" `
   }
-  return `<div class="block"><glisse-nombre ${optionsString} ></glisse-nombre></div>`
+  return `<div class="block"><glisse-nombre ${optionsString}></glisse-nombre></div>`
 }
