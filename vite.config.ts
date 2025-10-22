@@ -23,13 +23,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@mathalea": path.resolve(__dirname, "../mathalea/src"),
-      "@exos": path.resolve(__dirname, "../mathalea/src/exercices"),
+      // 💡 REVIENT AUX ALIAS INTERNES
+      "@mathalea": path.resolve(__dirname, "./src/mathalea"),
+      "@exos": path.resolve(__dirname, "./src/mathalea/exercices"),
       apigeom: path.resolve(__dirname, "node_modules/apigeom"),
     },
     extensions: [".ts", ".js", ".svelte"],
   },
-
   optimizeDeps: {
     include: [
       "svelte",
@@ -43,25 +43,26 @@ export default defineConfig({
       "roughjs",
       "@mathalea/modules/2dGeneralites",
     ],
+    exclude: ["lightningcss", "vitest"],
     esbuildOptions: {
       target: "esnext",
     },
   },
-
+  assetsInclude: ['**/*.test.ts'],
   server: {
     fs: {
       allow: [
-        path.resolve(__dirname, ".."),
-        path.resolve(__dirname, "../mathalea/src"),
+        path.resolve(__dirname, "."), // Ajoute la racine du projet
         path.resolve(__dirname, "node_modules"),
-      ],
+      ]
     },
   },
 
   css: {
-    // ⚙️ Assure explicitement que Vite utilise PostCSS au lieu de LightningCSS
+    // ⚙️ Assure explicitement que Vite utilise PostCSS (pour Tailwind v4)
     transformer: "postcss",
-    postcss: "./postcss.config.cjs",
+    // ⚠️ Assurez-vous que l'extension correspond exactement au nom de votre fichier
+    postcss: "./postcss.config.js",
   },
 
   build: {

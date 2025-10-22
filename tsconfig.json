@@ -18,6 +18,7 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
+      // 💡 REVIENT AUX CHEMINS INTERNES
       "@mathalea/*": ["src/mathalea/*"],
       "@exos/*": ["src/mathalea/exercices/*"]
     }
