@@ -386,7 +386,7 @@ function buildDefinition(path: string): ExerciseDefinition | null {
     ? metadata.categoryTitles[0].trim()
     : formatNiveau(categories[0] ?? "");
 
-  const title = metadata?.title ?? formatExerciseLabel([...fallbackCategories, fileName]) || id;
+  const title = (metadata?.title ?? formatExerciseLabel([...fallbackCategories, fileName])) || id;
   const label = metadata
     ? (() => {
         const parts = [...categoryTitles.slice(1), metadata.title];
