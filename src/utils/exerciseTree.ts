@@ -434,7 +434,7 @@ export function loadExerciseTree(): ExerciseTreeData {
   return runtimeCache;
 }
 
-}
+
 
 export function collectCategoryPaths(nodes: Record<string, ExerciseNode>, acc: Set<string> = new Set()): Set<string> {
   Object.values(nodes).forEach(node => {
