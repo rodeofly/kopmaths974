@@ -35,20 +35,17 @@ function createCssDebugPlugin() {
     },
     generateBundle(_, bundle) {
       const cssAssets = Object.entries(bundle)
-        .filter(([, output]) =>
-          output.type === "asset" && output.fileName.endsWith(".css")
-        )
+        .filter(([, output]) => output.type === "asset" && output.fileName.endsWith(".css"))
         .map(([fileName]) => fileName);
 
       if (cssAssets.length > 0) {
         console.info(CSS_DEBUG_PREFIX, "bundle", cssAssets);
       }
     },
-  } satisfies import("vite").Plugin;
+  };
 }
 
-// 🧩 Désactive complètement LightningCSS (utile pour Vite >=5, mais inoffensif sur Vite 4)
-process.env.VITE_NO_LIGHTNINGCSS = "true";
+// 🚫 Désactivation unique de LightningCSS (inutile avec Tailwind 4)
 process.env.TAILWIND_DISABLE_LIGHTNINGCSS = "true";
 
 export default defineConfig({
@@ -68,13 +65,13 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      // 💡 REVIENT AUX ALIAS INTERNES
       "@mathalea": path.resolve(__dirname, "./src/mathalea"),
       "@exos": path.resolve(__dirname, "./src/mathalea/exercices"),
       apigeom: path.resolve(__dirname, "node_modules/apigeom"),
     },
-    extensions: [".ts", ".js", ".svelte"],
+    extensions: [".ts", ".js", ".jsx", ".tsx", ".svelte"],
   },
+
   optimizeDeps: {
     include: [
       "svelte",
@@ -89,23 +86,21 @@ export default defineConfig({
       "@mathalea/modules/2dGeneralites",
     ],
     exclude: ["lightningcss", "vitest"],
-    esbuildOptions: {
-      target: "esnext",
-    },
+    esbuildOptions: { target: "esnext" },
   },
-  assetsInclude: ['**/*.test.ts'],
+
   server: {
     fs: {
       allow: [
-        path.resolve(__dirname, "."), // Ajoute la racine du projet
+        path.resolve(__dirname, "."),
         path.resolve(__dirname, "node_modules"),
-      ]
+      ],
     },
   },
 
   css: {
+    // Tailwind 4 gère tout seul PostCSS, inutile de le préciser
     transformer: "postcss",
-    postcss: "./postcss.config.cjs",  
   },
 
   build: {
@@ -115,6 +110,7 @@ export default defineConfig({
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
       external: [
+        "vitest",
         "decimal.js",
         "mathjs",
         "crypto-js",
