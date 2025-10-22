@@ -991,8 +991,13 @@ export function mathaleaHandleExerciceSimple(
             `id="ex${n}Q${i}"`,
           )
           exercice.question = exercice.question?.replace(
+<<<<<<< Updated upstream
             `CheckEx${n}Q0"`,
             `CheckEx${n}Q${i}"`,
+=======
+            `checkEx${n}Q0"`,
+            `checkEx${n}Q${i}"`,
+>>>>>>> Stashed changes
           )
           exercice.listeQuestions.push(exercice.question ?? '')
         } else {

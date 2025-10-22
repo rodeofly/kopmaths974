@@ -1,23 +1,39 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import sveltePreprocess from "svelte-preprocess";
 import path from "path";
 
 export default defineConfig({
-  root: __dirname,
-  plugins: [react()],
-
+  plugins: [
+    react(),
+    svelte({
+      preprocess: sveltePreprocess({ typescript: true, postcss: true }),
+      compilerOptions: { dev: true },
+    }),
+  ],
   resolve: {
     alias: {
+<<<<<<< Updated upstream
       "@mathalea": path.resolve(__dirname, "src/mathalea"),
       "apigeom/src": path.resolve(__dirname, "node_modules/apigeom/src"),
       "apigeom": path.resolve(__dirname, "node_modules/apigeom/src/index.ts"),
     },
     extensions: [".ts", ".js"],
+=======
+    "@": path.resolve(__dirname, "./src"),
+    "@mathalea": path.resolve(__dirname, "../mathalea/src"),
+    "@exos": path.resolve(__dirname, "../mathalea/src/exercices"),
+    "apigeom": path.resolve(__dirname, "node_modules/apigeom"),
   },
-
+    extensions: [".ts", ".js", ".svelte"],
+>>>>>>> Stashed changes
+  },
 
   optimizeDeps: {
     include: [
+      "svelte",
+      "@sveltejs/vite-plugin-svelte",    
       "decimal.js",
       "mathjs",
       "crypto-js",
@@ -25,7 +41,11 @@ export default defineConfig({
       "katex",
       "earcut",
       "roughjs",
+      "@mathalea/lib/2d/elements/ObjetMathalea2D"
     ],
+    esbuildOptions: {
+      target: "esnext", // ✅ idem pour la phase dev
+    }
   },
 
   server: {
@@ -39,8 +59,19 @@ export default defineConfig({
   },
 
   build: {
+    target: "esnext", // ✅ pour autoriser top-level await
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
+      external: [
+        "decimal.js",
+        "mathjs",
+        "crypto-js",
+        "seedrandom",
+        "katex",
+        "earcut",
+        "roughjs",
+      ],
     },
   },
 });
