@@ -2,75 +2,48 @@ import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
-const mathaleaPath = path.resolve("../mathalea");
-const backupPath = path.resolve("../mathalea_backup");
-const logFile = path.resolve("./logs/update-mathalea.log");
+const projectRoot = path.resolve(process.cwd());
+const externalRepo = path.resolve(projectRoot, "../mathalea");
+const localMathalea = path.resolve(projectRoot, "src/mathalea");
+const backupDir = path.resolve(projectRoot, "backups/mathalea_" + Date.now());
 
-function log(msg) {
-  console.log(msg);
-  fs.appendFileSync(logFile, msg + "\n");
+// Fonction d’exécution simple
+function run(cmd, cwd = projectRoot) {
+  console.log(`> ${cmd}`);
+  execSync(cmd, { stdio: "inherit", cwd });
 }
 
-function listFiles(dir) {
-  let results = [];
-  const list = fs.readdirSync(dir);
-  list.forEach((file) => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-    if (stat && stat.isDirectory()) {
-      results = results.concat(listFiles(filePath));
-    } else if (file.endsWith(".ts")) {
-      results.push(filePath.replace(mathaleaPath + "/", ""));
-    }
-  });
-  return results.sort();
-}
-
-console.log("📦 Mise à jour du dépôt MathALEA...");
-fs.mkdirSync(path.dirname(logFile), { recursive: true });
-fs.writeFileSync(logFile, `=== ${new Date().toISOString()} ===\n`);
-
+// Étape 1 : Cloner ou mettre à jour le dépôt officiel
 try {
-  // Sauvegarde
-  if (fs.existsSync(backupPath)) fs.rmSync(backupPath, { recursive: true, force: true });
-  fs.cpSync(mathaleaPath, backupPath, { recursive: true });
-  log(`🗂️  Sauvegarde créée dans ${backupPath}`);
-
-  // Liste avant mise à jour
-  const before = listFiles(path.join(mathaleaPath, "src/exercices"));
-
-  // Mise à jour git
-  execSync(`cd ${mathaleaPath} && git fetch --all && git reset --hard origin/main`, { stdio: "inherit" });
-
-  // Liste après mise à jour
-  const after = listFiles(path.join(mathaleaPath, "src/exercices"));
-
-  // Comparaison
-  const added = after.filter(f => !before.includes(f));
-  const removed = before.filter(f => !after.includes(f));
-  const common = after.filter(f => before.includes(f));
-  const modified = common.filter(f => {
-    const oldF = path.join(backupPath, f);
-    const newF = path.join(mathaleaPath, f);
-    if (fs.existsSync(oldF) && fs.existsSync(newF)) {
-      return fs.readFileSync(oldF, "utf-8") !== fs.readFileSync(newF, "utf-8");
-    }
-    return false;
-  });
-
-  log(`\n✅ MathALEA mise à jour !\n`);
-  log(`🟩 Nouveaux fichiers (${added.length}):`);
-  added.forEach(f => log("  + " + f));
-
-  log(`\n🟥 Fichiers supprimés (${removed.length}):`);
-  removed.forEach(f => log("  - " + f));
-
-  log(`\n🟨 Fichiers modifiés (${modified.length}):`);
-  modified.forEach(f => log("  * " + f));
-
-  console.log("\n📘 Résumé enregistré dans :", logFile);
-  console.log("✨ Mise à jour terminée !");
+  if (!fs.existsSync(externalRepo)) {
+    console.log("📥 Clonage initial du dépôt MathALEA...");
+    run("git clone https://forge.apps.education.fr/coopmaths/mathalea.git ../mathalea");
+  } else {
+    console.log("🔄 Mise à jour du dépôt MathALEA existant...");
+    run("git fetch --all", externalRepo);
+    run("git reset --hard origin/main", externalRepo);
+  }
 } catch (err) {
-  console.error("❌ Erreur lors de la mise à jour :", err.message);
-  log("❌ Erreur : " + err.message);
+  console.error("❌ Erreur pendant la mise à jour du dépôt :", err);
+  process.exit(1);
 }
+
+// Étape 2 : Sauvegarde locale avant copie
+if (fs.existsSync(localMathalea)) {
+  fs.mkdirSync(path.dirname(backupDir), { recursive: true });
+  console.log(`🗂️  Sauvegarde de l’ancien src/mathalea vers : ${backupDir}`);
+  fs.renameSync(localMathalea, backupDir);
+}
+
+// Étape 3 : Copier les fichiers nécessaires
+console.log("📦 Copie des fichiers de ../mathalea vers src/mathalea...");
+fs.mkdirSync(localMathalea, { recursive: true });
+run(`cp -r ${externalRepo}/src/* ${localMathalea}/`);
+
+// Étape 4 : Journalisation
+const logDir = path.resolve(projectRoot, "logs");
+fs.mkdirSync(logDir, { recursive: true });
+const logPath = path.join(logDir, "update-mathalea.log");
+fs.writeFileSync(logPath, `[${new Date().toISOString()}] Mise à jour réussie.\n`);
+
+console.log("✅ MathALEA mis à jour avec succès !");
