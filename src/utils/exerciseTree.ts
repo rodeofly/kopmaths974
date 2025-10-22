@@ -4,6 +4,11 @@
  * structure.
  */
 
+import referentiel2022FR from "@mathalea/json/referentiel2022FR.json";
+import codeToLevelList from "@mathalea/json/codeToLevelList.json";
+import levelsThemesList from "@mathalea/json/levelsThemesList.json";
+import { isJSONReferentielEnding } from "@mathalea/lib/types/referentiels";
+
 const DEBUG_PREFIX = "[KopMaths][ExerciseTree]";
 
 function treeDebug(...args: unknown[]): void {
@@ -55,6 +60,8 @@ export interface ExerciseDefinition {
   importPath: string;
   relativePath: string;
   categories: string[];
+  categoryTitles: string[];
+  tags: string[];
   label: string;
   title: string;
   searchableTitle: string;
@@ -180,7 +187,133 @@ export function extractRelativeExercisePath(moduleId: string): string | null {
   return null;
 }
 
-function formatSegmentName(segment: string): string {
+type JsonObject = Record<string, unknown>;
+
+interface ReferentielExerciseMetadata {
+  id: string;
+  title: string;
+  relativePath: string;
+  categoryCodes: string[];
+  categoryTitles: string[];
+  tags: string[];
+  uuid?: string;
+}
+
+const LEVEL_TITLE_LOOKUP = codeToLevelList as Record<string, string | undefined>;
+const THEME_TITLE_LOOKUP = levelsThemesList as Record<string, { titre?: string } | undefined>;
+
+const referentielExerciseMetadataByPath = new Map<string, ReferentielExerciseMetadata>();
+const referentielCategoryTitleByPath = new Map<string, string>();
+const referentielCategorySearchByPath = new Map<string, string>();
+
+function resolveCategoryTitleFromCode(code: string): string {
+  const trimmed = code.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  const levelTitle = LEVEL_TITLE_LOOKUP[trimmed];
+  if (typeof levelTitle === "string" && levelTitle.trim()) {
+    return levelTitle.trim();
+  }
+
+  const themeEntry = THEME_TITLE_LOOKUP[trimmed];
+  if (themeEntry && typeof themeEntry.titre === "string" && themeEntry.titre.trim()) {
+    return themeEntry.titre.trim();
+  }
+
+  return formatSegmentNameFallback(trimmed);
+}
+
+function buildCategorySearchableTokens(
+  code: string,
+  title: string,
+  pathCodes: string[],
+  pathTitles: string[]
+): string {
+  const tokens = new Set<string>();
+  tokens.add(code);
+  tokens.add(title);
+  pathCodes.forEach(token => tokens.add(token));
+  pathTitles.forEach(token => tokens.add(token));
+
+  return Array.from(tokens)
+    .map(token => normalizeWhitespace(String(token)).toLowerCase())
+    .filter(Boolean)
+    .join(" ");
+}
+
+function registerReferentielCategory(
+  pathCodes: string[],
+  pathTitles: string[],
+  code: string,
+  title: string
+): void {
+  const fullCodes = [...pathCodes, code];
+  const fullPath = fullCodes.join("/");
+  referentielCategoryTitleByPath.set(fullPath, title);
+  referentielCategorySearchByPath.set(
+    fullPath,
+    buildCategorySearchableTokens(code, title, fullCodes, [...pathTitles, title])
+  );
+}
+
+function buildReferentielMetadata(): void {
+  const rootNode = referentiel2022FR as JsonObject;
+  type StackEntry = { node: JsonObject; pathCodes: string[]; pathTitles: string[] };
+  const stack: StackEntry[] = [{ node: rootNode, pathCodes: [], pathTitles: [] }];
+
+  while (stack.length > 0) {
+    const { node, pathCodes, pathTitles } = stack.pop() as StackEntry;
+    Object.entries(node).forEach(([key, value]) => {
+      if (!value || typeof value !== "object") {
+        return;
+      }
+
+      if (isJSONReferentielEnding(value)) {
+        const relativePath = normalizeRelativePath(String((value as JsonObject).url ?? ""));
+        if (!relativePath) {
+          return;
+        }
+
+        const titleValue = (value as JsonObject).titre;
+        const idValue = (value as JsonObject).id;
+        const tagsValue = (value as JsonObject).tags;
+        const uuidValue = (value as JsonObject).uuid;
+        const categoryTitles = [...pathTitles];
+
+        referentielExerciseMetadataByPath.set(relativePath, {
+          id: typeof idValue === "string" && idValue.trim() ? idValue.trim() : key,
+          title:
+            typeof titleValue === "string" && titleValue.trim()
+              ? titleValue.trim()
+              : typeof idValue === "string" && idValue.trim()
+                ? idValue.trim()
+                : key,
+          relativePath,
+          categoryCodes: [...pathCodes],
+          categoryTitles,
+          tags: Array.isArray(tagsValue)
+            ? (tagsValue.filter(tag => typeof tag === "string") as string[])
+            : [],
+          uuid: typeof uuidValue === "string" && uuidValue.trim() ? uuidValue.trim() : undefined
+        });
+        return;
+      }
+
+      const childNode = value as JsonObject;
+      const nextCodes = [...pathCodes, key];
+      const title = resolveCategoryTitleFromCode(key);
+      const nextTitles = [...pathTitles, title];
+      registerReferentielCategory(pathCodes, pathTitles, key, title);
+      stack.push({ node: childNode, pathCodes: nextCodes, pathTitles: nextTitles });
+    });
+  }
+}
+
+buildReferentielMetadata();
+
+function formatSegmentNameFallback(segment: string): string {
   const cleaned = segment.replace(/\.ts$/i, "").replace(/[_-]+/g, " ").trim();
   if (!cleaned) return "";
 
@@ -204,14 +337,14 @@ function formatSegmentName(segment: string): string {
 
 function formatNiveau(segment: string): string {
   if (!segment) return "Autre";
-  const formatted = formatSegmentName(segment);
+  const formatted = resolveCategoryTitleFromCode(segment);
   return formatted || segment;
 }
 
 function formatExerciseLabel(segments: string[]): string {
   if (segments.length === 0) return "";
   const parts = segments
-    .map(segment => formatSegmentName(segment))
+    .map(segment => resolveCategoryTitleFromCode(segment))
     .filter(Boolean);
   return parts.join(" · ");
 }
@@ -233,10 +366,35 @@ function buildDefinition(path: string): ExerciseDefinition | null {
     return null;
   }
 
-  const categories = segments.slice(0, -1);
-  const niveau = formatNiveau(categories[0] ?? "");
-  const label = formatExerciseLabel([...categories, fileName]) || id;
-  const title = label;
+  const fallbackCategories = segments.slice(0, -1);
+  const metadata = referentielExerciseMetadataByPath.get(normalizedPath);
+
+  const categories = (metadata?.categoryCodes.length ? metadata.categoryCodes : fallbackCategories).map(code =>
+    normalizeRelativePath(code)
+  );
+  const categoryTitles = metadata?.categoryTitles.length
+    ? metadata.categoryTitles.map((title, index) => {
+        if (title && title.trim()) {
+          return title.trim();
+        }
+        const code = metadata?.categoryCodes[index];
+        return code ? resolveCategoryTitleFromCode(code) : "";
+      })
+    : fallbackCategories.map(segment => resolveCategoryTitleFromCode(segment));
+
+  const niveau = metadata?.categoryTitles[0]?.trim()
+    ? metadata.categoryTitles[0].trim()
+    : formatNiveau(categories[0] ?? "");
+
+  const title = metadata?.title ?? formatExerciseLabel([...fallbackCategories, fileName]) || id;
+  const label = metadata
+    ? (() => {
+        const parts = [...categoryTitles.slice(1), metadata.title];
+        return parts.map(part => part.trim()).filter(Boolean).join(" · ") || metadata.title;
+      })()
+    : formatExerciseLabel([...fallbackCategories, fileName]) || id;
+
+  const tags = metadata?.tags ?? [];
   const importPath = `@exos/${normalizedPath}`;
 
   const searchableParts = new Set<string>();
@@ -248,8 +406,13 @@ function buildDefinition(path: string): ExerciseDefinition | null {
   searchableParts.add(niveau);
   categories.forEach(segment => {
     searchableParts.add(segment);
-    searchableParts.add(formatSegmentName(segment));
+    searchableParts.add(resolveCategoryTitleFromCode(segment));
   });
+  categoryTitles.forEach(part => searchableParts.add(part));
+  tags.forEach(tag => searchableParts.add(tag));
+  if (metadata?.uuid) {
+    searchableParts.add(metadata.uuid);
+  }
 
   const searchableTitle = Array.from(searchableParts)
     .map(part => normalizeWhitespace(part).toLowerCase())
@@ -262,6 +425,8 @@ function buildDefinition(path: string): ExerciseDefinition | null {
     importPath,
     relativePath: normalizedPath,
     categories,
+    categoryTitles,
+    tags,
     label,
     title,
     searchableTitle
@@ -275,9 +440,25 @@ function buildDefinitions(paths: string[]): ExerciseDefinition[] {
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath, "fr", { sensitivity: "base" }));
 }
 
-function buildCategorySearchableTitle(segment: string, pathSegments: string[]): string {
-  const formattedSegment = formatSegmentName(segment);
-  const aggregateParts = [segment, formattedSegment, ...pathSegments];
+function getCategoryDisplayTitle(fullPath: string, segment: string): string {
+  const override = referentielCategoryTitleByPath.get(fullPath);
+  if (override && override.trim()) {
+    return override.trim();
+  }
+  return resolveCategoryTitleFromCode(segment) || segment;
+}
+
+function getCategorySearchableTitle(
+  fullPath: string,
+  segment: string,
+  pathSegments: string[]
+): string {
+  const override = referentielCategorySearchByPath.get(fullPath);
+  if (override) {
+    return override;
+  }
+
+  const aggregateParts = [segment, resolveCategoryTitleFromCode(segment), ...pathSegments];
   return aggregateParts
     .map(part => normalizeWhitespace(part).toLowerCase())
     .filter(Boolean)
@@ -298,12 +479,13 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
       let categoryNode = categoryMap.get(fullPath);
 
       if (!categoryNode) {
+        const displayTitle = getCategoryDisplayTitle(fullPath, segment);
         categoryNode = {
           id: segment,
           type: "category",
           segment,
-          title: formatSegmentName(segment) || segment,
-          searchableTitle: buildCategorySearchableTitle(segment, [...pathSegments]),
+          title: displayTitle,
+          searchableTitle: getCategorySearchableTitle(fullPath, segment, [...pathSegments]),
           fullPath,
           children: {}
         };
@@ -451,9 +633,13 @@ export function getSortedChildren(children: Record<string, ExerciseNode>): Exerc
   entries.sort((a, b) => {
     if (a.type === "category" && b.type === "exercise") return -1;
     if (a.type === "exercise" && b.type === "category") return 1;
-    const pathA = normalizeWhitespace(a.fullPath || a.id).toLowerCase();
-    const pathB = normalizeWhitespace(b.fullPath || b.id).toLowerCase();
-    return pathA.localeCompare(pathB, "fr", { sensitivity: "base" });
+    const labelA = normalizeWhitespace(
+      (a.title || (a.type === "category" ? a.fullPath : a.id) || a.id).toLowerCase()
+    );
+    const labelB = normalizeWhitespace(
+      (b.title || (b.type === "category" ? b.fullPath : b.id) || b.id).toLowerCase()
+    );
+    return labelA.localeCompare(labelB, "fr", { sensitivity: "base" });
   });
   return entries;
 }
