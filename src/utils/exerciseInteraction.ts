@@ -69,6 +69,15 @@ const STATUS_CLASSES: Record<InteractionStatus, string> = {
   incomplet: "mathalea-question--incomplete"
 };
 
+const DEBUG_INTERACTION_PREFIX = "[KopMaths][Interaction]";
+const DEBUG_INTERACTION_CSS_PREFIX = `${DEBUG_INTERACTION_PREFIX}[CSS]`;
+
+function debugInteractionCss(label: string, details: unknown): void {
+  if (typeof console !== "undefined" && typeof console.debug === "function") {
+    console.debug(DEBUG_INTERACTION_CSS_PREFIX, label, details);
+  }
+}
+
 const FEEDBACK_MESSAGES: Record<InteractionStatus, string> = {
   correct: "✅ Bonne réponse !",
   incorrect: "❌ Essaie encore !",
@@ -508,6 +517,35 @@ function updateQuestionStatus(
         ? "mathalea-question-feedback--incorrect"
         : "mathalea-question-feedback--incomplete";
   question.feedback.classList.add(modifier);
+
+  const baseDetails = {
+    id: question.id,
+    status,
+    containerClasses: Array.from(question.container.classList),
+    feedbackClasses: Array.from(question.feedback.classList)
+  };
+
+  if (
+    typeof window !== "undefined" &&
+    typeof window.getComputedStyle === "function"
+  ) {
+    const containerStyle = window.getComputedStyle(question.container);
+    const feedbackStyle = window.getComputedStyle(question.feedback);
+    debugInteractionCss("update-question-status", {
+      ...baseDetails,
+      styles: {
+        borderLeftColor: containerStyle.borderLeftColor,
+        backgroundColor: containerStyle.backgroundColor,
+        padding: containerStyle.padding,
+        feedbackColor: feedbackStyle.color
+      }
+    });
+  } else {
+    debugInteractionCss("update-question-status", {
+      ...baseDetails,
+      environment: "no-window"
+    });
+  }
 }
 
 function restoreInitialStatus(question: QuestionItem) {
@@ -522,6 +560,32 @@ function restoreInitialStatus(question: QuestionItem) {
     "mathalea-question-feedback--incomplete"
   );
   question.feedback.classList.add("mathalea-question-feedback--incomplete");
+
+  if (
+    typeof window !== "undefined" &&
+    typeof window.getComputedStyle === "function"
+  ) {
+    const containerStyle = window.getComputedStyle(question.container);
+    const feedbackStyle = window.getComputedStyle(question.feedback);
+    debugInteractionCss("restore-initial-status", {
+      id: question.id,
+      containerClasses: Array.from(question.container.classList),
+      feedbackClasses: Array.from(question.feedback.classList),
+      styles: {
+        borderLeftColor: containerStyle.borderLeftColor,
+        backgroundColor: containerStyle.backgroundColor,
+        padding: containerStyle.padding,
+        feedbackColor: feedbackStyle.color
+      }
+    });
+  } else {
+    debugInteractionCss("restore-initial-status", {
+      id: question.id,
+      containerClasses: Array.from(question.container.classList),
+      feedbackClasses: Array.from(question.feedback.classList),
+      environment: "no-window"
+    });
+  }
 }
 
 function createQuestion(
