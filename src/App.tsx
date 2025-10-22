@@ -39,8 +39,11 @@ type ExerciceModule = {
 type ExerciseDefinition = {
   id: string;
   niveau: string;
-  path: string;
-  label?: string;
+  moduleId: string;
+  importPath: string;
+  relativePath: string;
+  categories: string[];
+  label: string;
 };
 
 type ExerciseTreeNode =
@@ -56,166 +59,190 @@ type ExerciseTreeNode =
       definition: ExerciseDefinition;
     };
 
-const EXERCISES: ExerciseDefinition[] = [
-  {
-    id: "CM1M1",
-    niveau: "CM1",
-    path: "@mathalea/exercices/cm1/CM1M1",
-    label: "CM1 · Grandeurs et mesures"
-  },
-  {
-    id: "CM1M3",
-    niveau: "CM1",
-    path: "@mathalea/exercices/cm1/CM1M3",
-    label: "CM1 · Grandeurs et mesures"
-  },
-  {
-    id: "CM1N3",
-    niveau: "CM1",
-    path: "@mathalea/exercices/cm1/CM1N3",
-    label: "CM1 · Nombres et calculs"
-  },
-  {
-    id: "CM2D1",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2D1",
-    label: "CM2 · Organisation et gestion de données"
-  },
-  {
-    id: "CM2D3n",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2D3n",
-    label: "CM2 · Organisation et gestion de données"
-  },
-  {
-    id: "CM2G2",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2G2",
-    label: "CM2 · Espace et géométrie"
-  },
-  {
-    id: "CM2G3",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2G3",
-    label: "CM2 · Espace et géométrie"
-  },
-  {
-    id: "CM2G5",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2G5",
-    label: "CM2 · Espace et géométrie"
-  },
-  {
-    id: "CM2I1",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2I1",
-    label: "CM2 · Algorithmique et logique"
-  },
-  {
-    id: "CM2N1",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2N1",
-    label: "CM2 · Nombres et calculs"
-  },
-  {
-    id: "CM2N2",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2N2",
-    label: "CM2 · Nombres et calculs"
-  },
-  {
-    id: "CM2N3",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2N3",
-    label: "CM2 · Nombres et calculs"
-  },
-  {
-    id: "CM2N4",
-    niveau: "CM2",
-    path: "@mathalea/exercices/cm2/CM2N4",
-    label: "CM2 · Nombres et calculs"
-  },
-  {
-    id: "6N5-3",
-    niveau: "6e",
-    path: "@mathalea/exercices/6e/6N5-3",
-    label: "6e · Nombres et calculs"
+const exerciseModuleLoaders = import.meta.glob<ExerciceModule>("@exos/**/*.ts");
+
+const CATEGORY_NAME_OVERRIDES: Record<string, string> = {
+  cm1: "CM1",
+  cm2: "CM2",
+  ce1: "CE1",
+  ce2: "CE2",
+  cp: "CP",
+  "6e": "6e",
+  "5e": "5e",
+  "4e": "4e",
+  "3e": "3e",
+  "2nde": "2nde",
+  "2de": "2de",
+  seconde: "Seconde",
+  "1re": "1re",
+  premiere: "Première",
+  term: "Terminale",
+  terminale: "Terminale",
+  lycee: "Lycée",
+  college: "Collège",
+  cycle3: "Cycle 3",
+  cycle4: "Cycle 4"
+};
+
+function extractRelativeExercisePath(moduleId: string): string | null {
+  const normalized = moduleId.replace(/\\/g, "/");
+  const marker = "/exercices/";
+  const markerIndex = normalized.lastIndexOf(marker);
+  if (markerIndex !== -1) {
+    return normalized.slice(markerIndex + marker.length);
   }
-];
+  const aliasPrefix = "@exos/";
+  if (normalized.startsWith(aliasPrefix)) {
+    return normalized.slice(aliasPrefix.length);
+  }
+  return null;
+}
+
+function formatSegmentName(segment: string): string {
+  const cleaned = segment.replace(/\.ts$/i, "").replace(/[_-]+/g, " ").trim();
+  if (!cleaned) return "";
+  const lower = cleaned.toLowerCase();
+  const override = CATEGORY_NAME_OVERRIDES[lower];
+  if (override) return override;
+
+  const words = cleaned.split(/\s+/).map(word => {
+    const lowerWord = word.toLowerCase();
+    if (CATEGORY_NAME_OVERRIDES[lowerWord]) {
+      return CATEGORY_NAME_OVERRIDES[lowerWord];
+    }
+    if (/^[a-z]{1,3}\d?$/i.test(lowerWord)) {
+      return lowerWord.toUpperCase();
+    }
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  });
+
+  return words.join(" ");
+}
+
+function formatNiveau(segment: string): string {
+  if (!segment) return "Autre";
+  const formatted = formatSegmentName(segment);
+  return formatted || segment;
+}
+
+function formatExerciseLabel(segments: string[]): string {
+  if (segments.length === 0) return "";
+  const parts = segments
+    .map(segment => formatSegmentName(segment))
+    .filter(Boolean);
+  return parts.join(" · ");
+}
+
+function createExerciseDefinition(moduleId: string): ExerciseDefinition | null {
+  const relativePath = extractRelativeExercisePath(moduleId);
+  if (!relativePath || !relativePath.endsWith(".ts")) {
+    return null;
+  }
+
+  const segments = relativePath
+    .replace(/^\.\//, "")
+    .split("/")
+    .filter(Boolean);
+  if (segments.length === 0) {
+    return null;
+  }
+
+  const fileName = segments[segments.length - 1];
+  const id = fileName.replace(/\.ts$/i, "");
+  if (!id) {
+    return null;
+  }
+
+  const categories = segments.slice(0, -1);
+  const niveau = formatNiveau(categories[0] ?? "");
+  const cleanedRelativePath = segments.join("/");
+  const label = formatExerciseLabel([...categories, fileName]) || id;
+  const importPath = `@exos/${cleanedRelativePath.replace(/\.ts$/i, "")}`;
+
+  return {
+    id,
+    niveau,
+    moduleId,
+    importPath,
+    relativePath: cleanedRelativePath,
+    categories,
+    label
+  };
+}
+
+const EXERCISES: ExerciseDefinition[] = Object.keys(exerciseModuleLoaders)
+  .map(createExerciseDefinition)
+  .filter(
+    (definition): definition is ExerciseDefinition => definition !== null
+  )
+  .sort((a, b) => {
+    const labelComparison = a.label.localeCompare(b.label, "fr", {
+      sensitivity: "base"
+    });
+    if (labelComparison !== 0) {
+      return labelComparison;
+    }
+    return a.id.localeCompare(b.id, "fr", { sensitivity: "base" });
+  });
 
 const EXERCISES_BY_ID = new Map(EXERCISES.map(exercise => [exercise.id, exercise]));
 
-function buildExerciseTree(): ExerciseTreeNode[] {
-  const leaves = (ids: string[]): ExerciseTreeNode[] =>
-    ids
-      .map(id => EXERCISES_BY_ID.get(id))
-      .filter((definition): definition is ExerciseDefinition => Boolean(definition))
-      .map(definition => ({
-        type: "exercise" as const,
-        id: definition.id,
-        definition
-      }));
-
-  const branch = (
-    id: string,
-    title: string,
-    children: ExerciseTreeNode[]
-  ): ExerciseTreeNode => ({
-    type: "category",
-    id,
-    title,
-    children
+function sortTree(nodes: ExerciseTreeNode[]) {
+  nodes.sort((a, b) => {
+    if (a.type === "category" && b.type === "exercise") return -1;
+    if (a.type === "exercise" && b.type === "category") return 1;
+    const labelA = a.type === "category" ? a.title : a.definition.label;
+    const labelB = b.type === "category" ? b.title : b.definition.label;
+    return labelA.localeCompare(labelB, "fr", { sensitivity: "base" });
   });
 
-  const cm1Branches: ExerciseTreeNode[] = [];
-  const cm1Grandeurs = leaves(["CM1M1", "CM1M3"]);
-  if (cm1Grandeurs.length > 0) {
-    cm1Branches.push(branch("cm1-grandeurs", "Grandeurs et mesures", cm1Grandeurs));
-  }
-  const cm1Nombres = leaves(["CM1N3"]);
-  if (cm1Nombres.length > 0) {
-    cm1Branches.push(branch("cm1-nombres", "Nombres et calculs", cm1Nombres));
-  }
+  nodes.forEach(node => {
+    if (node.type === "category") {
+      sortTree(node.children);
+    }
+  });
+}
 
-  const cm2Branches: ExerciseTreeNode[] = [];
-  const cm2Donnees = leaves(["CM2D1", "CM2D3n"]);
-  if (cm2Donnees.length > 0) {
-    cm2Branches.push(
-      branch("cm2-donnees", "Organisation et gestion de données", cm2Donnees)
-    );
-  }
-  const cm2Geometrie = leaves(["CM2G2", "CM2G3", "CM2G5"]);
-  if (cm2Geometrie.length > 0) {
-    cm2Branches.push(branch("cm2-geometrie", "Espace et géométrie", cm2Geometrie));
-  }
-  const cm2Logique = leaves(["CM2I1"]);
-  if (cm2Logique.length > 0) {
-    cm2Branches.push(branch("cm2-logique", "Algorithmique et logique", cm2Logique));
-  }
-  const cm2Nombres = leaves(["CM2N1", "CM2N2", "CM2N3", "CM2N4"]);
-  if (cm2Nombres.length > 0) {
-    cm2Branches.push(branch("cm2-nombres", "Nombres et calculs", cm2Nombres));
-  }
-
+function buildExerciseTree(definitions: ExerciseDefinition[]): ExerciseTreeNode[] {
   const tree: ExerciseTreeNode[] = [];
-  const cm1Node = cm1Branches.length > 0 ? branch("cm1", "CM1", cm1Branches) : null;
-  const cm2Node = cm2Branches.length > 0 ? branch("cm2", "CM2", cm2Branches) : null;
-  const cm1cm2Children = [cm1Node, cm2Node].filter(
-    (child): child is ExerciseTreeNode => child !== null
+  const categoryMap = new Map<string, Extract<ExerciseTreeNode, { type: "category" }>>();
+
+  const sortedDefinitions = [...definitions].sort((a, b) =>
+    a.relativePath.localeCompare(b.relativePath, "fr", { sensitivity: "base" })
   );
-  if (cm1cm2Children.length > 0) {
-    tree.push(branch("cm1-cm2", "CM1 / CM2", cm1cm2Children));
-  }
 
-  const sixiemeLeaves = leaves(["6N5-3"]);
-  if (sixiemeLeaves.length > 0) {
-    tree.push(branch("6e", "Sixième", sixiemeLeaves));
-  }
+  sortedDefinitions.forEach(definition => {
+    const categorySegments = definition.categories;
+    let children = tree;
 
+    categorySegments.forEach((segment, index) => {
+      const categoryId = categorySegments.slice(0, index + 1).join("/");
+      let categoryNode = categoryMap.get(categoryId);
+      if (!categoryNode) {
+        categoryNode = {
+          type: "category",
+          id: categoryId,
+          title: formatSegmentName(segment),
+          children: []
+        };
+        categoryMap.set(categoryId, categoryNode);
+        children.push(categoryNode);
+      }
+      children = categoryNode.children;
+    });
+
+    children.push({
+      type: "exercise",
+      id: definition.id,
+      definition
+    });
+  });
+
+  sortTree(tree);
   return tree;
 }
 
-const EXERCISE_TREE = buildExerciseTree();
+const EXERCISE_TREE = buildExerciseTree(EXERCISES);
 
 function collectCategoryIds(nodes: ExerciseTreeNode[], acc: Set<string> = new Set()) {
   nodes.forEach(node => {
@@ -425,12 +452,16 @@ function App() {
     if (!term) return EXERCISES;
     return EXERCISES.filter(exercise => {
       const title = exerciseTitles[exercise.id]?.toLowerCase() ?? "";
-      const label = exercise.label?.toLowerCase() ?? "";
+      const label = exercise.label.toLowerCase();
+      const relativePath = exercise.relativePath.toLowerCase();
+      const importPath = exercise.importPath.toLowerCase();
       return (
         exercise.id.toLowerCase().includes(term) ||
         exercise.niveau.toLowerCase().includes(term) ||
         title.includes(term) ||
-        label.includes(term)
+        label.includes(term) ||
+        relativePath.includes(term) ||
+        importPath.includes(term)
       );
     });
   }, [searchTerm, exerciseTitles]);
@@ -482,11 +513,18 @@ function App() {
       const requestId = ++requestIdRef.current;
 
       try {
-        let module = moduleCacheRef.current.get(definition.id);
+        const cacheKey = definition.moduleId;
+        let module = moduleCacheRef.current.get(cacheKey);
         if (!module) {
-          module = await import(definition.path);
+          const loader = exerciseModuleLoaders[cacheKey];
+          if (!loader) {
+            throw new Error(
+              `Impossible de charger l'exercice ${definition.importPath}`
+            );
+          }
+          module = await loader();
           if (requestId !== requestIdRef.current) return;
-          moduleCacheRef.current.set(definition.id, module);
+          moduleCacheRef.current.set(cacheKey, module);
         }
 
         const ExerciseClass = module.default;
