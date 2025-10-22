@@ -4,6 +4,26 @@
  * structure.
  */
 
+const DEBUG_PREFIX = "[KopMaths][ExerciseTree]";
+
+function treeDebug(...args: unknown[]): void {
+  if (typeof console !== "undefined" && typeof console.debug === "function") {
+    console.debug(DEBUG_PREFIX, ...args);
+  }
+}
+
+function treeInfo(...args: unknown[]): void {
+  if (typeof console !== "undefined" && typeof console.info === "function") {
+    console.info(DEBUG_PREFIX, ...args);
+  }
+}
+
+function treeWarn(...args: unknown[]): void {
+  if (typeof console !== "undefined" && typeof console.warn === "function") {
+    console.warn(DEBUG_PREFIX, ...args);
+  }
+}
+
 const CATEGORY_NAME_OVERRIDES: Record<string, string> = {
   cm1: "CM1",
   cm2: "CM2",
@@ -84,13 +104,32 @@ const CACHE_KEY = "mathalea.exerciseTree.v1";
 const CACHE_VERSION = 1;
 
 const moduleGlob = import.meta.glob("@exos/**/*.ts");
+const moduleIds = Object.keys(moduleGlob);
+
+treeInfo("Initialisation des modules Vite", {
+  total: moduleIds.length,
+  apercu: moduleIds.slice(0, 5)
+});
+
+if (moduleIds.length === 0) {
+  treeWarn("Aucun module d'exercice détecté via import.meta.glob");
+}
 
 const loaderMap = new Map<string, () => Promise<unknown>>();
 const modulePaths: string[] = [];
 
 Object.entries(moduleGlob).forEach(([moduleId, loader]) => {
   const relativePath = extractRelativeExercisePath(moduleId);
-  if (!relativePath || !relativePath.endsWith(".ts")) {
+  if (!relativePath) {
+    treeWarn("Impossible de déterminer le chemin relatif pour un module", { moduleId });
+    return;
+  }
+
+  if (!relativePath.endsWith(".ts")) {
+    treeDebug("Module ignoré car l'extension n'est pas .ts", {
+      moduleId,
+      relativePath
+    });
     return;
   }
 
@@ -98,10 +137,22 @@ Object.entries(moduleGlob).forEach(([moduleId, loader]) => {
   if (!loaderMap.has(normalized)) {
     loaderMap.set(normalized, loader);
     modulePaths.push(normalized);
+  } else {
+    treeDebug("Module déjà présent dans la carte des loaders", { normalized });
   }
 });
 
 modulePaths.sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }));
+
+if (modulePaths.length === 0) {
+  treeWarn("Aucun chemin d'exercice disponible après normalisation");
+} else {
+  treeInfo("Chemins d'exercices normalisés", {
+    total: modulePaths.length,
+    premier: modulePaths[0],
+    dernier: modulePaths[modulePaths.length - 1]
+  });
+}
 
 let runtimeCache: ExerciseTreeData | null = null;
 
@@ -318,15 +369,28 @@ function writeCache(cache: ExerciseTreeCache) {
   }
 }
 
+
 export function loadExerciseTree(): ExerciseTreeData {
   if (runtimeCache) {
+    treeDebug("Utilisation du cache en mémoire pour le catalogue d'exercices", {
+      definitions: runtimeCache.definitions.length,
+      fingerprint: runtimeCache.fingerprint
+    });
     return runtimeCache;
   }
 
   const fingerprint = computeFingerprint(modulePaths);
+  treeInfo("Construction du catalogue d'exercices", {
+    fingerprint,
+    moduleCount: modulePaths.length
+  });
   const cached = readCache(fingerprint);
 
   if (cached) {
+    treeInfo("Catalogue chargé depuis le cache localStorage", {
+      definitions: cached.definitions.length,
+      generatedAt: cached.generatedAt
+    });
     runtimeCache = {
       tree: cached.tree,
       definitions: cached.definitions,
@@ -340,6 +404,11 @@ export function loadExerciseTree(): ExerciseTreeData {
 
   const definitions = buildDefinitions(modulePaths);
   const tree = buildTree(definitions);
+
+  treeInfo("Catalogue reconstruit depuis la source", {
+    definitions: definitions.length,
+    categories: Object.keys(tree).length
+  });
 
   runtimeCache = {
     tree,
@@ -356,9 +425,15 @@ export function loadExerciseTree(): ExerciseTreeData {
     definitions
   };
 
+  treeDebug("Écriture du cache du catalogue d'exercices", {
+    version: CACHE_VERSION,
+    definitions: definitions.length
+  });
   writeCache(cachePayload);
 
   return runtimeCache;
+}
+
 }
 
 export function collectCategoryPaths(nodes: Record<string, ExerciseNode>, acc: Set<string> = new Set()): Set<string> {
