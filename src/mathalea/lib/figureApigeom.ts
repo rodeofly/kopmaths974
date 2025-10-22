@@ -1,8 +1,8 @@
 import type Exercice from '../exercices/Exercice'
 import type Figure from 'apigeom'
 import { context } from '../modules/context'
-import { globalOptions } from '../../src/lib/stores/generalStore'
-import { canOptions } from '../../src/lib/stores/canStore'
+import { globalOptions } from '../lib/stores/generalStore'
+import { canOptions } from '../lib/stores/canStore'
 import { get } from 'svelte/store'
 
 /**
