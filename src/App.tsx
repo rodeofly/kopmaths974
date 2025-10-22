@@ -1035,6 +1035,68 @@ function App() {
   ]);
 
   useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const container = questionContainerRef.current;
+    if (!container) {
+      debugCss("question-container", "indisponible pour l'inspection CSS");
+      return;
+    }
+
+    const orderedLists = Array.from(
+      container.querySelectorAll<HTMLOListElement>("ol")
+    );
+    if (orderedLists.length === 0) {
+      debugCss("ordered-lists", "aucune liste ordonnée détectée dans l'énoncé");
+    }
+
+    orderedLists.slice(0, 5).forEach((list, index) => {
+      const computed = window.getComputedStyle(list);
+      debugCss("ordered-list-style", {
+        index,
+        classList: Array.from(list.classList),
+        listStyleType: computed.listStyleType,
+        listStylePosition: computed.listStylePosition,
+        paddingLeft: computed.paddingLeft,
+        marginLeft: computed.marginLeft
+      });
+    });
+
+    if (orderedLists.length > 5) {
+      debugCss(
+        "ordered-list-style",
+        `+${orderedLists.length - 5} listes supplémentaires non journalisées`
+      );
+    }
+
+    const interactiveBlocks = Array.from(
+      container.querySelectorAll<HTMLElement>(
+        ".mathalea-question-interactive"
+      )
+    );
+    interactiveBlocks.slice(0, 5).forEach((block, index) => {
+      const computed = window.getComputedStyle(block);
+      debugCss("interactive-block-style", {
+        index,
+        classList: Array.from(block.classList),
+        borderLeftColor: computed.borderLeftColor,
+        backgroundColor: computed.backgroundColor,
+        padding: computed.padding,
+        margin: computed.margin
+      });
+    });
+
+    if (interactiveBlocks.length > 5) {
+      debugCss(
+        "interactive-block-style",
+        `+${interactiveBlocks.length - 5} blocs supplémentaires non journalisés`
+      );
+    }
+  }, [questionHtml, questionRawHtml, isInteractive]);
+
+  useEffect(() => {
     debugCss("tree-mode", hasSearch ? "search-results" : "navigation-tree");
   }, [hasSearch]);
 
