@@ -73,6 +73,7 @@ interface ExerciseNodeBase {
   title: string;
   searchableTitle: string;
   fullPath: string;
+  order: number;
 }
 
 export interface ExerciseCategoryNode extends ExerciseNodeBase {
@@ -197,6 +198,7 @@ interface ReferentielExerciseMetadata {
   categoryTitles: string[];
   tags: string[];
   uuid?: string;
+  orderTrail: number[];
 }
 
 const LEVEL_TITLE_LOOKUP = codeToLevelList as Record<string, string | undefined>;
@@ -205,6 +207,7 @@ const THEME_TITLE_LOOKUP = levelsThemesList as Record<string, { titre?: string }
 const referentielExerciseMetadataByPath = new Map<string, ReferentielExerciseMetadata>();
 const referentielCategoryTitleByPath = new Map<string, string>();
 const referentielCategorySearchByPath = new Map<string, string>();
+const referentielCategoryOrderTrailByPath = new Map<string, number[]>();
 
 function resolveCategoryTitleFromCode(code: string): string {
   const trimmed = code.trim();
@@ -247,7 +250,8 @@ function registerReferentielCategory(
   pathCodes: string[],
   pathTitles: string[],
   code: string,
-  title: string
+  title: string,
+  orderTrail: number[]
 ): void {
   const fullCodes = [...pathCodes, code];
   const fullPath = fullCodes.join("/");
@@ -256,19 +260,25 @@ function registerReferentielCategory(
     fullPath,
     buildCategorySearchableTokens(code, title, fullCodes, [...pathTitles, title])
   );
+  referentielCategoryOrderTrailByPath.set(fullPath, [...orderTrail]);
 }
 
 function buildReferentielMetadata(): void {
   const rootNode = referentiel2022FR as JsonObject;
-  type StackEntry = { node: JsonObject; pathCodes: string[]; pathTitles: string[] };
-  const stack: StackEntry[] = [{ node: rootNode, pathCodes: [], pathTitles: [] }];
 
-  while (stack.length > 0) {
-    const { node, pathCodes, pathTitles } = stack.pop() as StackEntry;
-    Object.entries(node).forEach(([key, value]) => {
+  function traverse(
+    node: JsonObject,
+    pathCodes: string[],
+    pathTitles: string[],
+    orderTrail: number[]
+  ): void {
+    const entries = Object.entries(node);
+    entries.forEach(([key, value], index) => {
       if (!value || typeof value !== "object") {
         return;
       }
+
+      const nextOrderTrail = [...orderTrail, index];
 
       if (isJSONReferentielEnding(value)) {
         const relativePath = normalizeRelativePath(String((value as JsonObject).url ?? ""));
@@ -296,22 +306,33 @@ function buildReferentielMetadata(): void {
           tags: Array.isArray(tagsValue)
             ? (tagsValue.filter(tag => typeof tag === "string") as string[])
             : [],
-          uuid: typeof uuidValue === "string" && uuidValue.trim() ? uuidValue.trim() : undefined
+          uuid: typeof uuidValue === "string" && uuidValue.trim() ? uuidValue.trim() : undefined,
+          orderTrail: nextOrderTrail
         });
         return;
       }
 
       const childNode = value as JsonObject;
-      const nextCodes = [...pathCodes, key];
       const title = resolveCategoryTitleFromCode(key);
-      const nextTitles = [...pathTitles, title];
-      registerReferentielCategory(pathCodes, pathTitles, key, title);
-      stack.push({ node: childNode, pathCodes: nextCodes, pathTitles: nextTitles });
+      registerReferentielCategory(pathCodes, pathTitles, key, title, nextOrderTrail);
+      traverse(
+        childNode,
+        [...pathCodes, key],
+        [...pathTitles, title],
+        nextOrderTrail
+      );
     });
   }
+
+  traverse(rootNode, [], [], []);
 }
 
 buildReferentielMetadata();
+
+treeInfo("Métadonnées du référentiel 2022 chargées", {
+  exercices: referentielExerciseMetadataByPath.size,
+  categories: referentielCategoryTitleByPath.size
+});
 
 function formatSegmentNameFallback(segment: string): string {
   const cleaned = segment.replace(/\.ts$/i, "").replace(/[_-]+/g, " ").trim();
@@ -349,7 +370,10 @@ function formatExerciseLabel(segments: string[]): string {
   return parts.join(" · ");
 }
 
-function buildDefinition(path: string): ExerciseDefinition | null {
+function buildDefinition(
+  path: string,
+  metadataOverride?: ReferentielExerciseMetadata
+): ExerciseDefinition | null {
   const normalizedPath = normalizeRelativePath(path);
   if (!normalizedPath.endsWith(".ts")) {
     return null;
@@ -367,7 +391,7 @@ function buildDefinition(path: string): ExerciseDefinition | null {
   }
 
   const fallbackCategories = segments.slice(0, -1);
-  const metadata = referentielExerciseMetadataByPath.get(normalizedPath);
+  const metadata = metadataOverride ?? referentielExerciseMetadataByPath.get(normalizedPath);
 
   const categories = (metadata?.categoryCodes.length ? metadata.categoryCodes : fallbackCategories).map(code =>
     normalizeRelativePath(code)
@@ -433,11 +457,58 @@ function buildDefinition(path: string): ExerciseDefinition | null {
   };
 }
 
-function buildDefinitions(paths: string[]): ExerciseDefinition[] {
-  return paths
-    .map(buildDefinition)
-    .filter((definition): definition is ExerciseDefinition => definition !== null)
-    .sort((a, b) => a.relativePath.localeCompare(b.relativePath, "fr", { sensitivity: "base" }));
+function toOrderKey(trail?: number[]): string {
+  if (!trail || trail.length === 0) {
+    return "";
+  }
+  return trail.map(index => index.toString().padStart(4, "0")).join("-");
+}
+
+function buildDefinitionsFromMetadata(): ExerciseDefinition[] {
+  const definitions: ExerciseDefinition[] = [];
+  const availableModules = new Set(modulePaths);
+
+  referentielExerciseMetadataByPath.forEach(metadata => {
+    const definition = buildDefinition(metadata.relativePath, metadata);
+    if (!definition) {
+      treeWarn("Définition invalide lors de la construction du catalogue", {
+        path: metadata.relativePath,
+        id: metadata.id
+      });
+      return;
+    }
+
+    if (!availableModules.has(definition.relativePath)) {
+      treeWarn("Exercice référencé introuvable dans les modules disponibles", {
+        relativePath: definition.relativePath,
+        id: metadata.id,
+        titre: metadata.title
+      });
+    }
+
+    definitions.push(definition);
+  });
+
+  definitions.sort((a, b) => {
+    const metadataA = referentielExerciseMetadataByPath.get(a.relativePath);
+    const metadataB = referentielExerciseMetadataByPath.get(b.relativePath);
+    const keyA = toOrderKey(metadataA?.orderTrail);
+    const keyB = toOrderKey(metadataB?.orderTrail);
+
+    if (keyA && keyB && keyA !== keyB) {
+      return keyA.localeCompare(keyB);
+    }
+    if (keyA && !keyB) {
+      return -1;
+    }
+    if (!keyA && keyB) {
+      return 1;
+    }
+
+    return a.relativePath.localeCompare(b.relativePath, "fr", { sensitivity: "base" });
+  });
+
+  return definitions;
 }
 
 function getCategoryDisplayTitle(fullPath: string, segment: string): string {
@@ -480,6 +551,7 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
 
       if (!categoryNode) {
         const displayTitle = getCategoryDisplayTitle(fullPath, segment);
+        const orderTrail = referentielCategoryOrderTrailByPath.get(fullPath);
         categoryNode = {
           id: segment,
           type: "category",
@@ -487,7 +559,11 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
           title: displayTitle,
           searchableTitle: getCategorySearchableTitle(fullPath, segment, [...pathSegments]),
           fullPath,
-          children: {}
+          children: {},
+          order:
+            orderTrail && orderTrail.length > 0
+              ? orderTrail[orderTrail.length - 1]
+              : Number.MAX_SAFE_INTEGER
         };
         categoryMap.set(fullPath, categoryNode);
         children[segment] = categoryNode;
@@ -497,6 +573,7 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
     });
 
     const exerciseFullPath = [...definition.categories, definition.id].join("/");
+    const metadata = referentielExerciseMetadataByPath.get(definition.relativePath);
     const exerciseNode: ExerciseLeafNode = {
       id: definition.id,
       type: "exercise",
@@ -507,7 +584,11 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
       definitionId: definition.id,
       niveau: definition.niveau,
       categories: [...definition.categories],
-      label: definition.label
+      label: definition.label,
+      order:
+        metadata && metadata.orderTrail.length > 0
+          ? metadata.orderTrail[metadata.orderTrail.length - 1]
+          : Number.MAX_SAFE_INTEGER
     };
 
     children[definition.id] = exerciseNode;
@@ -584,7 +665,7 @@ export function loadExerciseTree(): ExerciseTreeData {
     return runtimeCache;
   }
 
-  const definitions = buildDefinitions(modulePaths);
+  const definitions = buildDefinitionsFromMetadata();
   const tree = buildTree(definitions);
 
   treeInfo("Catalogue reconstruit depuis la source", {
@@ -631,6 +712,9 @@ export function collectCategoryPaths(nodes: Record<string, ExerciseNode>, acc: S
 export function getSortedChildren(children: Record<string, ExerciseNode>): ExerciseNode[] {
   const entries = Object.values(children);
   entries.sort((a, b) => {
+    if (a.order !== b.order) {
+      return a.order - b.order;
+    }
     if (a.type === "category" && b.type === "exercise") return -1;
     if (a.type === "exercise" && b.type === "category") return 1;
     const labelA = normalizeWhitespace(
