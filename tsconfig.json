@@ -18,7 +18,8 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "@mathalea/*": ["../mathalea/src/*"]
+      "@mathalea/*": ["../mathalea/src/*"],
+      "@exos/*": ["../mathalea/src/exercices/*"]
     }
   },
   "include": ["src"],

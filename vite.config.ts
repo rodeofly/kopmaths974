@@ -9,6 +9,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@mathalea": path.resolve(__dirname, "../mathalea/src"),
+      "@exos": path.resolve(__dirname, "../mathalea/src/exercices"),
       "apigeom/src": path.resolve(__dirname, "node_modules/apigeom/src"),
       "apigeom": path.resolve(__dirname, "node_modules/apigeom/src/index.ts"),
     },
