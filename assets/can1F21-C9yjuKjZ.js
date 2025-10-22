@@ -1,0 +1,12 @@
+import{a as c,r as $,F as p,a0 as l,Y as n,f as a}from"./embellissements-BYV7mIDn.js";import d from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const R="Déterminer l’abscisse ou l’ordonnée du sommet d’une parabole",q=!0,D="mathLive",P=!0,Q="AMCNum",C="21/09/2022",N="2d459",T={"fr-fr":["can1F21"],"fr-ch":["1mF3-21"]};class w extends d{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1}nouvelleVersion(){const m=[["f"],["g"],["h"],["u"],["v"]];let e,t,r,s,o,i;c([!0,!1])?(e=$(-3,3,0),t=$(-9,9),r=$(-9,9),i=c(m),s=new p(-t,2*e),this.question=`Soit $${i}$ la fonction définie sur $\\mathbb{R}$ par :<br>
+
+      $${i}(x)=${l(0,e,t,r)}$. <br>
+      Quelle est l'abscisse du sommet de la parabole représentant $${i}$ ?`,this.correction=`$${i}$ est une fonction polynôme du second degré écrite sous forme développée $ax^2+bx+c$.<br>
+      Le sommet de la parabole a pour abscisse $-\\dfrac{b}{2a}$.<br>
+          L'abscisse du sommet est donc : $-\\dfrac{${t}}{2\\times${n(e)} }= ${s.texFraction}${s.texSimplificationAvecEtapes()}$.`,this.reponse=s):(e=$(-3,3,0),t=$(-2,2)*2*e,r=$(-9,9),o=-t/(2*e),i=c(m),s=e*o**2+t*o+r,this.question=`Soit $${i}$ la fonction définie sur $\\mathbb{R}$ par :<br>
+
+          $${i}(x)=${l(0,e,t,r)}$. <br>
+
+          Quelle est l'ordonnée du sommet de la parabole représentant $${i}$ ?`,this.correction=`$${i}$ est une fonction polynôme du second degré écrite sous forme développée $ax^2+bx+c$.<br>
+          Le sommet de la parabole a pour abscisse $-\\dfrac{b}{2a}=-\\dfrac{${t}}{2\\times${n(e)} }= ${o}$.<br>
+          L'ordonnée du sommet est donnée par l'image de l'abscisse, soit `,e===1?t===0?r===0?this.correction+=`$ ${n(o)}^2=${s}$.`:this.correction+=`$${n(o)}^2${a(r)}=${s}$.`:this.correction+=`$${n(o)}^2${a(t)}\\times ${n(o)}${a(r)}=${s}$.`:t===0?r===0?this.correction+=`$${e}\\times ${n(o)}^2=${s}$.`:this.correction+=`$${e}\\times ${n(o)}^2${a(r)}=${s}$.`:this.correction+=`$${e}\\times ${n(o)}^2${a(t)}\\times ${n(o)}${a(r)}=${s}$.`,this.reponse=s),this.canEnonce=this.question,this.canReponseACompleter=""}}export{P as amcReady,Q as amcType,C as dateDePublication,w as default,q as interactifReady,D as interactifType,T as refs,R as titre,N as uuid};

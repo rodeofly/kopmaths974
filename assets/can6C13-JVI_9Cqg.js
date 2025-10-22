@@ -1,0 +1,10 @@
+import{K as d}from"./Exercice-DtXhjCyI.js";import{a as h,r,e,m as u,_ as $}from"./embellissements-BYV7mIDn.js";import p from"decimal.js";import{b as l}from"./colors-bl7PrqSM.js";import b from"./ExerciceSimple-CWWOU0FG.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const R="Calculer la somme de deux décimaux",S=!0,K="mathLive",L=!0,j="AMCNum",F="c3e17",Q={"fr-fr":["can6C13","6N2A-flash1"],"fr-ch":[]};class V extends b{constructor(){super(),this.typeExercice="simple",this.formatChampTexte=d.clavierNumbers,this.nbQuestions=1,this.optionsDeComparaison={nombreDecimalSeulement:!0}}nouvelleVersion(){let t,m,s,a,o;if(h([!0,!1])){t=r(3,9),m=r(1,9,t),s=r(1,9,[t,m]),a=r(1,9,[t,m,s]),o=r(10,13);const i=new p(m).div(10),n=i.plus(t);this.reponse=i.plus(o),this.question=`Calculer $${e(n,1)}+${e(o-t,0)}$.`,this.correction=`$${e(n,1)}+${e(o-t,0)}=${u(e(Number(this.reponse),1))}$<br>`,this.correction+=$(`
+      <br> Mentalement : <br>
+      On fait la somme des parties entières des deux nombres : $${t}+${o-t}=${o}$, puis on ajoute les dixièmes. On obtient :<br>
+      $${o}+${e(i,1)}=${e(Number(this.reponse),1)}$`,l)}else{t=r(1,9),m=r(3,5),s=r(1,9),a=r(7,9);const i=new p(m).div(10),n=new p(a).div(10),c=i.plus(n);this.reponse=c.plus(t+s),this.question=`Calculer $${e(i.plus(t),1)}+${e(n.plus(s),1)}$.`,this.correction=`$${e(i.plus(t),1)}+${e(n.plus(s),1)}=${u(e(Number(this.reponse),1))}$<br>`,this.correction+=$(`
+        <br> Mentalement : <br>
+    On fait la somme des parties entières des deux nombres : $${t}+${s}=${t+s}$.<br>
+    On fait la somme des parties décimales : $${e(i,1)}+${e(n,1)}=${e(c,1)}$.<br>
+    Le résultat est donc donné par :
+    $${t+s}+${e(c,1)}=${e(Number(this.reponse),1)}$.
+        `,l)}this.canEnonce=this.question,this.canReponseACompleter=""}}export{L as amcReady,j as amcType,V as default,S as interactifReady,K as interactifType,Q as refs,R as titre,F as uuid};

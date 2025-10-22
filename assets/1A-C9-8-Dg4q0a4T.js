@@ -1,0 +1,10 @@
+import{r,v as n,f as t,z as o,m as s}from"./embellissements-BYV7mIDn.js";import x from"./ExerciceQcmA-CHnTcRvH.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./ExerciceQcm-DOkcCRBu.js";import"./qcm-BQR8Ns0N.js";import"./lists-i1i4IA1M.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const O="02/09/2025",D="ba2e1",P={"fr-fr":["1A-C9-8"],"fr-ch":[]},R=!0,T="qcm",z="true",C="qcmMono",M="Développer une expression algébrique.";class Q extends x{versionOriginale=()=>{this.enonce="Soit $x$ un réel.<br>",this.enonce+="À quelle expression est égale $3(x+2)^2-8$ ?",this.correction=`On cherche parmi les  propositions, lesquelles peuvent donner, après développement, l'expression de l'énoncé. <br>
+     $\\begin{aligned}
+       (2x+1)(x-3)&=2x^2-6x+x-3\\\\
+        &=2x^2-5x-3.
+     \\end{aligned}$`,this.reponses=["$3x^2+12x+4$","$3x^2+12x-4$ ","$3x^2+6x+4$ ","$3x^2+6x-2$ "]};versionAleatoire=()=>{const $=r(-4,4,0),e=r(-5,5,[-1,0,1]),i=r(-4,4,[0,1]);this.enonce="Soit $x$ un réel.<br>",this.enonce+=`À quelle expression est égale $${n($)}(x${t(-e)})^2${t(i)}$ ?`,this.correction=`On développe l'expression de l'énoncé. <br>
+              $\\begin{aligned}
+    ${n($)}(x${t(-e)})^2${t(i)}&=${o($)}\\left(x^2 ${t(2*-e)}x${t(-e*-e)}\\right)${t(i)}\\\\
+    &=${n($)}x^2 ${t(-2*$*e)}x${t($*-e*-e)} ${t(i)}\\\\
+        &=${s(`${n($)}x^2 ${t(-2*$*e)}x${t($*-e*-e+i)}`)}\\\\
+          \\end{aligned}$`,$*-e*-e+i===0?this.reponses=[`$${n($)}x^2 ${t(-2*$*e)}x$`,`$${n($)}x^2 ${t(2*$*e)}x${t($*-e*-e+i)}$`,`$${n($)}x^2 ${t(-2*$*e)}x${t($*-e*-e-i)}$`,`$${n($)}x^2 ${t(-$*e)}x${t($*-e*-e+i)}$`]:this.reponses=[`$${n($)}x^2 ${t(-2*$*e)}x${t($*-e*-e+i)}$`,`$${n($)}x^2 ${t(2*$*e)}x${t($*-e*-e+i)}$`,`$${n($)}x^2 ${t(-2*$*e)}x${t($*-e*-e-i)}$`,`$${n($)}x^2 ${t(-$*e)}x${t($*-e*-e+i)}$`]};constructor(){super(),this.versionAleatoire()}}export{z as amcReady,C as amcType,O as dateDePublication,Q as default,R as interactifReady,T as interactifType,P as refs,M as titre,D as uuid};

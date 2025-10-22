@@ -1,0 +1,8 @@
+import{b as r}from"./colors-bl7PrqSM.js";import{K as o}from"./Exercice-DtXhjCyI.js";import{r as n,a,m as i,_ as s}from"./embellissements-BYV7mIDn.js";import c from"./ExerciceSimple-CWWOU0FG.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const E="Calculer le quart ou le tiers",A=!0,T="mathLive",M=!0,Q="AMCNum",L="fc2fd",P={"fr-fr":["can6C08","auto6P3A-flash1"],"fr-ch":[]};class R extends c{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=o.clavierNumbers,this.optionsDeComparaison={nombreDecimalSeulement:!0}}nouvelleVersion(){const t=n(5,10);let e;a([!0,!1])?(e=t*8,this.reponse=t*2,this.question=`Quel est le quart de $${e}$ ?`,this.correction=`Le quart de $${e}$ est $${i(t*2)}.$<br>`,this.correction+=s(`<br> Mentalement : <br>
+      Prendre le quart d'une quantité revient à la diviser deux fois par $2$.<br>
+      Ainsi, le quart de $${e}$ est égal à $${e}\\div 2 \\div 2=${t*4}\\div 2=${t*2}$.
+         `,r)):(e=t*6,this.reponse=t*2,this.question=`Quel est le tiers de $${e}$ ?`,this.correction=`Le tiers de $${e}$ est $${i(t*2)}.$<br>`,this.correction+=s(`<br> Mentalement : <br>
+      Prendre le tiers d'une quantité revient à la diviser par $3$.<br>
+      Ainsi, le tiers de $${e}$ est égal à $${e}\\div 3=${t*2}$.
+      
+      `,r)),this.canEnonce=this.question,this.canReponseACompleter=""}}export{M as amcReady,Q as amcType,R as default,A as interactifReady,T as interactifType,P as refs,E as titre,L as uuid};

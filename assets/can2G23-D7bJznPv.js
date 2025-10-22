@@ -1,0 +1,7 @@
+import n from"./ExerciceSimple-CWWOU0FG.js";import{a,r,e as c,v as p,Y as m,m as $}from"./embellissements-BYV7mIDn.js";import{K as d}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const A="Déterminer p dans l'équation réduite d'une droite",P=!0,S="mathLive",B="30/11/2024",F="fddc6",K={"fr-fr":["can2G23"],"fr-ch":["1mF2-21","11FA8-26"]};class N extends n{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=d.clavierDeBase}nouvelleVersion(){const o=a(["A","B","C"]),e=r(-10,10,0),t=r(-10,10,0),i=r(-10,10,0),s=t-i*e;this.reponse=c(s,0),this.question=`$d$ est  la droite d'équation $y=${p(i)}x+p$.<br>
+    Déterminer la valeur de $p$ sachant qu'elle passe par le point $${o}(${e}\\,;\\,${t})$.`,this.correction=`Comme $${o}(\\underbrace{${e}}_{x}\\,;\\,\\underbrace{${t}}_{y})$ est sur la droite, ses coordonnées vérifient l'équation de la droite : <br>
+    $\\begin{aligned}
+    ${t}&=${i}\\times ${m(e)}+p\\\\
+    ${t}&= ${i*e}+p\\\\
+    p&=${$(this.reponse)}
+    \\end{aligned}$`,this.interactif&&(this.question+="<br>$p=$"),this.canEnonce=this.question,this.canReponseACompleter="$p=\\ldots$"}}export{B as dateDePublication,N as default,P as interactifReady,S as interactifType,K as refs,A as titre,F as uuid};

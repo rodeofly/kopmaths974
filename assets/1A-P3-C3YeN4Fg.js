@@ -1,0 +1,15 @@
+import{i as l,o as p,e,m as b,r as s}from"./embellissements-BYV7mIDn.js";import{A as n}from"./arbres-BoNgbwQ8.js";import m from"./ExerciceQcmA-CHnTcRvH.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./ExerciceQcm-DOkcCRBu.js";import"./qcm-BQR8Ns0N.js";import"./lists-i1i4IA1M.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const E="15/09/2025",N="3a5ab",P={"fr-fr":["1A-P3"],"fr-ch":[]},j=!0,R="qcm",C="true",D="qcmMono",M="Utiliser un arbre pour calculer une probabilité (totale)";class Q extends m{versionOriginale=()=>{let t=[];const o=new n({racine:!0,nom:"",proba:1,visible:!1,alter:"",enfants:[new n({rationnel:!1,nom:"A",proba:.4,enfants:[new n({rationnel:!1,nom:"B",proba:.3}),new n({rationnel:!1,nom:"\\bar B",proba:1,visible:!1})]}),new n({rationnel:!1,nom:"\\bar A",proba:.6,visible:!1,enfants:[new n({rationnel:!1,nom:"B",proba:1,visible:!1}),new n({rationnel:!1,nom:"\\bar B",proba:.9,visible:!0,alter:""})]})]});o.setTailles(),t=o.represente(0,6,0,3,!0,1,8),this.enonce=`${l(`On considère l'arbre de probabilités ci-contre.<br><br>
+      On cherche la probabilité de l'événement $B$.<br><br>
+      On a :`,p({xmin:-.1,xmax:12,ymin:-5,ymax:5,style:"inline",scale:.7},t))}<br>`,this.correction=`
+    On applique la formule de probabilité totale :<br> $\\begin{aligned}
+    p(B)&=p(A)\\times p_A(B)+p(\\overline A)\\times p_{\\overline A}(B)\\\\
+    &=${e(.4,2)}\\times ${e(.3)}+${e(1-.4)}\\times ${e(1-.9)}\\\\
+    &=${b(e(.4*.3+(1-.4)*(1-.9),2))}.
+    \\end{aligned}$`,this.reponses=[`$p(B)=${e(.4*.3+(1-.4)*(1-.9))} $`,`$p(B)=${e(.12)}$ `,`$p(B)=${e(.66)}$ `,`$p(B)=${e(.3)}$ `]};versionAleatoire=()=>{let t=[];const r=s(1,9)/10,i=s(1,9)/10,a=s(1,9)/10,o=new n({racine:!0,nom:"",proba:1,visible:!1,alter:"",enfants:[new n({rationnel:!1,nom:"A",proba:r,enfants:[new n({rationnel:!1,nom:"B",proba:i}),new n({rationnel:!1,nom:"\\bar B",proba:1,visible:!1})]}),new n({rationnel:!1,nom:"\\bar A",proba:Number(1-r),visible:!1,enfants:[new n({rationnel:!1,nom:"B",proba:1,visible:!1}),new n({rationnel:!1,nom:"\\bar B",proba:a,visible:!0,alter:""})]})]});o.setTailles(),t=o.represente(0,6,0,3,!0,1,8),this.enonce=`${l(`On considère l'arbre de probabilités ci-contre.<br><br>
+      On cherche la probabilité de l'événement $B$.<br><br>
+      On a :`,p({xmin:-.1,xmax:10,ymin:-5,ymax:5,style:"inline",scale:.7},t))}<br>`,this.correction=`
+    On applique la formule de probabilité totale :<br> $\\begin{aligned}
+    p(B)&=p(A)\\times p_A(B)+p(\\overline A)\\times p_{\\overline A}(B)\\\\
+    &=${e(r,2)}\\times ${e(i)}+${e(1-r)}\\times ${e(1-a)}\\\\
+    &=${b(e(r*i+(1-r)*(1-a),2))}.
+    \\end{aligned}$`,this.reponses=[`$p(B)=${e(r*i+(1-r)*(1-a))} $`,`$p(B)=${e(r*i)}$ `,`$p(B)=${e(r*i+(1-r)*a)}$ `,`$p(B)=${e(i)}$ `]};constructor(){super(),this.versionAleatoire()}}export{C as amcReady,D as amcType,E as dateDePublication,Q as default,j as interactifReady,R as interactifType,P as refs,M as titre,N as uuid};

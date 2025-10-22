@@ -1,0 +1,23 @@
+import{a as v,r as n,x as u,u as c,F as s,v as b,f as d,m as o,Y as x,z as p,l as S}from"./embellissements-BYV7mIDn.js";import{E as O}from"./Exercice-DtXhjCyI.js";import{r as l}from"./questionMathLive-DdRvWqlN.js";import{h as m}from"./gestionInteractif-DujZpSu8.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";import"./tableauMathlive-xx-nDjq0.js";import"./canStore-DaSrd7sp.js";import"./generalStore-C3E9FHtR.js";import"./comparisonFunctions-B45ZZ3C7.js";import"./compute-engine.min.umd-BwAhpA7x.js";import"./Hms-u2AUyU1C.js";import"./ListeDeroulanteElement-CXmzV-cr.js";import"./sizeTools-DfTC1Dgv.js";import"./time-DMC-jnVL.js";import"./AjouteTableauMathlive-Bz24QHd3.js";const G="Reconnaitre une fonction affine",H=!0,K="mathLive",P="25/10/2021",U="06/02/2025",W="b60f4",X={"fr-fr":["can3F09"],"fr-ch":[]};class Z extends O{constructor(){super(),this.nbQuestions=1}nouvelleVersion(){let e,a,t,i,f;for(let $=0,h=0;$<this.nbQuestions&&h<50;){switch(v([1,2,3,4])){case 1:e=n(-7,7),a=n(-9,9,[e,0]),i=`Soit $f(x)=${c(e,a)}$.<br>
+            $f$ est une fonction affine de la forme $f(x)=ax+b$.<br>
+            On a `,f=`On identifie les valeurs de $a$ et de $b$ : <br>
+          la valeur de $a$ est le coefficient devant $x$ (attention, $x=1x$) et la valeur de $b$ est la constante. <br>
+        $f(x)=${c(e,a)}=\\underbrace{${e}}_{a}x+\\underbrace{${x(a)}}_{b}$.<br>
+        On a donc $a=${o(e)}$ et $b=${o(a)}$.`,i+=l(this,$,"a =%{champ1}  \\text{ et  } b= %{champ2}"),m(this,$,{bareme:r=>[Math.min(r[0],r[1]),1],champ1:{value:String(e)},champ2:{value:String(a)}}),this.canEnonce=`Soit $f(x)=${c(e,a)}$.<br>    
+         La fonction $f$ est une fonction affine de la forme $f(x)=ax+b$.`;break;case 2:e=n(1,5),a=n(-9,9,[e,0]),i=`Soit $f(x)=${a}${p(e)}x$.<br>
+            $f$ est une fonction affine de la forme $f(x)=ax+b$.<br>
+            On a `,f=`On identifie les valeurs de $a$ et de $b$ : <br>
+          la valeur de $a$ est le coefficient devant $x$ (attention, $x=1x$) et la valeur de $b$ est la constante. <br>
+        $f(x)=${a}${p(e)}x=\\underbrace{${e}}_{a}x+\\underbrace{${x(a)}}_{b}$.<br>
+        On a donc $a=${o(e)}$ et $b=${o(a)}$.`,i+=l(this,$,"a =%{champ1}  \\text{ et  } b= %{champ2}"),m(this,$,{bareme:r=>[Math.min(r[0],r[1]),1],champ1:{value:String(e)},champ2:{value:String(a)}}),this.canEnonce=`Soit $f(x)=${c(e,a)}$.<br>    
+         La fonction $f$ est une fonction affine de la forme $f(x)=ax+b$.`;break;case 3:for(e=n(-9,9,0),a=n(2,10,e),t=n(-9,9,0);u(e,a)!==1;)e=n(-5,5,0);i=`Soit $f(x)=\\dfrac{${b(e)}x}{${a}}${d(t)}$.<br>
+           $f$ est une fonction affine de la forme $f(x)=ax+b$.<br>
+            On a `,this.canEnonce=`Soit $f(x)=\\dfrac{${b(e)}x}{${a}}${d(t)}$.<br>    
+         La fonction $f$ est une fonction affine de la forme $f(x)=ax+b$.`,f=`On identifie les valeurs de $a$ et de $b$ : la valeur de $a$ est le coefficient devant $x$ (attention, $\\dfrac{ax}{b}=\\dfrac{a}{b}x$) et la valeur de $b$ est la constante.<br>
+        $f(x)=\\dfrac{${b(e)}x}{${a}}${d(t)}=\\underbrace{\\dfrac{${e}}{${a}}}_{a}x+\\underbrace{${x(t)}}_{b}$<br>
+         On a donc $a=${o(new s(e,a))}$ et $b=${o(t)}$.`,i+=l(this,$,"a =%{champ1}  \\text{ et  } b= %{champ2}"),m(this,$,{bareme:r=>[Math.min(r[0],r[1]),1],champ1:{value:new s(e,a)},champ2:{value:String(t)}});break;case 4:default:for(e=n(-9,9,0),a=n(2,10,e),t=n(-9,9,0);u(e,a)!==1||u(t,a)!==1;)e=n(-9,9,0),t=n(-9,9,0),a=n(2,10);i=`Soit $f(x)=\\dfrac{${c(e,t)}}{${a}}$.<br>
+ $f$ est une fonction affine de la forme $f(x)=ax+b$.<br>
+            On a `,this.canEnonce=`Soit $f(x)=\\dfrac{${c(e,t)}}{${a}}$.<br>
+          La fonction $f$ est une fonction affine de la forme $f(x)=ax+b$.`,i+=l(this,$,"a =%{champ1}  \\text{ et  } b= %{champ2}"),m(this,$,{bareme:r=>[Math.min(r[0],r[1]),1],champ1:{value:new s(e,a)},champ2:{value:new s(t,a)}}),f=`On identifie les valeurs de $a$ et de $b$ : la valeur de $a$ est le coefficient devant $x$  et la valeur de $b$ est la constante.<br>
+        $f(x)=\\dfrac{${b(e)}x${d(t)}}{${a}}=\\underbrace{\\dfrac{${e}}{${a}}}_{a}x+\\underbrace{\\dfrac{${t}}{${a}}}_{b}$<br>
+         On a donc $a=${o(new s(e,a))}$ et $b=${o(new s(t,a))}$.`;break}this.canReponseACompleter="Les valeurs de $a$ et de $b$ sont : <br>$a=\\ldots $ et $b=\\ldots$",this.questionJamaisPosee($,e,a)&&(this.listeQuestions[$]=i,this.listeCorrections[$]=f,this.listeCanEnonces.push(this.canEnonce),this.listeCanReponsesACompleter.push(this.canReponseACompleter),$++),h++}S(this)}}export{U as dateDeModifImportante,P as dateDePublication,Z as default,H as interactifReady,K as interactifType,X as refs,G as titre,W as uuid};

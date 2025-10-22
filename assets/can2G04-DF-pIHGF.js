@@ -1,0 +1,12 @@
+import{aP as u,a as l,r as i,Y as c,m as r,e as $,_ as d,d as a}from"./embellissements-BYV7mIDn.js";import m from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const P="Calculer les coordonnées du milieu",q=!0,A="mathLive",N="29/11/2023",T="8bc88",k={"fr-fr":["can2G04"],"fr-ch":[]};class L extends m{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1}nouvelleVersion(){let e,o,n,t;const s=u(2,"MPQDO");switch(l(["a","b"])){case"a":e=i(-10,10),o=i(-10,10,0),n=i(-10,10),t=i(-10,10,0),this.question=`Dans un repère du plan, on donne $${s[0]}(${e}\\,;\\,${n})$ et $${s[1]}(${o}\\,;\\,${t})$.<br>
+        Déterminer les coordonnées du milieu $M$ de $[${s[0]+s[1]}]$ sous forme décimale.<br><br>`,this.optionsChampTexte={texteAvant:"$M$ a pour coordonnées :"},this.correction=`Les coordonnées du milieu $M$ sont données par :
+        $\\left(\\dfrac{${e}+${o}}{2}\\,;\\,\\dfrac{${n}+${t}}{2}\\right)=
+        \\left(\\dfrac{${$(e+o,0)}}{2}\\,;\\,\\dfrac{${$(n+t,0)}}{2}\\right)=
+        ${r("(")} ${r(`${$((e+o)/2,1)}`)}\\,${r(";")}\\,${r(`${$((n+t)/2,1)}`)} ${r(")")}$<br><br>`,this.correction+=d(` Mentalement : <br>
+        On calcule les moyennes des abscisses et des ordonnées des deux points.
+         `,"blue"),this.reponse=`(${a((e+o)/2,1)};${a((n+t)/2,1)})`;break;case"b":e=i(-9,9,0),o=i(-9,9,0),this.question=`Dans un repère du plan d'origine $O$, on donne $${s[0]}(${e}\\,;\\,${o})$.<br>
+        Déterminer les coordonnées du milieu $M$ de $[O${s[0]}]$ sous forme décimale.<br><br>`,this.optionsChampTexte={texteAvant:"$M$ a pour coordonnées :"},this.correction=`Comme les coordonnées du point $O$ sont $(0\\,;\\,0)$, les coordonnées du milieu $M$ sont données par :
+        $\\left(\\dfrac{0+${c(e)}}{2}\\,;\\,\\dfrac{0+${c(o)}}{2}\\right)
+        =${r("(")} ${r(`${$(e/2)}`)}\\,${r(";")}\\,${r(`${$(o/2)}`)} ${r(")")}$<br><br>`,this.correction+=d(` Mentalement : <br>
+       Puisque le premier point est l'origine du repère, les coordonnées du milieu sont données par la moitié de l'abscisse et de l'ordonnée du deuxième point.
+         `,"blue"),this.reponse=`(${a(e/2,1)};${a(o/2,1)})`;break}this.canEnonce=this.question,this.canReponseACompleter=""}}export{N as dateDeModifImportante,L as default,q as interactifReady,A as interactifType,k as refs,P as titre,T as uuid};

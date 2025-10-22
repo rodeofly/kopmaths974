@@ -1,0 +1,7 @@
+import $ from"./ExerciceSimple-CWWOU0FG.js";import{m as c,r as n,a,u as i,f as s}from"./embellissements-BYV7mIDn.js";import{K as m}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const q="Factoriser avec un facteur commun",A=!0,C="mathLive",T="b4205";class B extends ${constructor(){super(),this.canOfficielle=!1,this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=m.clavierDeBaseAvecFractionPuissanceCrochets}nouvelleVersion(){if(this.canOfficielle)this.reponse="(2x-1)(2x-5)",this.question=" Factoriser $(2x-1)^2-4(2x-1)$.<br>",this.correction=`$(2x-1)$ est un facteur commun.<br>
+    $\\begin{aligned}(2x-1)^2-4(2x-1)&=(2x-1)((2x-1)-4)\\\\
+    &=${c("(2x-1)(2x-5)")}\\end{aligned}$`;else{const t=n(2,3),e=n(-6,6,0),r=n(-5,5,[0,1,e,-e,-1]),o=a([!0,!1]);this.reponse=`(${i(t,e)})(${t}x${s(e+r)})`,this.question=` Factoriser   ${o?`$(${i(t,e)})^2${s(r)}(${i(t,e)})$.<br>`:`$${r}(${i(t,e)})+(${i(t,e)})^2$.<br>`}`,this.correction=`$(${i(t,e)})$ est un facteur commun.<br>
+      $\\begin{aligned}
+      ${o?`(${i(t,e)})^2${s(r)}(${i(t,e)})`:`${r}(${i(t,e)})+(${i(t,e)})^2`}
+      &=${o?`(${i(t,e)})((${i(t,e)})${s(r)})`:`(${i(t,e)})(${r}+(${i(t,e)}))`}\\\\
+      &=${c(`(${i(t,e)})(${t}x${s(e+r)})`)}\\end{aligned}$`}this.canEnonce=this.question,this.canReponseACompleter=""}}export{B as default,A as interactifReady,C as interactifType,q as titre,T as uuid};

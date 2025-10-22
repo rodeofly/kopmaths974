@@ -1,0 +1,10 @@
+import{m as e}from"./embellissements-BYV7mIDn.js";import r from"./ExerciceQcm-DOkcCRBu.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./qcm-BQR8Ns0N.js";import"./lists-i1i4IA1M.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const h="97669",g={"fr-fr":["TSP1-QCM07"],"fr-ch":[]},j=!0,A="qcm",v="true",q="qcmMono",L="Métropole 03/23 : conditionnelles",x="11/03/2025";class O extends r{versionOriginale=()=>{this.reponses=["$\\dfrac{7}{25}$","$\\dfrac{7}{10}$","$\\dfrac{3}{25}$","$\\dfrac{24}{125}$"],this.enonce=this.sup3?`Un jeu vidéo possède une vaste communauté de joueurs en ligne.<br> Avant de débuter une partie, le joueur doit choisir entre deux "mondes" : soit le monde A, soit le monde B.
+<br>On choisit au hasard un individu dans la communauté des joueurs.<br>
+Lorsqu'il joue une partie, on admet que :<br>
+$\\bullet~~$ la probabilité que le joueur choisisse le monde A est égale à $\\dfrac25$ ;<br>
+$\\bullet~~$ si le joueur choisit le monde A, la probabilité qu'il gagne la partie est de $\\dfrac{7}{10}$ ;<br>
+$\\bullet~~$ la probabilité que le joueur gagne la partie est de $\\dfrac{12}{25}$.<br>
+On considère les évènements suivants : <br>
+$\\bullet~~$ $A$ :  "Le joueur choisit le monde A" ; <br>
+$\\bullet~~$ $B$ :  "Le joueur choisit le monde B"  ;<br>
+$\\bullet~~$ $G$ :  "Le joueur gagne la partie" .<br><br>`:"",this.enonce+="La probabilité que le joueur choisisse le monde A et gagne la partie est égale à :",this.correction="On utilise la formule des probabilités conditionnelles :<br>",this.correction+="$P(A \\cap G) = P(A) \\times P_A(G) = \\dfrac{2}{5} \\times \\dfrac{7}{10} = \\dfrac{7}{25}.$<br>",this.correction+=`La bonne réponse est donc $${e("\\dfrac{7}{25}")}$.`};constructor(){super(),this.options={vertical:!1,ordered:!1},this.versionOriginale(),this.besoinFormulaire3CaseACocher=["Avec le préambule de l'énoncé",!0],this.sup3=!0}}export{v as amcReady,q as amcType,x as dateDePublication,O as default,j as interactifReady,A as interactifType,g as refs,L as titre,h as uuid};

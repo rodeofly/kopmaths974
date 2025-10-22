@@ -1,0 +1,19 @@
+import{c as x}from"./courbes-C9fk0WuH.js";import{r as m}from"./reperes-WwrVcExd.js";import{a as d,r as $,C as c,v as l,o as b,m as f,f as y,l as L}from"./embellissements-BYV7mIDn.js";import{E as v}from"./Exercice-DtXhjCyI.js";import{a as M}from"./questionMathLive-DdRvWqlN.js";import{s as h}from"./gestionInteractif-DujZpSu8.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";import"./tableauMathlive-xx-nDjq0.js";import"./canStore-DaSrd7sp.js";import"./generalStore-C3E9FHtR.js";import"./comparisonFunctions-B45ZZ3C7.js";import"./compute-engine.min.umd-BwAhpA7x.js";import"./Hms-u2AUyU1C.js";import"./ListeDeroulanteElement-CXmzV-cr.js";import"./sizeTools-DfTC1Dgv.js";import"./time-DMC-jnVL.js";import"./AjouteTableauMathlive-Bz24QHd3.js";const I="Lire graphiquement la valeur  $b$ dans $ax^2+b$",K=!0,W="mathLive",Z="17/06/2022",_="26b38",ee={"fr-fr":["can1F06"],"fr-ch":["NR"]};class ie extends v{constructor(){super(),this.nbQuestions=1}nouvelleVersion(){let t,p,i,e,o,n,a;for(let s=0,u=0;s<this.nbQuestions&&u<50;){switch(d([1,2])){case 1:i=$(1,4),e=$(-3,3,0),o=c("O",-.3,-.3,"milieu","black",1),n=function(r){return i*r**2+e},e>0?(a=m({yUnite:1,xUnite:2,xMin:-3,yMin:-1,yMax:8,xMax:3,thickHauteur:.1,xLabelMin:-2,xLabelMax:2,yLabelMax:7,yLabelMin:0,axeXStyle:"->",axeYStyle:"->"}),n=r=>i*r**2+e,t=` $f$ est définie par $f(x)=${l(i)}x^2+b$ .<br>
+                        `,t+=`Déterminer la valeur de  $b$.<br>
+            
+            `+b({xmin:-6,xmax:6,ymin:-1.5,ymax:8,pixelsParCm:25,scale:.6,style:"margin: auto"},a,o,x(n,{repere:a,color:"blue",epaisseur:2}))):(a=m({yUnite:1,xUnite:2,xMin:-3,yMin:-4,yMax:4,xMax:3,thickHauteur:.1,xLabelMin:-2,xLabelMax:2,yLabelMax:3,yLabelMin:-3,axeXStyle:"->",axeYStyle:"->"}),n=r=>i*r**2+e,t=`$f$ est définie par $f(x)=${l(i)}x^2+b$ .<br>
+            `,t+=`Déterminer la valeur de $b$.<br>
+            
+            `+b({xmin:-6,xmax:6,ymin:-4.5,ymax:4,pixelsParCm:25,scale:.6,style:"margin: auto"},a,o,x(n,{repere:a,color:"blue",epaisseur:2}))),this.interactif&&(t+=M(this,s," ",{texteAvant:"$b=$"}),h(this,s,e)),p=`La valeur de $b$ est donnée par l'image de $0$ par la fonction $f$.<br>
+          On lit $f(0)=${e}$. D'où, $b=${f(e)}$.<br>
+           On obtient alors $f(x)=${l(i)}x^2${y(e)}$.<br>
+          `;break;case 2:i=$(-4,-1),e=$(-3,3,0),o=c("O",-.3,-.3,"milieu","black",1),n=function(r){return i*r**2+e},e>0?(a=m({yUnite:1,xUnite:2,xMin:-3,yMin:-4,yMax:4,xMax:3,thickHauteur:.1,xLabelMin:-2,xLabelMax:2,yLabelMax:3,yLabelMin:-3,axeXStyle:"->",axeYStyle:"->"}),n=r=>i*r**2+e,t=`$f$ est définie par $f(x)=${l(i)}x^2+b$ .<br>
+            `,t+=`Déterminer la valeur de $b$.<br>
+            
+            `+b({xmin:-6,xmax:6,ymin:-4.5,ymax:4,pixelsParCm:25,scale:.6,style:"margin: auto"},a,o,x(n,{repere:a,color:"blue",epaisseur:2}))):(a=m({yUnite:1,xUnite:2,xMin:-3,yMin:-7,yMax:1,xMax:3,thickHauteur:.1,xLabelMin:-2,xLabelMax:2,yLabelMax:0,yLabelMin:-6,axeXStyle:"->",axeYStyle:"->"}),n=r=>i*r**2+e,t=`$f$ est définie par $f(x)=${l(i)}x^2+b$ .<br>
+            `,t+=`Déterminer la valeur de $b$.<br>
+            
+            `+b({xmin:-6,xmax:6,ymin:-7.1,ymax:1,pixelsParCm:25,scale:.6,style:"margin: auto"},a,o,x(n,{repere:a,color:"blue",epaisseur:2}))),this.interactif&&(t+=M(this,s," ",{texteAvant:"$b=$"}),h(this,s,e)),p=`La valeur de $b$ est donnée par l'image de $0$ par la fonction $f$.<br>
+          On lit $f(0)=${e}$. D'où, $b=${f(e)}$. <br>
+          On obtient alors $f(x)=${l(i)}x^2${y(e)}$.<br>
+          `;break}this.questionJamaisPosee(s,i,e)&&(this.listeQuestions[s]=t,this.listeCorrections[s]=p,s++),u++}L(this),this.listeCanEnonces.push(t),this.listeCanReponsesACompleter.push("$b=\\ldots$")}}export{Z as dateDePublication,ie as default,K as interactifReady,W as interactifType,ee as refs,I as titre,_ as uuid};

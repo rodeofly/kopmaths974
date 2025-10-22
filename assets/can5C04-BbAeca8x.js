@@ -1,0 +1,5 @@
+import{r as i,e,_ as r}from"./embellissements-BYV7mIDn.js";import o from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const v="Calculer avec triple et moitié",x=!0,y="mathLive",C=!0,E="AMCNum",A="52336",q={"fr-fr":["can5C04","auto6P3A-flash5"],"fr-ch":["10FA3-14"]};class L extends o{constructor(){super(),this.nbQuestions=1,this.typeExercice="simple"}nouvelleVersion(){const t=i(3,20);this.question=`Le triple d'un nombre vaut $${3*t}$, combien vaut sa moitié ?`,this.correction=`Le nombre est $${t}$, sa moitié est ${e(t/2)}.`,this.correction+=r(`
+    <br> Mentalement : <br>
+    Si le triple du nombre est $${3*t}$, ce nombre est : $${3*t}\\div 3=${t}$.<br>
+    Puisqu'on cherche sa moitié, on le divise par $2$, soit  $${t}\\div 2=${e(t/2)}$.<br>
+     `),this.reponse=t/2,this.canEnonce=this.question,this.canReponseACompleter=""}}export{C as amcReady,E as amcType,L as default,x as interactifReady,y as interactifType,q as refs,v as titre,A as uuid};

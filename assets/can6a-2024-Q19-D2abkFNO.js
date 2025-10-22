@@ -1,0 +1,6 @@
+import c from"./ExerciceSimple-CWWOU0FG.js";import{r,e as t,m as a}from"./embellissements-BYV7mIDn.js";import o from"decimal.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const g="Soustraire un décimal à un entier",y=!0,O="mathLive",S="dcd81";class q extends c{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.canOfficielle=!1,this.optionsChampTexte={texteAvant:" $=$"}}nouvelleVersion(){let i,e,s,n;this.canOfficielle?(i=new o("10"),s=7,n=new o("0.6"),e=new o(s).add(n)):(i=new o(r(1,5)*10),s=r(11,89,[20,30,40,50,60,70,80]),n=new o(r(1,9)).div(10),e=new o(r(11,89,[20,30,40,50,60,70,80])).div(10)),this.reponse=i.sub(e).toFixed(1),this.question=`$${t(i,0)}- ${t(e,1)}$`,this.canEnonce=this.question,this.canReponseACompleter="",this.correction=`On décompose pour calculer plus simplement : <br>
+    $\\begin{aligned}
+     ${t(i,0)}- ${t(e,1)}&= ${t(i,0)}- ${e.floor()}-${t(e.sub(e.floor()),1)}\\\\
+     &=${t(i.sub(e.floor()),0)}-${t(e.sub(e.floor()),1)}\\\\
+     &=${a(t(i.sub(e),1))}
+     \\end{aligned}$`}}export{q as default,y as interactifReady,O as interactifType,g as titre,S as uuid};

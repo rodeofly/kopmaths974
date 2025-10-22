@@ -1,0 +1,5 @@
+import{r,e as t,m as i,_ as o}from"./embellissements-BYV7mIDn.js";import{K as s}from"./Exercice-DtXhjCyI.js";import{b as n}from"./colors-bl7PrqSM.js";import m from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const E="Trouver le complément à 1*",A=!0,T="mathLive",N=!0,M="AMCNum",R="89135",q={"fr-fr":["can6C21","6N2A-flash3"],"fr-ch":[]};class K extends m{constructor(){super(),this.nbQuestions=1,this.formatChampTexte=s.clavierNumbers,this.typeExercice="simple"}nouvelleVersion(){const e=r(1,9)/10+r(1,9)/100;this.question=`Calculer $1-${t(e)}$.`,this.correction=`$1-${t(e)}=${i(t(1-e))}$<br>`,this.correction+=o(`
+    <br> Mentalement : <br>
+    $1$ unité = $100$ centièmes.<br>
+    On enlève $${t(100*e)}$ centièmes à $100$ centièmes, il en reste $${t(100*(1-e))}$.<br>
+    Ainsi, $1-${t(e)}=${t(1-e)}$.  `,n),this.reponse=1-e,this.canEnonce=this.question,this.canReponseACompleter=""}}export{N as amcReady,M as amcType,K as default,A as interactifReady,T as interactifType,q as refs,E as titre,R as uuid};

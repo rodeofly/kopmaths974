@@ -1,0 +1,31 @@
+import{E as D}from"./Exercice-DtXhjCyI.js";import{af as L,r as b,F as B,v as l,z as u,Y as v,l as y}from"./embellissements-BYV7mIDn.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const N="Déterminer si des points sont ou non coplanaires",V="11/01/2025",Y="14e60",H={"fr-fr":["TSG2-01"],"fr-ch":["3mAlgLin-5"]};class K extends D{constructor(){super(),this.consigne="",this.nbQuestions=2,this.spacingCorr=2}nouvelleVersion(){const x=L(["coplanaires","non-coplanaires"],this.nbQuestions);for(let _=0,q=0;_<this.nbQuestions&&q<50;){let A="",n="",o="";const e=b(-6,6,0),r=b(-6,6,[0,e]),a=b(-6,6,0),h=b(-6,6,[0,e]),$=b(-6,6,[0,r,h]),d=b(-6,6,[0,a]),t=b(-6,6,[0,e]),i=b(-6,6,[0,$,r]),p=b(-6,6,[0,$,a]),s=b(-2,2,0),g=b(-2,2,[0,s]),w=b(-2,2,[0,s,g]),f=s*h+g*t+(1-s-g)*e,c=s*$+g*i+(1-s-g)*r;let m;switch(x[_]){case"coplanaires":m=s*d+g*p+(1-s-g)*a,o+=`<br><br>$\\iff \\begin{cases}
+           \\lambda_1&= ${s}\\\\  
+            \\lambda_2&= ${g}\\\\  
+            \\end{cases}$<br>`,o+=`Le système admet donc un couple solution : $S=\\{\\left(${s};${g}\\right)\\}$.<br>`,o+=`On vient donc de montrer que $\\overrightarrow{AD}=${l(s)} \\overrightarrow{AB} ${u(g)} \\overrightarrow{AC}$.`,o+="<br>Les points A, B, C et D sont coplanaires.";break;default:{m=s*d+w*p+(1-s-w)*a;const C=new B((c-r)*(t-e)-($-r)*(t-e)*s,(i-r)*(t-e));o+=`$\\iff \\begin{cases}
+           \\lambda_1&= ${s}\\\\  
+            \\lambda_2&= ${C.texFractionSimplifiee}\\\\  
+            \\lambda_2&= ${w}\\\\  
+            \\end{cases}$<br>`,o+="Il n'existe pas un unique couple $(\\lambda_1;\\lambda_2)$ vérifiant $(1)$.<br>",o+="Le système n'admet donc pas de solution,  $~~S=\\emptyset$.<br>",o+="Il reste à vérifier que les vecteurs $\\overrightarrow{AB}$ et $\\overrightarrow{AC}$ forment une base d'un plan, c'est-à-dire qu'ils ne sont pas colinéaires.<br>",o+="En effet, s'ils l'étaient,  $\\overrightarrow{AD}$ serait nécessairement coplanaires avec $\\overrightarrow{AB}$ et $\\overrightarrow{AC}$.<br>",o+="On sait que $\\overrightarrow{AB}$ et $\\overrightarrow{AC}$ sont colinéaires si et seulement s'il existe un réel $\\lambda$ vérifiant $\\overrightarrow{AB}=\\lambda\\overrightarrow{AC}$.<br>",o+=`Ce qui est équivalent à résoudre : $\\begin{cases}
+           ${h-e}&= ${l(f-e)}\\lambda\\\\  
+           ${$-r}&= ${l(c-r)}\\lambda\\\\  
+           ${d-a}&= ${l(m-a)}\\lambda\\\\  
+            \\end{cases}$<br>`,o+="On observe trivialement que ce système n'admet pas de solution. Les vecteurs $\\overrightarrow{AB}$ et $\\overrightarrow{AC}$ ne sont donc pas colinéaires.",o+="<br>On vient donc de montrer que les vecteurs $\\overrightarrow{AB}$ et $\\overrightarrow{AC}$ forment une base d'un plan et que le vecteur $\\overrightarrow{AD}$ n'est pas une combinaison linéaire de ces vecteurs.",o+="<br>Les trois vecteurs ne sont donc pas coplanaires.<br> Les points A, B, C et D ne sont pas coplanaires.";break}}A="On donne, dans un repère orthonormé de l'espace $\\big(O~;\\vec{\\imath}~;\\vec{\\jmath}~;\\vec{k}\\big)$,<br>",A+="les coordonnées des points suivants :<br>",A+=`$A(${e}\\,;${r}\\,;${a}), ~~ B(${h}\\,;${$}\\,;${d}), ~~ C(${t}\\,;${i}\\,;${p}), ~~ D(${f}\\,;${c}\\,;${m}).$<br> `,A+="Déterminer si les points $A\\,,B\\,,C\\,\\text{et} \\, D$ sont ou non coplanaires.<br> ",n="Les quatre points sont coplanaires s'il existe deux réels $\\lambda_1$ et $\\lambda_2$ tels que <br>",n+="$\\overrightarrow{AD}=\\lambda_1 \\overrightarrow{AB}+\\lambda_2 \\overrightarrow{AC}\\quad(1)$,<br> c'est-à-dire si ",n+="$\\overrightarrow{AD}$ est une combinaison linéaire des vecteurs $\\overrightarrow{AB}$ et $ \\overrightarrow{AC}$.<br>",n+="On calcule les coordonnées des trois vecteurs : <br>",n+=`$\\overrightarrow{AD}\\begin{pmatrix}${f} -${v(e)}\\\\ ${c} -${v(r)}\\\\${m}- ${v(a)}\\end{pmatrix}\\iff\\overrightarrow{AD}\\begin{pmatrix}${f-e} \\\\ ${c-r} \\\\${m-a}\\end{pmatrix}$<br><br>`,n+=`$\\overrightarrow{AB}\\begin{pmatrix}${h} -${v(e)}\\\\ ${$} -${v(r)}\\\\${d}- ${v(a)}\\end{pmatrix}\\iff\\overrightarrow{AB}\\begin{pmatrix}${h-e} \\\\ ${$-r} \\\\${d-a}\\end{pmatrix}$<br><br>`,n+=`$\\overrightarrow{AC}\\begin{pmatrix}${t} -${v(e)}\\\\ ${i} -${v(r)}\\\\${p}- ${v(a)}\\end{pmatrix}\\iff\\overrightarrow{AC}\\begin{pmatrix}${t-e} \\\\ ${i-r} \\\\${p-a}\\end{pmatrix}$<br>`,n+="On cherche  des réels $\\lambda_1$ et $\\lambda_2$ qui vérifient $(1)$,<br> ce qui est équivalent à résoudre le système :",n+=`<br><br>$\\begin{cases}${f-e}&= ${l(h-e)} \\lambda_1 ${u(t-e)} \\lambda_2\\quad\\quad \\left(L_1\\right)\\\\  
+            ${c-r} &=${l($-r)}\\lambda_1 ${u(i-r)}\\lambda_2\\quad\\quad \\left(L_2\\right)\\\\
+            ${m-a}&=${l(d-a)}\\lambda_1 ${u(p-a)}\\lambda_2
+            \\end{cases}\\iff$`,n+=`$\\begin{cases}${(f-e)*(i-r)}&= ${l((h-e)*(i-r))}\\lambda_1 ${u((t-e)*(i-r))} \\lambda_2\\quad\\quad \\left(${i-r}\\times L_1\\rightarrow L_1\\right)\\\\  
+            ${(c-r)*(t-e)} &=${l(($-r)*(t-e))}\\lambda_1 ${u((i-r)*(t-e))}\\lambda_2\\quad\\quad \\left(${t-e}\\times L_2\\rightarrow L_2\\right)\\\\
+            ${m-a}&=${l(d-a)}\\lambda_1 ${u(p-a)}\\lambda_2
+            \\end{cases}$<br><br>`,n+=`$\\iff \\begin{cases}
+            ${(f-e)*(i-r)-(c-r)*(t-e)}&= ${(h-e)*(i-r)-($-r)*(t-e)} \\lambda_1\\quad\\quad \\left(L_1-L_2\\rightarrow L_1\\right)\\\\  
+            ${(c-r)*(t-e)} &=${($-r)*(t-e)}\\lambda_1  ${u((i-r)*(t-e))}\\lambda_2\\quad\\quad \\left(L_2\\right)\\\\  
+            ${m-a}&=${l(d-a)}\\lambda_1 ${u(p-a)}\\lambda_2
+              \\end{cases}\\iff 
+              \\begin{cases}
+           \\lambda_1&= ${s}\\\\  
+             ${(c-r)*(t-e)} &=${($-r)*(t-e)*s}  ${u((i-r)*(t-e))}\\lambda_2\\\\  
+            ${m-a}&=${l((d-a)*s)} ${u(p-a)}\\lambda_2
+              \\end{cases}$<br><br>`,n+=`$\\iff\\begin{cases}
+       \\lambda_1&= ${s}\\\\  
+       ${l((i-r)*(t-e))}\\lambda_2&=${(c-r)*(t-e)-($-r)*(t-e)*s} \\\\  
+        ${l(p-a)}\\lambda_2&= ${m-a+(a-d)*s}
+              \\end{cases}$`,n+=o,this.questionJamaisPosee(_,A)&&(this.listeQuestions[_]=A,this.listeCorrections[_]=n,_++),q++}y(this)}}export{V as dateDePublication,K as default,H as refs,N as titre,Y as uuid};

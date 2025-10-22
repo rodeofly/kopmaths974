@@ -1,0 +1,29 @@
+import{c as h}from"./lists-i1i4IA1M.js";import{ac as P,p as a,A as u,I as c,a4 as Z,a3 as _,aH as K,aG as U,o as L,D as M,c as F,bS as B,bO as i,bQ as W,j as A,e,bP as X,cm as V,t as Y,az as ee,a as re,r as f}from"./embellissements-BYV7mIDn.js";import te from"./ExerciceBrevetA-CJtX4hAj.js";import{b as se}from"./solides-Bdh-0xDW.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./ExerciceBrevet-lD74fcMo.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";import"./aleatoires-BLhzzHLc.js";import"./dateEtHoraires-yqKtvK1K.js";const ve="4beb9",xe={"fr-fr":["3G30DNB0","3Z1DNB-03"],"fr-ch":["1mT-10"]},De="Préparation DNB : Pythagore, trigonométrie, aire, volume",qe="05/12/2024";class we extends te{constructor(){super(),this.besoinFormulaireCaseACocher=["Sujet original",!1],this.spacingCorr=2.5,this.sup=!1,this.versionAleatoire(),this.introduction=P("D'après l'exercice 4 du brevet Amérique du Sud 2024.<br>")}appliquerLesValeurs(t,r,s){const o=Math.round(Math.sqrt(r**2-t**2)*10)/10,n=25,v=.5,m=a(0,0,"C","below left"),p=a(0,4,"A","above"),d=a(7,0,"B","above right"),l=u(a(-6,4),a(0,4),p,m,a(12,0),a(12,-2),a(-6,-2));l.hachures="dots",l.color=c("black"),l.couleurDesHachures=c("gray"),l.epaisseurDesHachures=.7,l.distanceDesHachures=10;const b=u(a(-1,4),a(-4,4),a(-4,7),a(-2.5,8.5),a(-1,7)),E=Z(b,_(12,-4)),$=u(m,p,d);$.pointilles=2,$.opacite=.5,$.color=c("gray"),$.hachures="north east lines",$.couleurDesHachures=c("gray"),b.couleurDeRemplissage=c("gray");const y=K(m,p,d),j=U(p,m,d),x=[$,l,b,E,y,j],H=L(Object.assign({pixelsParCm:n,scale:v},M(x,{rxmin:.5,rymin:.5})),x);F.anglePerspective=60;const I=B(i(0,0,0,!0,"C","below left"),i(7,-4,0,!0,"B","below right"),i(0,0,3,!0,"A","above left")),S=W(8,14,0),N=se(I,S,"black",!0,"FED",["below","right","above"]),D=B(i(0,0,0),i(.7,-.4,0),i(.7,-.4,.6),i(0,0,.6)),G=D.listePoints2d,g=u(...G);g.epaisseur=0,g.couleurDeRemplissage=c("gray");const q=B(i(8,14,0),i(8.7,13.6,0),i(8.7,13.6,.6),i(8,14,.6)),R=q.listePoints2d,C=u(...R);C.epaisseur=0,C.couleurDeRemplissage=c("gray");const k=A(`${e(t,2)}\\text{ m}`,-.5,1.5,{orientation:90}),z=A(`${e(s,2)}\\text{ m}`,5.3,6.4,{orientation:30}),T=A(`${e(r,2)}\\text{ m}`,14.5,7.4,{orientation:-40}),w=[...N.c2d,D.c2d,q.c2d,g,C,k,z,T],J=L(Object.assign({pixelsParCm:n,scale:v},M(w)),w);F.anglePerspective=30;let O=`On dispose d'un terrain en pente sur lequel on souhaite construire une maison.<br>
+    Il faut pour cela enlever de la terre afin d'obtenir un terrain horizontal.<br>
+On dispose des informations suivantes :<br><br>
+
+  ${X(`${V(Y("Vue en coupe du terrain","black"))}${H}`,`La maison sera construite sur le terrain horizontal représenté par le segment $[BC]$.<br>
+    Le triangle $ABC$ est rectangle en $C$ et :<br>
+    ${h({items:[`$AC = ${e(t,2)}$ m;`,`$AB = ${e(r,2)}$ m.`],style:"fleches"})}`,{eleId:"figure1",largeur1:60,widthmincol1:"360px",widthmincol2:"240px",stylecol2:"vertical-align: center;"})}`;O+=h({items:[`Justifier que la longueur $CB$ est égale à $${e(o,2)}$ m.`,`Le coût des travaux pour enlever la terre dépend de la mesure de l'angle $\\widehat{ABC}$.<br>
+Si la mesure de l'angle $\\widehat{ABC}$ est supérieure à $8,5°$, cela entraînera un surcoût des travaux (c'est-à-dire que les traveaux pour enlever la terre coûteront plus cher).<br>
+Est-ce le cas pour ce terrain ?`,`On admet que le volume de terre enlevée correspond au prisme droit $CBAFED$ de hauteur $[CF]$ et de bases $ABC$ et $DEF$comme représenté ci-dessous.<br>
+ On rappelle que les longueurs CF et AD sont égales.<br>${J}
+
+ Déterminer le volume de terre à enlever en m$^3$.<br>
+On rappelle la volume de formule :
+ ${V(`Volume d'un prisme droit = ${P("aire d'une base du prisme × hauteur du prisme")}.`)}`],style:"nombres"});const Q=h({items:[`Le triangle $ABC$ est rectangle en $C$ donc d'après le théorème de Pythagore :<br>
+        $AB^2 = AC^2 + BC^2$<br>
+        En remplaçant par les valeurs numériques, on a :<br>
+        $${e(r,2)}^2 = ${e(t,2)}^2 + BC^2$, soit : $${e(r**2,4)} = ${e(t**2,4)} + BC^2$.<br>
+        On en déduit : $BC^2 = ${e(r**2,4)} - ${e(t**2,4)}=${e(r**2-t**2,4)}$<br>
+        D'où $BC = \\sqrt{${e(r**2-t**2,4)}}= ${e(o,2)}$<br>
+        Donc $[CB]$ mesure bien $${e(o,2)}$ m.`,`On a dans le triangle $ABC$ rectangle en $C$ :<br>
+        $\\sin(\\widehat{ABC}) = \\dfrac{AC}{AB}$.<br>
+        $\\sin(\\widehat{ABC}) = \\dfrac{${e(t,2)}}{${e(r,2)}}$<br>
+        $\\sin(\\widehat{ABC}) ${ee(t/r,3)} ${e(t/r,3)}$<br>
+        $\\widehat{ABC} \\approx ${e(Math.asin(t/r)*180/Math.PI,1)}^{\\circ}$<br>
+        Or ${Math.asin(t/r)*180/Math.PI>8.5?" $\\widehat{ABC} > 8,5°$, donc le surcoût des travaux est à prévoir.":" $\\widehat{ABC} \\leq 8,5°$, donc il n'y aura pas de surcoût."}`,`Le volume du prisme droit $CBAFED$ est égal à l'aire de la base $ABC$ multipliée par la hauteur $CF$ du prisme.<br>
+        $V = \\mathscr{A}_{ABC} \\times CF$<br>
+        $V = \\dfrac{AC \\times BC}{2} \\times CF$<br>
+        $V = \\dfrac{${e(t,2)} \\times ${e(o,2)}}{2} \\times ${e(s,1)}$<br>
+        $V = ${e(t*o*s/2,5)}$ m$^3$`],style:"nombres"});this.enonce=O,this.correction=Q}versionOriginale=()=>{this.appliquerLesValeurs(2.6,17,30)};versionAleatoire=()=>{const r=re([{a:15,b:112,c:113},{a:21,b:220,c:221},{a:33,b:544,c:545},{a:45,b:336,c:339},{a:77,b:294,c:305},{a:105,b:1408,c:1413},{a:135,b:1792,c:1797},{a:153,b:2176,c:2185}]);if(r.a>40)if(r.a<100){const s=r.c/20,o=r.a/20,n=f(Math.ceil(s)+2,Math.ceil(s)+15);this.appliquerLesValeurs(o,s,n)}else{const s=r.c/50,o=r.a/50,n=f(Math.ceil(s)+2,Math.ceil(s)+15);this.appliquerLesValeurs(o,s,n)}else{const s=r.c/10,o=r.a/10,n=f(Math.ceil(s)+2,Math.ceil(s)+15);this.appliquerLesValeurs(o,s,n)}}}export{qe as dateDePublication,we as default,xe as refs,De as titre,ve as uuid};

@@ -1,0 +1,4 @@
+import e from"./_Construire_par_symetrie-Cg6KAQq9.js";import"./embellissements-BYV7mIDn.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./reperes-WwrVcExd.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const y="Construire le symétrique d'un triangle par rapport à une droite",x=!1,g=!0,h="AMCOpen",A="14/11/2021",q="8ea24",C={"fr-fr":["5G10-2"],"fr-ch":["9ES6-4"]};class M extends e{constructor(){super(),this.figure=!0,this.sup=4,this.besoinFormulaireNumerique=["Type de questions",4,`1 : Axe horizontal ou vertical
+2 : Axe oblique à 45°
+3 : Axe avec une légère pente
+4 : Mélange`]}}export{g as amcReady,h as amcType,A as dateDeModifImportante,M as default,x as interactifReady,C as refs,y as titre,q as uuid};

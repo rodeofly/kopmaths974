@@ -1,0 +1,6 @@
+import r from"./ExerciceSimple-CWWOU0FG.js";import{a as o,r as s,a0 as a,Y as n,m as c}from"./embellissements-BYV7mIDn.js";import{K as m}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const v="Calculer l'abscisse du sommet d'une parabole",P=!0,g="mathLive",C="e88e8";class L extends r{constructor(){super(),this.canOfficielle=!1,this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=m.clavierDeBase}nouvelleVersion(){let e,t,i;this.canOfficielle?(e=1,t=-2,i=-3):(e=o([-1,1]),t=s(-5,5,0)*2,i=s(-6,6,0)),this.reponse=(-t/(2*e)).toFixed(0),this.question=`Soit $f(x)=${a(0,e,t,i)}$<br>
+    L'abscisse du sommet de la parabole qui représente $f$ est :`,this.correction=`Pour un polynôme de degré $2$ du type $ax^2+bx+c$, l'abscisse du sommet 
+    de la parabole $x_S$ est donnée par $-\\dfrac{b}{2a}$.<br>
+     L'abscisse du sommet est donnée  par $x_S=-\\dfrac{${t}}{2\\times ${n(e)}}=${c(this.reponse)}$.
+     <br>
+   `,this.canEnonce=this.question,this.canReponseACompleter="",this.interactif||(this.question+=" $\\ldots$")}}export{L as default,P as interactifReady,g as interactifType,v as titre,C as uuid};

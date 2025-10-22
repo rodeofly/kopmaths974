@@ -1,0 +1,74 @@
+import{r as x,a as m,l as f}from"./embellissements-BYV7mIDn.js";import{c as n}from"./style-CcGLZIPY.js";import{E as P}from"./Exercice-DtXhjCyI.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const N="Remplir une facture",R="837cd",z={"fr-fr":["BP2CCF7","6N3Q-3"],"fr-2016":["6P13-1","BP2CCF7"],"fr-ch":["9FA3-14"]};class B extends P{constructor(){super(),this.besoinFormulaireNumerique=["Niveau de difficulté",2,`1 : Sans réduction
+2 : Avec réduction`],this.consigne="Compléter le tableau suivant.",this.nbQuestions=1,this.nbQuestionsModifiable=!1,this.sup=2}nouvelleVersion(){for(let d=0,$,i,l,h,s,o,u,a,r,c,t,e,T=0;d<this.nbQuestions&&T<50;){const p=[["Feuilletés au fromage",x(50,80)/10],["Feuilletés à la viande",x(50,80)/10],["Pizzas",x(80,140)/10],["Glaces à la vanille",x(20,60)/10],["Glaces au chocolat",x(20,60)/10],["Filets de saumon",x(150,200)/10],["Aiguillettes de poulet",x(400,700)/10]];$=m(p),h=m(p,[$]),u=m(p,[$,h]),l=$[1],o=h[1],r=$[1],i=x(2,8),s=x(2,8,[i]),a=x(2,8,[i,s]),c=x(3,9),this.sup===1?(t=`$\\def\\arraystretch{2.5}\\begin{array}{|c|c|c|c|}
+`,t+=`\\hline
+`,t+=`\\text{Designations} & \\text{Quantités} & \\text{Prix unitaires H.T.} & \\text{Montants} \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{${$[0]}} & ${i} & ${n(l)} & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{${h[0]}} & ${s} & ${n(o)} & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{${u[0]}} & ${a} & ${n(r)} & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{Prix total (H.T.)} & & & \\ldots\\ldots \\\\ 
+`,t+=`\\hline\\hline
+`,t+=`\\text{TVA (20~\\%)} & & & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{Prix total (T.T.C.)} & & & \\ldots\\ldots \\\\ 
+ `,t+=`\\hline
+`,t+="\\end{array}$",e=`$\\def\\arraystretch{2.5}\\begin{array}{|c|c|c|c|}
+`,e+=`\\hline
+`,e+=`\\text{Designations} & \\text{Quantités} & \\text{Prix unitaires H.T.} & \\text{Montants} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{${$[0]}} & ${i} & ${n(l)} & ${n(l*i)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{${h[0]}} & ${s} & ${n(o)} & ${n(o*s)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{${u[0]}} & ${a} & ${n(r)} & ${n(r*a)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{Prix total (H.T.)} & & & ${n(l*i+o*s+r*a)} \\\\ 
+`,e+=`\\hline\\hline
+`,e+=`\\text{TVA (20~\\%)} & & & ${n((l*i+o*s+r*a)*.2)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{Prix total (T.T.C.)} & & & ${n((l*i+o*s+r*a)*1.2)} \\\\ 
+ `,e+=`\\hline
+`,e+="\\end{array}$"):(t=`$\\def\\arraystretch{2.5}\\begin{array}{|c|c|c|c|}
+`,t+=`\\hline
+`,t+=`\\text{Designations} & \\text{Quantités} & \\text{Prix unitaires H.T.} & \\text{Montants} \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{${$[0]}} & ${i} & ${n(l)} & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{${h[0]}} & ${s} & ${n(o)} & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{${u[0]}} & ${a} & ${n(r)} & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{Prix total brut (H.T.)} & & & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{Réduction (${c}~\\%)} & & & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{Prix total net (H.T.)} & & & \\ldots\\ldots \\\\ 
+`,t+=`\\hline\\hline
+`,t+=`\\text{TVA (20~\\%)} & & & \\ldots\\ldots \\\\ 
+`,t+=`\\hline
+`,t+=`\\text{Prix total (T.T.C.)} & & & \\ldots\\ldots \\\\ 
+ `,t+=`\\hline
+`,t+="\\end{array}$",e=`$\\def\\arraystretch{2.5}\\begin{array}{|c|c|c|c|}
+`,e+=`\\hline
+`,e+=`\\text{Designations} & \\text{Quantités} & \\text{Prix unitaires H.T.} & \\text{Montants} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{${$[0]}} & ${i} & ${n(l)} & ${n(l*i)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{${h[0]}} & ${s} & ${n(o)} & ${n(o*s)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{${u[0]}} & ${a} & ${n(r)} & ${n(r*a)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{Prix total brut (H.T.)} & & & ${n(l*i+o*s+r*a)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{Réduction (${c}~\\%)} & & & ${n((l*i+o*s+r*a)*c/100)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{Prix total net (H.T.)} & & & ${n((l*i+o*s+r*a)*(1-c/100))} \\\\ 
+`,e+=`\\hline\\hline
+`,e+=`\\text{TVA (20~\\%)} & & & ${n((l*i+o*s+r*a)*(1-c/100)*.2)} \\\\ 
+`,e+=`\\hline
+`,e+=`\\text{Prix total (T.T.C.)} & & & ${n((l*i+o*s+r*a)*(1-c/100)*1.2)} \\\\ 
+ `,e+=`\\hline
+`,e+="\\end{array}$"),this.questionJamaisPosee(d,l,o,r)&&(this.listeQuestions[d]=t,this.listeCorrections[d]=e,d++),T++}f(this)}}export{B as default,z as refs,N as titre,R as uuid};

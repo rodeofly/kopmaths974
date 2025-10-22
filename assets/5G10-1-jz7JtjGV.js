@@ -1,0 +1,4 @@
+import e from"./_Construire_par_symetrie-Cg6KAQq9.js";import"./embellissements-BYV7mIDn.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./reperes-WwrVcExd.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const y="Construire le symétrique de différents points par rapport à une droite",x=!1,h=!0,A="AMCOpen",q="14/11/2021",g="ce9ef",C={"fr-fr":["5G10-1"],"fr-ch":["9ES6-3"]};class M extends e{constructor(){super(),this.figure=!1,this.sup=4,this.besoinFormulaireNumerique=["Type de questions",4,`1 : Axe horizontal ou vertical
+2 : Axe oblique à 45°
+3 : Axe avec une légère pente
+4 : Mélange`]}}export{h as amcReady,A as amcType,q as dateDeModifImportante,M as default,x as interactifReady,C as refs,y as titre,g as uuid};

@@ -1,0 +1,6 @@
+import t from"./6N1G-1-NILQ282w.js";import"./embellissements-BYV7mIDn.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";import"./comparisonFunctions-B45ZZ3C7.js";import"./compute-engine.min.umd-BwAhpA7x.js";import"./Hms-u2AUyU1C.js";import"./gestionInteractif-DujZpSu8.js";import"./ListeDeroulanteElement-CXmzV-cr.js";import"./tableauMathlive-xx-nDjq0.js";import"./canStore-DaSrd7sp.js";import"./generalStore-C3E9FHtR.js";import"./sizeTools-DfTC1Dgv.js";import"./time-DMC-jnVL.js";import"./questionMathLive-DdRvWqlN.js";import"./AjouteTableauMathlive-Bz24QHd3.js";const E="Repérer des entiers sur une droite graduée",O="14b84",P={"fr-fr":["CM2N2U-3"],"fr-2016":["c3N11-1"],"fr-ch":["9NO2-7"]},T=!0,q="mathLive",F="21/10/2024",I="15/06/2025";class L extends t{constructor(){super(),this.version="cm",this.nbQuestions=4,this.besoinFormulaireTexte=["Niveaux de difficulté ",`Nombres séparés par des tirets :
+1 : 10 graduations secondaires
+2 : 2 graduations secondaires
+3 : 5 graduations secondaires
+4 : Pas secondaire plus compliqué
+5 : Mélange`],this.sup3=!1}}export{I as dateDeModifImportante,F as dateDePublication,L as default,T as interactifReady,q as interactifType,P as refs,E as titre,O as uuid};

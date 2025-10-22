@@ -1,0 +1,7 @@
+import i from"./ExerciceSimple-CWWOU0FG.js";import{e as t,m as s,a as o}from"./embellissements-BYV7mIDn.js";import{K as r}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const b="Calculer une distance à partir d'une vitesse",k=!0,q="mathLive",y="5108c";class C extends i{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=r.clavierDeBase,this.optionsChampTexte={texteApres:"km/h"},this.canOfficielle=!1}nouvelleVersion(){if(this.canOfficielle)this.reponse=13.5,this.question=`Un sportif court $${t(4500,0)}$ m  en $20$ min.<br>
+      Quelle est sa vitesse en km/h ?`,this.correction=`En $1$ heure, il parcourt $3$ fois plus de distance  qu'en $20$ minutes, soit $3\\times ${t(4500,0)}=
+       ${t(13500,0)}$ m.<br>
+       Sa vitesse est donc $${s(t(13.5,1))}$ km/h.`;else{const e=o([[5500,20,3,16.5],[6500,20,3,19.5],[3500,15,4,14],[4500,15,4,18]]);this.reponse=e[3],this.question=`Un sportif court $${t(e[0],0)}$ m  en $${e[1]}$ min.<br>
+      Quelle est sa vitesse en km/h ?`,this.correction=`En $1$ heure, il parcourt $${e[2]}$ fois plus de distance  qu'en $${e[1]}$ minutes, soit $${e[2]}\\times ${t(e[0],0)}=
+      ${t(e[0]*e[2],0)}$ m.<br>
+      Sa vitesse est donc $${s(t(e[3],1))}$ km/h.`}this.canEnonce=this.question,this.canReponseACompleter=" $\\ldots$ km/h"}}export{C as default,k as interactifReady,q as interactifType,b as titre,y as uuid};

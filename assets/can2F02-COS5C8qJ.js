@@ -1,0 +1,8 @@
+import{r as o,u as a,F as m,Y as c,f as $,m as f,_ as h}from"./embellissements-BYV7mIDn.js";import x from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const P="Calculer une image avec un quotient",Q=!0,R="mathLive",T="8b3a9",B={"fr-fr":["can2F02"],"fr-ch":[]};class I extends x{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1}nouvelleVersion(){let t,i;t=o(1,5);const n=o(-7,7,0);i=o(1,6);const r=o(-6,6,[0,n]),e=o(-3,3,0);for(;i*e+r===0;)i=o(1,4);for(;t*e+n===0;)t=o(1,4);const u=t*e+n,l=i*e+r,p=`\\dfrac{${a(t,n)}}{${a(i,r)}}`,s=new m(u,l);this.reponse=new m(t*e+n,i*e+r).simplifie(),this.question=`On considère la fonction $f$ définie par $f(x)= ${p}$. <br>
+        Calculer $f(${e})$.`,this.interactif&&(this.question+="<br>",this.optionsChampTexte={texteAvant:`$f(${e})=$`}),this.correction=`$f(${e})=\\dfrac{${t===1?`${e}`:`${t}\\times ${c(e)}`}${$(n)}}{${i===1?`${e}`:`${i}\\times ${c(e)}`}${$(r)}}
+          =${s.texFraction}${s.texSimplificationAvecEtapes()}$.<br>
+          Ainsi, $f(${e})=${f(s.texFractionSimplifiee)}$.<br><br>`,this.correction+=h(` Mentalement : <br>
+          On calcule  le numérateur et le dénominateur pour $x=${e}$, soit
+           $ ${t}\\times ${c(e)}${$(n)}=${t*e+n}$ et $${i}\\times ${c(e)}${$(r)}=${i*e+r}$.<br>
+           On obtient le quotient que l'on simplifie éventuellement : $${s.texFractionSimplifiee}$.
+    `,"blue"),this.canEnonce=this.question,this.canReponseACompleter=""}}export{I as default,Q as interactifReady,R as interactifType,B as refs,P as titre,T as uuid};

@@ -1,0 +1,5 @@
+import n from"./ExerciceSimple-CWWOU0FG.js";import{r as s,a0 as o,Y as r,m as a}from"./embellissements-BYV7mIDn.js";import{K as c}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const x="Calculer un discriminant",E=!0,q="mathLive",C="17868";class S extends n{constructor(){super(),this.canOfficielle=!1,this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=c.clavierDeBase}nouvelleVersion(){let e,t,i;this.canOfficielle?(this.reponse=-7,e=2,t=-1,i=1):(e=s(1,2),t=s(-6,6,0),i=s(-2,2,0),this.reponse=t**2-4*e*i),this.question=`Le discriminant du trinôme $${o(0,e,t,i)}$ est `,this.correction=` $\\Delta=b^2-4ac$ avec $a=${e}$, $b=${t}$ et $c=${i}$.<br>
+      $\\begin{aligned}
+      \\Delta&=${r(t)}^2-4\\times ${r(e)}\\times ${r(i)} \\\\
+      &=${a(this.reponse)} 
+      \\end{aligned}$`,this.canEnonce=this.question,this.canReponseACompleter="$\\ldots$",this.interactif||(this.question+=" $\\ldots$")}}export{S as default,E as interactifReady,q as interactifType,x as titre,C as uuid};

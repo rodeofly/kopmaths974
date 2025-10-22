@@ -1,0 +1,4 @@
+import e from"./_Construire_par_symetrie-Cg6KAQq9.js";import"./embellissements-BYV7mIDn.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./reperes-WwrVcExd.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const y="Construire le symétrique d'une figure par rapport à une droite (cas simples)",x="14/11/2021",h=!1,A=!0,g="AMCOpen",q="adfb5",b={"fr-fr":["6G7B-2"],"fr-2016":["6G24-2"],"fr-ch":["9ES6-13"]};class C extends e{constructor(){super(),this.figure=!0,this.sup=1,this.besoinFormulaireNumerique=["Type de questions",4,`1 : Axe horizontal ou vertical
+2 : Axe oblique à 45°
+3 : Axe avec une légère pente
+4 : Toutes les symétries axiales`]}}export{A as amcReady,g as amcType,x as dateDeModifImportante,C as default,h as interactifReady,b as refs,y as titre,q as uuid};

@@ -1,0 +1,19 @@
+import{g as _,c as N,r as y,p as H,aJ as K,aQ as W,cd as X,a3 as Y,a4 as V,ah as Z,aO as p,aV as g,aP as B,aU as R,_ as ee,o as se,D as te,l as ne}from"./embellissements-BYV7mIDn.js";import{p as oe}from"./qcm-BQR8Ns0N.js";import{E as ie}from"./Exercice-DtXhjCyI.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const Ce="Justifier que deux triangles sont égaux",fe=!0,Ae="qcm",Pe=!0,Qe="qcmMono",ye="b9a52",Oe={"fr-fr":["5G24-2"],"fr-ch":[]};class Te extends ie{constructor(){super(),this.nbQuestions=4,this.sup=6,this.spacing=2,this.besoinFormulaireTexte=["Choix des questions",`Nombres séparés par des tirets :
+1 : CCC
+2 : CAC
+3 : ACA
+4 : AAA
+5 : CC
+6 : Mélange`]}nouvelleVersion(){const w=_({saisie:this.sup,max:5,melange:6,defaut:6,nbQuestions:this.nbQuestions,listeOfCase:["CCC","CAC","ACA","AAA","CC"]});this.interactif||N.isAmc?(this.consigne="Cocher la bonne réponse",this.spacing=1):this.consigne="Les triangles sont-ils égaux ? S'ils sont égaux, justifier la réponse.";for(let a=0,$,c,k,D=0;a<this.nbQuestions&&D<50;){const h=[];$="",c="";let u=!0;a%3===0&&h.push("QD");let d=y(40,70),x=y(40,80,d),O=y(40,d+x-10,[d,x]);d/=10,x/=10,O/=10;const e=H(0,0),s=K(e,d),r=W(e,s,x,O),t=r.listePoints[2],S=X(r),E=Y(Math.max(Math.abs(e.x-s.x),Math.abs(t.x-s.x),Math.abs(e.x-t.x))+4,0),z=V(S,E),L=V(r,E);L.isVisible=!1;const m=Z(L,z,y(0,360)),o=m.listePoints[0],n=m.listePoints[1],i=m.listePoints[2],P=p(e,s,"|"),Q=p(o,n,"|"),M=p(s,t,"||"),v=p(n,i,"||"),I=p(t,e,"|||"),j=p(i,o,"|||"),T=g(e,s,t,.8,"|"),q=g(o,n,i,.8,"|"),G=g(s,t,e,.8,"||"),U=g(n,i,o,.8,"||"),F=g(t,e,s,.8,"|||"),J=g(i,o,n,.8,"|||"),b=B(3,h);h.push(b);const C=B(3,h);h.push(C);const f=R(r,b),A=R(m,C),l=[];switch(w[a]){case"CCC":l.push(r,m,P,Q,M,v,I,j,f,A),c=`$${e.nom}${s.nom} = ${o.nom}${n.nom}$<br>
+            $${s.nom}${t.nom} = ${n.nom}${i.nom}$<br>
+            $${t.nom}${e.nom} = ${i.nom}${o.nom}$<br>
+            Les triangles ${b} et ${C} ont leurs trois côtés deux à deux de même longueur.<br>
+            Ils sont donc égaux.`,u=!0;break;case"CAC":l.push(r,m,P,Q,M,v,T,q,f,A),c=`$${e.nom}${s.nom} = ${o.nom}${n.nom}$<br>
+            $${s.nom}${t.nom} = ${n.nom}${i.nom}$<br>
+            $\\widehat{${e.nom}${s.nom}${t.nom}} = \\widehat{${o.nom}${n.nom}${i.nom}}$<br>
+            Les triangles ${b} et ${C} ont un angle de même mesure compris entre deux côtés deux à deux de même longueur.<br>
+            Ils sont donc égaux.`,u=!0;break;case"ACA":l.push(r,m,P,Q,T,q,F,J,f,A),c=`$${e.nom}${s.nom} = ${o.nom}${n.nom}$<br>
+            $\\widehat{${s.nom}${e.nom}${t.nom}} = \\widehat{${n.nom}${o.nom}${i.nom}}$<br>
+            $\\widehat{${e.nom}${s.nom}${t.nom}} = \\widehat{${o.nom}${n.nom}${i.nom}}$<br>
+            Les triangles ${b} et ${C} ont un côté de même longueur compris entre deux angles deux à deux de même mesure.<br>
+            Ils sont donc égaux.`,u=!0;break;case"AAA":l.push(r,m,T,q,G,U,F,J,f,A),c=`On ne peut pas déterminer si ces triangles sont égaux. Ils ont la même forme mais leurs longueurs peuvent être différentes. On dit qu'ils sont ${ee("semblables")}.`,u=!1;break;case"CC":l.push(r,m,P,Q,I,j,f,A),c="On ne peut pas déterminer si ces triangles sont égaux (il manque une troisième information).",u=!1;break}(this.interactif||N.isAmc)&&(this.autoCorrection[a]={enonce:$,options:{ordered:!0},propositions:[{texte:"Les triangles sont égaux.",statut:u},{texte:"Les triangles ne sont pas égaux.",statut:!u}]},k=oe(this,a),$+=$+k.texte),$+=se(Object.assign({scale:.3,optionsTikz:["baseline=(current bounding box.north)"]},te(l)),l),this.questionJamaisPosee(a,w[a],d,x,O)&&(this.listeQuestions[a]=$,this.listeCorrections[a]=c,a++),D++}ne(this)}}export{Pe as amcReady,Qe as amcType,Te as default,fe as interactifReady,Ae as interactifType,Oe as refs,Ce as titre,ye as uuid};

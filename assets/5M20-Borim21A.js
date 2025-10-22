@@ -1,0 +1,6 @@
+import t from"./5M20-1-SmzH1PBn.js";import"decimal.js";import"./comparisonFunctions-B45ZZ3C7.js";import"./compute-engine.min.umd-BwAhpA7x.js";import"./index-BUDQz6-w.js";import"mathjs";import"./embellissements-BYV7mIDn.js";import"katex";import"earcut";import"roughjs";import"./Hms-u2AUyU1C.js";import"./gestionInteractif-DujZpSu8.js";import"./ListeDeroulanteElement-CXmzV-cr.js";import"./tableauMathlive-xx-nDjq0.js";import"./canStore-DaSrd7sp.js";import"./generalStore-C3E9FHtR.js";import"seedrandom";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"crypto-js";import"./sizeTools-DfTC1Dgv.js";import"./time-DMC-jnVL.js";import"./qcm-BQR8Ns0N.js";import"./questionMathLive-DdRvWqlN.js";import"./AjouteTableauMathlive-Bz24QHd3.js";import"./deprecatedFractions-D2cbyAQf.js";import"./colors-bl7PrqSM.js";const A="Calculs de volumes",F=!0,G="AMCHybride",H=!0,I=["qcm","mathLive"],L="10/06/2024",N="e26ca",j={"fr-fr":["5M20"],"fr-ch":["10GM2-1"]};class k extends t{constructor(){super(),this.sup=1,this.sup4=5,this.classe=5,this.besoinFormulaire4Texte=["Type de solides",`Nombres séparés par des tirets :
+1  : Cubes
+2 : Pavés droits
+3 : Cylindres
+4 : Prismes droits
+5 : Mélange`]}}export{F as amcReady,G as amcType,L as dateDeModifImportante,k as default,H as interactifReady,I as interactifType,j as refs,A as titre,N as uuid};

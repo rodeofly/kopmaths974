@@ -1,0 +1,10 @@
+import{m as e}from"./embellissements-BYV7mIDn.js";import r from"./ExerciceQcm-DOkcCRBu.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./qcm-BQR8Ns0N.js";import"./lists-i1i4IA1M.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const f="41f8f",g={"fr-fr":["TSP1-QCM09"],"fr-ch":[]},j=!0,v="qcm",q="true",A="qcmMono",x="Métropole 03/23 : binomiale",L="11/03/2025";class O extends r{versionOriginale=()=>{this.reponses=["$0,188$","$0,859$","$0,671$","$0,187$"],this.enonce=this.sup3?`Un jeu vidéo possède une vaste communauté de joueurs en ligne.<br> Avant de débuter une partie, le joueur doit choisir entre deux "mondes" : soit le monde A, soit le monde B.
+<br>On choisit au hasard un individu dans la communauté des joueurs.<br>
+Lorsqu'il joue une partie, on admet que :<br>
+$\\bullet~~$ la probabilité que le joueur choisisse le monde A est égale à $\\dfrac25$ ;<br>
+$\\bullet~~$ si le joueur choisit le monde A, la probabilité qu'il gagne la partie est de $\\dfrac{7}{10}$ ;<br>
+$\\bullet~~$ la probabilité que le joueur gagne la partie est de $\\dfrac{12}{25}$.<br>
+On considère les évènements suivants : <br>
+$\\bullet~~$ $A$ :  "Le joueur choisit le monde A" ; <br>
+$\\bullet~~$ $B$ :  "Le joueur choisit le monde B"  ;<br>
+$\\bullet~~$ $G$ :  "Le joueur gagne la partie" .<br><br>`:"",this.enonce+="La probabilité, arrondie au millième, que le joueur gagne exactement $6$ parties est égale à :",this.correction="On utilise la loi binomiale avec $n = 10$ et $p = \\dfrac{12}{25}$ :<br>",this.correction+="$P(X = 6) = \\binom{10}{6} \\left(\\dfrac{12}{25}\\right)^6 \\left(\\dfrac{13}{25}\\right)^4 \\approx 0,188.$<br>",this.correction+=`La bonne réponse est donc $${e("0,188")}$.`};constructor(){super(),this.options={vertical:!1,ordered:!1},this.versionOriginale(),this.besoinFormulaire3CaseACocher=["Avec le préambule de l'énoncé",!0],this.sup3=!0}}export{q as amcReady,A as amcType,L as dateDePublication,O as default,j as interactifReady,v as interactifType,g as refs,x as titre,f as uuid};

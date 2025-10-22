@@ -1,0 +1,7 @@
+import{b as i}from"./colors-bl7PrqSM.js";import{r,e as o,m as s,_ as n}from"./embellissements-BYV7mIDn.js";import $ from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const C="Déterminer une distance avec une vitesse",y=!0,A="mathLive",M=!0,q="AMCNum",D="01/08/2021",P="b0f1a",R={"fr-fr":["can6P03","6P3C-flash2"],"fr-ch":[]};class T extends ${constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.optionsChampTexte={texteApres:" km"}}nouvelleVersion(){const e=r(2,6)*20,t=r(1,6);this.reponse=Math.round(e*(t+.5)),this.question=`Une voiture roule à une vitesse constante de $${e}$ km/h. <br>
+    
+    Combien de kilomètres parcourt-elle en $${t}$ h et $30$ min ?`,this.correction=`$${e}\\times ${o(t+.5)} = ${s(this.reponse)}$`,this.correction+=n(`<br> Mentalement : <br>
+    La voiture roule à une vitesse constante de $${e}$ km/h, cela signifie qu'elle parcourt $${e}$ km en $1$ heure.<br>
+    En $${t}$ heures, elle parcourt $${e}\\times ${t}=${e*t}$ km.<br>
+    En $30$ minutes, elle parcourt la moitié de $${e}$ km, soit $${e/2}$ km.<br>
+    Au total, elle a parcouru $${e*t}+${e/2} $, soit $${e*(t+.5)}$ km. `,i),this.canEnonce=this.question,this.canReponseACompleter="$\\dots$ km"}}export{M as amcReady,q as amcType,D as dateDePublication,T as default,y as interactifReady,A as interactifType,R as refs,C as titre,P as uuid};

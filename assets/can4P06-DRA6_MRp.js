@@ -1,0 +1,10 @@
+import o from"./ExerciceSimple-CWWOU0FG.js";import{r as i,a as n,e as t,m as a,a8 as $}from"./embellissements-BYV7mIDn.js";import{K as c}from"./Exercice-DtXhjCyI.js";import m from"decimal.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const Q="Déterminer une valeur définie avec un pourcentage",y=!0,E="mathLive",P="15/09/2024",C="0b829",R={"fr-fr":["can4P06"],"fr-ch":["9NO14-13"]};class T extends o{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=c.clavierDeBase,this.spacing=1.5,this.spacingCorr=1.5,this.versionQcmDisponible=!0}nouvelleVersion(){const s=[[1,i(1,100)*10,100],[5,i(3,20)*10,20],[10,i(5,20)*10,10],[20,i(1,9)*10,5],[50,i(10,30),2],[25,i(1,10)*10,4]],e=n(s),r=new m(e[0]).mul(e[1]).div(100);this.distracteurs=[`$N=${t(r.mul(1-e[0]/100),2)}$`,`$N=${t(e[1]*10,0)}$`,`$N=${t(e[1]/100,2)}$`],this.reponse=this.versionQcm?`$N=${t(e[1],0)}$`:t(e[1],0),this.question=`$${e[0]}\\,\\%$ de $N$ est égal à $${t(r,2)}$.<br> `,this.versionQcm?this.question+=" On a :":this.question+=" Quelle est la valeur de $N$ ?",this.canEnonce=this.question,this.canReponseACompleter="$N=\\ldots$",this.correction=`Pour passer de $${e[0]}\\,\\%$ à $100\\,\\%$, on multiplie par $${e[2]}$.<br>
+        $\\begin{aligned}
+        ${e[0]}\\,\\% \\text{ de } N &=  ${t(r,2)}\\\\
+        100\\,\\% \\text{ de } N&=${e[2]}\\times${t(r,2)}\\\\
+        ${e[0]===5&&!Number.isInteger(e[0]*e[1]/100)?`100\\,\\% \\text{ de } N&=\\underbrace{2\\times 10}_{=20}\\times${t(r,2)}\\\\`:""}
+        N&=${a(`${t(e[1],0)}`)}
+        \\end{aligned}$
+          `,e[0]===5&&!Number.isInteger(e[0]*e[1]/100)&&(this.correction+=`<br>  ${$("Remarque : ")} <br>
+              Pour multiplier un nombre par $20$, on peut le multiplier par $10$, puis par $2$.
+                `),this.interactif&&!this.versionQcm&&(this.question+="<br> $N=$")}}export{P as dateDePublication,T as default,y as interactifReady,E as interactifType,R as refs,Q as titre,C as uuid};

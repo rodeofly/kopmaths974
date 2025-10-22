@@ -1,0 +1,8 @@
+import m from"decimal.js";import{r as s,a as h,e as p}from"./embellissements-BYV7mIDn.js";import f from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const v="Déterminer le chiffre des ...",z=!0,A="mathLive",E=!0,q="AMCNum",w="22f41",M={"fr-fr":["can6N05","6N1A-flash4"],"fr-ch":["NR"]};class Q extends f{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1}nouvelleVersion(){const e=s(1,3),t=s(1,9,e),i=s(1,9,[e,t]),r=s(1,9,[e,t,i]),n=s(1,9,[e,t,i,r]),c=s(1,9,[e,t,i,r,n]),a=new m(e*1e5+t*1e4+i*1e3+r*100+n*10+c).div(1e3),o=h(["centaines","dizaines","dixièmes","centièmes","millièmes","unités"]);switch(this.question=`Quel est le chiffre des ${o} dans $${p(a)}$ ? `,o){case"unités":this.reponse=i;break;case"centaines":this.reponse=e;break;case"dizaines":this.reponse=t;break;case"dixièmes":this.reponse=r;break;case"centièmes":this.reponse=n;break;case"millièmes":this.reponse=c;break}this.correction=`Le chiffre des ${o} est $${this.reponse}$.<br><br>$\\begin{array}{|c|c|c|c|c|c|c|}
+`,this.correction+=`\\hline
+`,this.correction+=`\\text{Centaine} &  \\text{Dizaine} & \\text{Unité} &  \\Large{\\textbf{,}}& \\text{Dixième} & \\text{Centième} & \\text{Millième} \\\\ 
+`,this.correction+=`\\hline
+`,this.correction+=`${e}&${t}&${i} & \\Large{\\textbf{,}}& ${r}&${n}& ${c}\\\\ 
+`,this.correction+=`\\hline
+`,this.correction+=`\\end{array}
+$`,this.canEnonce=this.question,this.canReponseACompleter=""}}export{E as amcReady,q as amcType,Q as default,z as interactifReady,A as interactifType,M as refs,v as titre,w as uuid};

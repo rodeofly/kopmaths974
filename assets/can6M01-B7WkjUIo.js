@@ -1,0 +1,10 @@
+import{p as c}from"./qcm-BQR8Ns0N.js";import{r as $,_ as a,l as m}from"./embellissements-BYV7mIDn.js";import{E as l}from"./Exercice-DtXhjCyI.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const V="Comparer des périmètres (V/F)",q=!0,y="qcm",F=!0,v="qcmMono",R="79035",T={"fr-fr":["can6M01","CM1M1H-flash1"],"fr-ch":[]};class A extends l{constructor(){super(),this.nbQuestions=1}nouvelleVersion(){for(let r=0,s=0;r<this.nbQuestions&&s<50;){const e=$(3,25),t=$(0,1),o=[!1,!0];let i=`Un carré de côté $${e}$ cm a le même périmètre qu'un rectangle de largeur $${e-t}$ cm et de longueur $${e+1}$ cm. `;this.canEnonce=i,this.autoCorrection[r]={enonce:i,propositions:[{texte:"Vrai",statut:o[t]},{texte:"Faux",statut:o[1-t]}],options:{ordered:!0,radio:!0}};const n=c(this,r);i+=n.texte,this.correction=o[t]?`Vrai <br>
+      $\\bullet$ Pour le carré : $4\\times ${e}=${4*e}$ cm.<br>
+      $\\bullet$ Pour le rectangle  : $2\\times (${e-t}+ ${e+1}) = ${4*e}$ cm.`:`Faux <br>
+      $\\bullet$ Pour le carré : $4\\times ${e}=${4*e}$ cm.<br>
+      $\\bullet$ Pour le rectangle  : $2\\times (${e}+${e+1})= ${2*2*e+2}$ cm.`,this.correction+=o[t]?a(`<br> Mentalement : <br>
+           Pour le rectangle, la somme de la longueur $${e+1}$ et de la largeur $${e-t}$ donne le demi-périmètre : $${2*e-t+1}$.<br>
+      Pour avoir son périmètre, on multiplie  par $2$, on obtient : $2\\times ${2*e-t+1}=${4*e-2*t+2}$.`):a(`<br> Mentalement : <br>
+      Pour le rectangle, la somme de la longueur $${e+1}$ et de la largeur $${e}$ donne le demi-périmètre : $${2*e+1}$.<br>
+      Pour avoir son périmètre, on multiplie  par $2$, on obtient : $2\\times ${2*e+1}=${4*e+2}$.
+      `),this.questionJamaisPosee(r,e,t)&&(this.listeQuestions[r]=i,this.listeCorrections[r]=this.correction,this.listeCanEnonces[r]=this.canEnonce,this.listeCanReponsesACompleter[r]=n.texte,r++),s++}m(this)}}export{F as amcReady,v as amcType,A as default,q as interactifReady,y as interactifType,T as refs,V as titre,R as uuid};

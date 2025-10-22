@@ -1,0 +1,10 @@
+import{m as e}from"./embellissements-BYV7mIDn.js";import r from"./ExerciceQcm-DOkcCRBu.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./qcm-BQR8Ns0N.js";import"./lists-i1i4IA1M.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const f="ef507",v={"fr-fr":["TSP1-QCM10"],"fr-ch":[]},g=!0,j="qcm",q="true",A="qcmMono",x="Métropole 03/23 : binomiale",O="11/03/2025";class E extends r{versionOriginale=()=>{this.enonce=this.sup3?`Un jeu vidéo possède une vaste communauté de joueurs en ligne.<br> Avant de débuter une partie, le joueur doit choisir entre deux "mondes" : soit le monde A, soit le monde B.
+<br>On choisit au hasard un individu dans la communauté des joueurs.<br>
+Lorsqu'il joue une partie, on admet que :<br>
+$\\bullet~~$ la probabilité que le joueur choisisse le monde A est égale à $\\dfrac25$ ;<br>
+$\\bullet~~$ si le joueur choisit le monde A, la probabilité qu'il gagne la partie est de $\\dfrac{7}{10}$ ;<br>
+$\\bullet~~$ la probabilité que le joueur gagne la partie est de $\\dfrac{12}{25}$.<br>
+On considère les évènements suivants : <br>
+$\\bullet~~$ $A$ :  "Le joueur choisit le monde A" ; <br>
+$\\bullet~~$ $B$ :  "Le joueur choisit le monde B"  ;<br>
+$\\bullet~~$ $G$ :  "Le joueur gagne la partie" .<br><br>`:"",this.reponses=["$n = 3$","$n = 2$","$n = 4$","$n = 5$"],this.enonce+="On considère un entier naturel $n$ pour lequel la probabilité, arrondie au millième,<br> que le joueur gagne au plus $n$ parties est de $0,207$. Alors :",this.correction="On cherche $n$ tel que $P(X \\leq n) \\approx 0,207$.<br>",this.correction+="En utilisant la loi binomiale avec $n = 10$ et $p = \\dfrac{12}{25}$, on trouve que $n = 3$.<br>",this.correction+=`La bonne réponse est donc $${e("n = 3")}$.`};constructor(){super(),this.options={vertical:!1,ordered:!1},this.versionOriginale(),this.besoinFormulaire3CaseACocher=["Avec le préambule de l'énoncé",!0],this.sup3=!0}}export{q as amcReady,A as amcType,O as dateDePublication,E as default,g as interactifReady,j as interactifType,v as refs,x as titre,f as uuid};

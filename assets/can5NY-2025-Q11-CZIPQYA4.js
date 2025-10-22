@@ -1,0 +1,11 @@
+import i from"./ExerciceSimple-CWWOU0FG.js";import{r as s,e as r,m as t,a as o}from"./embellissements-BYV7mIDn.js";import{K as $}from"./Exercice-DtXhjCyI.js";import n from"decimal.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const C="Calculer un rendu de monnaie",q=!0,j="mathLive",k="bee6d",E={"fr-fr":[],"fr-ch":[]};class O extends i{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.optionsChampTexte={texteApres:" €"},this.formatChampTexte=$.clavierDeBase}nouvelleVersion(){let e;switch(s(1,5)){case 1:e=new n(20.25),this.reponse=r(new n(30).sub(e),2),this.question=`Pour payer $${r(e,2)}$ €, je donne $3$ billets de $10$ €.<br>
+      Combien me rend-on ?`,this.correction=`$30-20,25=${t(this.reponse)}$<br>
+      On doit me rendre $${t(this.reponse)}$ €.`;break;case 2:e=new n(20.25),this.reponse=r(new n(40).sub(e),2),this.question=`Pour payer $${r(e,2)}$ €, je donne $2$ billets de $20$ €.<br>
+      Combien me rend-on ?`,this.correction=`$40-20,25=${t(this.reponse)}$<br>
+      On doit me rendre $${t(this.reponse)}$ €.`;break;case 3:e=new n(20.25),this.reponse=r(new n(50).sub(e),2),this.question=`Pour payer $${r(e,2)}$ €, je donne $1$ billet de $50$ €.<br>
+      Combien me rend-on ?`,this.correction=`$50-20,25=${t(this.reponse)}$<br>
+      On doit me rendre $${t(this.reponse)}$ €.`;break;case 4:e=new n(20.25),this.reponse=r(new n(25).sub(e),2),this.question=`Pour payer $${r(e,2)}$ €, je donne ${o([!0,!1])?"$5$ billets de $5$ €":"$1$ billet de $20$ € et un billet de $5$ €"}.<br>
+          Combien me rend-on ?`,this.correction=`$25-20,25=${t(this.reponse)}$<br>
+          On doit me rendre $${t(this.reponse)}$ €.`;break;case 5:e=new n(20.25),this.reponse=r(new n(22).sub(e),2),this.question=`Pour payer $${r(e,2)}$ €, je donne $1$ billet de $20$ € et une pièce de $2$ €.<br>
+              Combien me rend-on ?`,this.correction=`$22-20,25=${t(this.reponse)}$<br>
+              On doit me rendre $${t(this.reponse)}$ €.`;break}this.interactif&&(this.question+="<br>"),this.canReponseACompleter="$\\ldots$ €",this.canEnonce=this.question}}export{O as default,q as interactifReady,j as interactifType,E as refs,C as titre,k as uuid};

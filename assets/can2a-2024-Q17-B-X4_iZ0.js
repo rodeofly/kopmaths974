@@ -1,0 +1,7 @@
+import c from"./ExerciceSimple-CWWOU0FG.js";import{F as r,m as n,a as o}from"./embellissements-BYV7mIDn.js";import{K as s}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const v="Rendre une fraction irréductible",y=!0,R="mathLive",q="2c801";class T extends c{constructor(){super(),this.canOfficielle=!1,this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=s.clavierDeBaseAvecFraction}nouvelleVersion(){if(this.canOfficielle)this.question="Rendre irréductible la fraction $\\dfrac{15}{20}$.<br>",this.reponse=new r(3,4).texFraction,this.correction=`$\\begin{aligned}
+      \\dfrac{15}{20}&=\\dfrac{5\\times 3}{5\\times 4}\\\\
+      &=${n("\\dfrac{3}{4}")}
+      \\end{aligned}$`;else{const t=o([[5,3],[7,9],[3,7],[5,7],[9,7],[2,9],[4,7],[11,5],[11,3]]),e=new r(t[0],t[1]),i=o([3,5,7,9]);this.question=`Rendre irréductible la fraction $\\dfrac{${e.n*i}}{${e.d*i}}$.`,this.correction=`$\\begin{aligned}
+      \\dfrac{${e.n*i}}{${e.d*i}}&=\\dfrac{${e.n}\\times ${i}}{${e.d}\\times ${i}}\\\\
+      &=${n(e.texFraction)}
+      \\end{aligned}$`,this.reponse={reponse:{value:e.simplifie().texFraction,options:{fractionIrreductible:!0}}}}this.canEnonce=this.question,this.canReponseACompleter=""}}export{T as default,y as interactifReady,R as interactifType,v as titre,q as uuid};

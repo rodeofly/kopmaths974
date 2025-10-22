@@ -1,0 +1,5 @@
+import r from"./ExerciceSimple-CWWOU0FG.js";import{r as o,e,m as c}from"./embellissements-BYV7mIDn.js";import s from"decimal.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const g="Additionner des décimaux",q=!0,w="mathLive",y="c700e";class A extends r{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.canOfficielle=!1}nouvelleVersion(){let i,t;if(this.canOfficielle)i=new s("0.16"),t=new s("0.2");else{const n=o(2,7);t=new s(n).div(10),i=new s(o(1,3)*10+(10-n)).div(100)}this.question=`$${e(i,2)}+${e(t,1)}`,this.interactif?this.question+="=$":this.question+="$",this.canEnonce=this.question,this.canReponseACompleter="",this.reponse=e(i.add(t),2),this.correction=`On peut calculer ainsi : <br>
+    $\\begin{aligned}
+    ${e(i,2)}+${e(t,1)}&=${e(i,2)}+${e(t,2,!0)}\\\\
+    &=${c(this.reponse)}
+    \\end{aligned}$`}}export{A as default,q as interactifReady,w as interactifType,g as titre,y as uuid};

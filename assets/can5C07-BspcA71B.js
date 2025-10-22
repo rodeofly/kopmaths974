@@ -1,0 +1,5 @@
+import{r as i,_ as o}from"./embellissements-BYV7mIDn.js";import s from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const y="Utiliser une priorité opératoire",C=!0,E="mathLive",R=!0,q="AMCNum",v="14b41",A={"fr-fr":["can5C07"],"fr-ch":["NR"]};class L extends s{constructor(){super(),this.nbQuestions=1,this.typeExercice="simple"}nouvelleVersion(){const t=i(5,9),r=20-t,e=i(3,9);this.reponse=r+t*e,this.question=`Calculer $${r} + ${t} \\times ${e}$.`,this.correction=`$${r} + ${t} \\times ${e}= ${r} + ${t*e} = ${this.reponse}$`,this.correction+=o(`
+    <br> Mentalement : <br>
+    La multiplication étant prioritaire sur l'addition, on commence par calculer $${t} \\times ${e}=${t*e}$.<br>
+    On ajoute ensuite  $${r}$ pour obtenir le résultat : $${t*e}+${r}=${this.reponse}$.
+     `),this.canEnonce=this.question,this.canReponseACompleter=""}}export{R as amcReady,q as amcType,L as default,C as interactifReady,E as interactifType,A as refs,y as titre,v as uuid};

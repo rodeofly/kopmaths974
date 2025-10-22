@@ -1,0 +1,9 @@
+import{r as n,h as u,F as m,a as d,v as c,f as a,Y as f,m as h}from"./embellissements-BYV7mIDn.js";import b from"./ExerciceSimple-CWWOU0FG.js";import{w as x}from"./message-BfjIT6jz.js";import{K as q}from"./Exercice-DtXhjCyI.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const L="Résoudre une équation du type $\\dfrac{ax+b}{c}=\\dfrac{d}{e}$",N=!0,Q="mathLive",k="10/09/2025",B="550cf",I={"fr-fr":["2N51-6"],"fr-ch":[]};class M extends b{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=q.clavierDeBaseAvecFraction}nouvelleVersion(){const i=n(-10,10,0),r=n(-10,10,0),o=n(-10,10,[-1,0,1]);let t=n(-10,10,0),e=n(-10,10,[-1,0,1,t]);e*t>=0&&(e=u(e),t=u(t));const l=new m(t,e),$=(p=!1)=>`\\dfrac{${c(i)}x${a(r)}}{${o}}${p?"&=":"="}${l.texFraction}`,s=new m(o*t-r*e,e*i);switch(d([1])){case 1:this.interactif?this.question=` Donner la solution de l'équation $${$()}$.`:this.question=` Résoudre l'équation $${$()}$.`,this.correction=x("Pour tout réels $a$, $b$, $c$, $d$ tels que $b$ et $d$ soient non nuls : $\\dfrac{a}{b}=\\dfrac{c}{d}$ si et seulement si $ad=bc$.","nombres","Rappel"),this.correction+=`\\[
+\\begin{aligned}
+${$(!0)}\\\\
+${e}( ${c(i)}x${a(r)} )&=${o} \\times ${f(t)}\\\\
+${c(e*i)}x${a(e*r)}&=${o*t}\\\\
+${c(e*i)}x&=${o*t}${a(-r*e)}\\\\
+${c(e*i)}x&=${o*t-r*e}`,e*i!==1&&(this.correction+=`\\\\x&=${s.texFSD}`,!s.estIrreductible&&s.num!==0&&(this.correction+=`=${s.texFractionSimplifiee}`)),this.correction+=`
+\\end{aligned}
+\\]`,this.correction+=`L'équation a donc pour unique solution : $${h(s.texFractionSimplifiee)}$.`,this.reponse=s.simplifie();break}this.canEnonce=this.question,this.canReponseACompleter=""}}export{k as dateDePublication,M as default,N as interactifReady,Q as interactifType,I as refs,L as titre,B as uuid};

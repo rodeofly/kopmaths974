@@ -1,0 +1,7 @@
+import t from"./3F10-2-A-5BH0PQ.js";import"./gestionInteractif-DujZpSu8.js";import"decimal.js";import"./embellissements-BYV7mIDn.js";import"mathjs";import"katex";import"earcut";import"roughjs";import"./comparisonFunctions-B45ZZ3C7.js";import"./compute-engine.min.umd-BwAhpA7x.js";import"./index-BUDQz6-w.js";import"./Hms-u2AUyU1C.js";import"./ListeDeroulanteElement-CXmzV-cr.js";import"./tableauMathlive-xx-nDjq0.js";import"./canStore-DaSrd7sp.js";import"./generalStore-C3E9FHtR.js";import"seedrandom";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"crypto-js";import"./sizeTools-DfTC1Dgv.js";import"./time-DMC-jnVL.js";import"./questionMathLive-DdRvWqlN.js";import"./AjouteTableauMathlive-Bz24QHd3.js";const R="Calculer des images dans des fonctions polynomiales ou rationnelles",q="19/06/2024",M=!0,O="mathLive",T=!0,I="AMCNum",B="8a78e",D={"fr-fr":["3F10-6","BP2AutoO7"],"fr-ch":["1mF1-8"]};class L extends t{constructor(){super(),this.besoinFormulaireTexte=["Choix des questions",`Nombres séparés par des tirets :
+1 : Polynôme de degré 2 
+2 : Fonction rationnelle 
+3 : Mélange`],this.besoinFormulaire3Numerique=["Niveau de difficulté",5,`1 : Que des entiers positifs
+2 : Avec des entiers relatifs
+3 : Avec des antécédents tous négatifs
+4 : Mélange`],this.fonctions="polynomialesOuRationnelles",this.besoinFormulaire2Numerique=!1,this.sup=3,this.sup2=1,this.sup3=1}}export{T as amcReady,I as amcType,q as dateDePublication,L as default,M as interactifReady,O as interactifType,D as refs,R as titre,B as uuid};

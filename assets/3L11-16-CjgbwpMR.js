@@ -1,0 +1,20 @@
+import{I as g}from"./IdentiteRemarquable-B_d9PlbS.js";import{M as n}from"./MonomePlusieursVariables-DHq3iA-O.js";import{g as T,bo as M,F as $,a as b,r as S,an as c,m as h,l as E}from"./embellissements-BYV7mIDn.js";import{E as q}from"./Exercice-DtXhjCyI.js";import"./PolynomePlusieursVariables-DEsXl1Ev.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const B="Compléter une identité remarquable à trou",G="11/09/2024",H="7f0cf",K={"fr-fr":["3L11-16"],"fr-ch":["11FA1-13","1mCL1-8"]};class O extends q{constructor(){super(),this.consigne="Compléter le terme manquant afin d'obtenir une identité remarquable. Écrire ensuite l'identité remarquable correspondante factorisée.",this.nbQuestions=4,this.besoinFormulaireTexte=["Choix des questions",`Nombres séparés par des tirets :
+1 - (x+a)^2
+2 - (x-a)^2
+3 - (x-a)(x-b)
+4 - (x+a)(x+b)
+5 - (ax+by)^2
+6 - (ax-by)^2
+7 - (ax+by)(ax-by)
+8 - (ax+b)(ax+c)
+9 - Mélange`],this.besoinFormulaire2Numerique=["Coefficients",3,`Entiers 
+2 : Fractionnaires 
+3 : Mélange`],this.besoinFormulaire3Numerique=["Degré maximum",5,`1
+2
+3
+4
+5`],this.besoinFormulaire4Numerique=["Nombre de variables différentes",5,`1
+2
+3
+4
+5`],this.sup=9,this.sup2=1,this.sup3=2,this.sup4=2,this.listeAvecNumerotation=!1}nouvelleVersion(){this.consigne="Compléter le terme manquant afin d'obtenir une identité remarquable. Écrire ensuite l'identité remarquable correspondante factorisée.";const a=T({saisie:this.sup,min:1,max:8,melange:9,defaut:9,nbQuestions:this.nbQuestions});for(let e=0,v=0;e<this.nbQuestions&&v<50;){let u="",f="";const x=Math.max(this.sup3,0),m=M(["x","y","z","r","s","t"],this.sup4),D=["entier","fractionnaire"];let l=[],t,i,r,s;if(t=new n(new $(1,1),{variables:[],exposants:[]}),i=new n(new $(1,1),{variables:[],exposants:[]}),r=new n(new $(1,1),{variables:[],exposants:[]}),s=new n(new $(1,1),{variables:[],exposants:[]}),this.sup2===1?l=["entier"]:this.sup2===2?l=["fraction"]:l=D,a[e]===1||a[e]===2||a[e]===3||a[e]===4){t=n.createRandomMonome(x,b(l),m),i=n.createRandomMonome(0,b(l),m),r=n.createRandomMonome(0,"entier",m);do s=n.createRandomMonome(0,"entier",m);while(s===r||s.oppose()===r);t.coefficient=new $(1,1),i.coefficient.signe<0&&(i=i.oppose())}if(a[e]===5||a[e]===6||a[e]===7||a[e]===8){t=n.createRandomMonome(S(1,Math.max(1,x)),b(l),m);do i=n.createRandomMonome(S(1,Math.max(1,x)),b(l),m);while(i.estSemblable(t));r=n.createRandomMonome(0,"entier",m);do s=n.createRandomMonome(0,"entier",m);while(s===r||s.oppose()===r);t.coefficient.signe<0&&(t=t.oppose()),i.coefficient.signe<0&&(i=i.oppose())}switch(a[e]){case 1:case 5:{const o=g.carreDuneSomme(t,i).melangerTermes(!0);u=`$${c(e+1)}=${o.toStringSansLeDernierTerme()}\\,=\\,\\ldots\\ldots$`,f=`$${c(e+1)}=${o.toStringAvecDernierTermeEnEvidence()}=${h(`\\left(${t.toString()}+${i.toString()}\\right)^2`)}$`;break}case 2:case 6:{const o=g.carreDuneDifference(t,i).melangerTermes(!0);u=`$${c(e+1)}=${o.toStringSansLeDernierTerme()}\\,=\\,\\ldots\\ldots$`,f=`$${c(e+1)}=${o.toStringAvecDernierTermeEnEvidence()}=${h(`\\left(${t.toString()}-${i.toString()}\\right)^2`)}$`;break}case 3:case 7:{const o=["+","-"],d=S(0,1),p=g.differenceDeDeuxCarres(t,i).melangerTermes(!0);u=`$${c(e+1)}=${p.toStringSansLeDernierTerme()}\\,=\\,\\ldots\\ldots$`,f=`$${c(e+1)}=${p.toStringAvecDernierTermeEnEvidence()}=${h(`\\left(${t.toString()}${o[d]} ${i.toString()}\\right)\\left(${t.toString()}${o[(d+1)%2]}${i.toString()}\\right)`)}$`;break}case 4:case 8:{const o=r.coefficient.signe<0?"":"+",d=s.coefficient.signe<0?"":"+",p=g.sommeProduit(t,r,s).melangerTermes(!0);u=`$${c(e+1)}=${p.toStringSansLeDernierTerme()}\\,=\\,\\ldots\\ldots$`,f=`$${c(e+1)}=${p.toStringAvecDernierTermeEnEvidence()}=${h(`\\left(${t.toString()}${o}${r.toString()}\\right)\\left(${t.toString()}${d}${s.toString()}\\right)`)}$`;break}}this.questionJamaisPosee(e,u)&&(this.listeQuestions[e]=u,this.listeCorrections[e]=f,e++),v++}E(this)}}export{G as dateDePublication,O as default,K as refs,B as titre,H as uuid};

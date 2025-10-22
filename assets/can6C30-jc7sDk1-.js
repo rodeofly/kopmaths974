@@ -1,0 +1,13 @@
+import{K as a}from"./Exercice-DtXhjCyI.js";import{a as u,r as $,e,m as o,_ as n}from"./embellissements-BYV7mIDn.js";import m from"decimal.js";import{b as c}from"./colors-bl7PrqSM.js";import l from"./ExerciceSimple-CWWOU0FG.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const k="Multiplier deux décimaux",D=!0,R="mathLive",T=!0,A="AMCNum",K="04/03/2022",L="16ea9",P={"fr-fr":["can6C30","6N2E-flash1"],"fr-ch":["NR"]};class Q extends l{constructor(){super(),this.nbQuestions=1,this.formatChampTexte=a.clavierNumbers,this.typeExercice="simple"}nouvelleVersion(){let s,t,i,r;switch(u([1,2,3,4])){case 1:s=$(2,9),t=new m(s).div(10),i=$(2,9),this.reponse=t.mul(i),this.question=`Calculer $${e(t,1)}\\times ${i}$.`,this.correction=`$${e(t,1)}\\times ${i}=${o(e(Number(this.reponse),1))}$<br>`,this.correction+=n(`
+    <br> Mentalement : <br>
+   Comme $${e(t,1)}=${s}\\times 0,1$, alors $${e(t,1)}\\times ${i}=${s}\\times 0,1\\times ${i} =
+   ${s*i}\\times 0,1=${e(Number(this.reponse),1)}$ `,c);break;case 2:s=$(2,9),t=new m(s).div(100),i=$(2,9),this.reponse=t.mul(i),this.question=`Calculer $${e(t,2)}\\times ${i}$.`,this.correction=`$${e(t,2)}\\times ${i}=${o(e(Number(this.reponse),2))}$<br>`,this.correction+=n(`
+    <br> Mentalement : <br>
+   Comme $${e(t,2)}=${s}\\times 0,01$, alors $${e(t,2)}\\times ${i}=${s}\\times 0,01\\times ${i} =
+   ${s*i}\\times 0,01=${e(Number(this.reponse),2)}$ `,c);break;case 3:s=$(2,9),t=new m(s).div(10),i=$(2,9),r=new m(i).div(10),this.reponse=t.mul(r),this.question=`Calculer $${e(t,1)}\\times ${e(r,1)}$.`,this.correction=`$${e(t,1)}\\times ${e(r,1)}=${o(e(Number(this.reponse),2))}$<br>`,this.correction+=n(`
+    <br> Mentalement : <br>
+   Comme $${e(t,1)}=${s}\\times 0,1$ et $${e(r,1)}=${i}\\times 0,1$,
+    alors $${e(t,1)}\\times ${e(r,1)}=${s}\\times ${i}\\times 0,1 \\times 0,1=${s*i}\\times 0,01=${e(Number(this.reponse),2)}$ `,c);break;case 4:s=$(2,9),t=new m(s).div(10),i=$(2,9),r=new m(i).div(100),this.reponse=t.mul(r),this.question=`Calculer $${e(t,1)}\\times ${e(r,2)}$.`,this.correction=`$${e(t,1)}\\times ${e(r,2)}=${o(e(Number(this.reponse),3))}$<br>`,this.correction+=n(`
+    <br> Mentalement : <br>
+   Comme $${e(t,1)}=${s}\\times 0,1$ et $${e(r,2)}=${i}\\times 0,01$,
+    alors $${e(t,1)}\\times ${e(r,2)}=${s}\\times ${i}\\times 0,01 \\times 0,1=${s*i}\\times 0,001=${e(Number(this.reponse),3)}$ `,c);break}this.canEnonce=this.question,this.canReponseACompleter=""}}export{T as amcReady,A as amcType,K as dateDePublication,Q as default,D as interactifReady,R as interactifType,P as refs,k as titre,L as uuid};

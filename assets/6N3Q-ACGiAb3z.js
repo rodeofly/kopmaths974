@@ -1,0 +1,16 @@
+import{g as u,a as d,r,e as s,m as h,l as x}from"./embellissements-BYV7mIDn.js";import{t as p}from"./deprecatedFractions-D2cbyAQf.js";import{E as f}from"./Exercice-DtXhjCyI.js";import{a as b}from"./questionMathLive-DdRvWqlN.js";import{s as g}from"./gestionInteractif-DujZpSu8.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./colors-bl7PrqSM.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";import"./tableauMathlive-xx-nDjq0.js";import"./canStore-DaSrd7sp.js";import"./generalStore-C3E9FHtR.js";import"./comparisonFunctions-B45ZZ3C7.js";import"./compute-engine.min.umd-BwAhpA7x.js";import"./Hms-u2AUyU1C.js";import"./ListeDeroulanteElement-CXmzV-cr.js";import"./sizeTools-DfTC1Dgv.js";import"./time-DMC-jnVL.js";import"./AjouteTableauMathlive-Bz24QHd3.js";const I=!0,K="AMCNum",U=!0,W="mathLive",X="Calculer mentalement le pourcentage d'un nombre",Y="66756",Z={"fr-fr":["6N3Q"],"fr-2016":["6N33-1"],"fr-ch":["9NO14-3"]};class _ extends f{constructor(){super(),this.nbQuestions=5,this.consigne="Calculer.",this.spacing=2,this.spacingCorr=3.5,this.nbCols=2,this.sup=!0,this.interactif=!1,this.sup2="1-2-4-5",this.besoinFormulaireCaseACocher=["Plusieurs méthodes"],this.besoinFormulaire2Texte=["Choix des pourcentages",`Nombres séparés par des tirets
+1 : 10%
+2 : 20%
+3 : 25%
+4 : 30%
+5 : 40%
+6 : 50%
+7 : 60%
+8 : 75%
+9 : 90%
+10 : Mélange`]}nouvelleVersion(){const l=u({saisie:this.sup2,min:1,max:9,defaut:10,melange:10,nbQuestions:this.nbQuestions,listeOfCase:[10,20,25,30,40,50,60,75,90]}).map(Number);for(let $=0,a,i,c=0;$<this.nbQuestions&&c<50;){const t=l[$];let e=d([r(2,9),r(2,9)*10,r(1,9)*10+r(1,2)]);switch((t===25||t===75)&&(e=r(1,10)*d([4,40])),a=`$${t}~\\%~\\text{de }${e}$`,t){case 50:i=`$${t}~\\%~\\text{de }${e}=${e}\\div2 = ${s(e/2)}$`;break;case 25:i=`$${t}~\\%~\\text{de }${e}=${e}\\div4 = ${s(e/4)}$`;break;case 75:i=`$${t}~\\%~\\text{de }${e}=${e}\\div 4\\times 3 = ${s(e/4)} \\times 3 = ${s(e/4*3)}$`;break;default:i=`$${t}~\\%~\\text{de }${e}=${p(t,100)}\\times${e}=(${t}\\times${e})\\div100=${s(t*e)}\\div100=${s(t*e/100)}$`,this.sup2&&(i+=`<br>$${t}~\\%~\\text{de }${e}=${p(t,100)}\\times${e}=(${e}\\div100)\\times${t}=${s(e/100)}\\times${t}=${s(t*e/100)}$`,i+=`<br>$${t}~\\%~\\text{de }${e}=${p(t,100)}\\times${e}=${s(t/100)}\\times${e}=${s(t*e/100)}$`,t===60?i+=`<br>$${t}~\\%~\\text{de }${e}$, c'est $50~\\%~\\text{de }${e}$
+plus $10 ~\\%~\\text{de }${e} $ soit la moitié de $ ${e} \\text{ plus } 10 ~\\%~\\text{de }${e} $ :
+$${t}~\\%~\\text{de }${e}=${e}\\div2 + ${e}\\div10 =  ${s(e*.6)}$`:t===90?i+=`<br>$${t}~\\%~\\text{de }${e}$, c'est $${e}$
+moins $10 ~\\%~\\text{de }${e} $ :
+$${t}~\\%~\\text{de }${e}=${e} - ${e}\\div10 =  ${s(e*.9)}$`:t>10&&(i+=`<br>$${t}~\\%~\\text{de }${e}$, c'est $ ${t/10} $ fois $ 10 ~\\%~\\text{de }${e} $ :
+$${t}~\\%~\\text{de }${e}= ${t/10} \\times ${e}\\div10 =  ${s(t*e/100)}$`))}this.interactif&&(a+=b(this,$,"")),g(this,$,e*t/100);const o=i.split("=");let m=o[o.length-1];m=m.replace("$","").replace("<br>",""),i="";for(let n=0;n<o.length-1;n++)i+=o[n]+"=";i+=`$ $${h(m)}$`,this.questionJamaisPosee($,t,e)?(this.listeQuestions[$]=a,this.listeCorrections[$]=i,$++):c++}x(this)}}export{I as amcReady,K as amcType,_ as default,U as interactifReady,W as interactifType,Z as refs,X as titre,Y as uuid};

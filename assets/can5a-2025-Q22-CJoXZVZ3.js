@@ -1,0 +1,7 @@
+import{r as n,a as $,a7 as i,m}from"./embellissements-BYV7mIDn.js";import c from"./ExerciceCan-BGFYQSAT.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./ExerciceSimple-CWWOU0FG.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const L="Proportionnalité",y=!0,O="mathLive",P="a343b",R={"fr-fr":[],"fr-ch":[]};class T extends c{enonce(t,e,o){let s,r;(t==null||e==null||o==null)&&(t=n(1,3)*4,s=$([1.5,2.5]),r=$([5,7])/4,e=t*r,o=t*s),r=e/t,s=o/t,this.reponse=r*o,this.question=`$${t}$ gommes coûtent $${e}$ euros. <br>
+     $${o}$ de ces mêmes gommes coûtent `,this.correction=`Le prix de $${t}$ gommes est $${e}$ euros.<br>
+    On calcule le prix de $${t/2}$ gommes :<br>
+    $${e}\\div 2=${i(e/2)}$<br>
+    Le prix de $${t/2}$ gommes est $${i(e/2)}$ euros.<br>
+    Ainsi, le prix de $${o}$ gommes est $${s===2.5?`2\\times ${e} + ${i(e/2)}`:`${e} + ${i(e/2)}`} =${m(i(e*s))}$ euros.`,this.canEnonce=`$${t}$ gommes coûtent $${e}$ euros. <br>
+     $${o}$ de ces mêmes gommes coûtent `,this.canReponseACompleter="$\\ldots$ euros",this.optionsChampTexte={texteApres:" euros."},this.interactif?this.question+="":this.question+="$\\ldots$ euros"}nouvelleVersion(){this.canOfficielle?this.enonce(4,5,10):this.enonce()}}export{T as default,y as interactifReady,O as interactifType,R as refs,L as titre,P as uuid};

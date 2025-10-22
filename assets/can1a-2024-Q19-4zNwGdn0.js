@@ -1,0 +1,6 @@
+import s from"./ExerciceSimple-CWWOU0FG.js";import{r,f as t,z as o,m as n}from"./embellissements-BYV7mIDn.js";import{K as c}from"./Exercice-DtXhjCyI.js";import{h as a}from"./comparisonFunctions-B45ZZ3C7.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";import"./compute-engine.min.umd-BwAhpA7x.js";import"./Hms-u2AUyU1C.js";const A="Calculer une fonction dérivée",D=!0,O="mathLive",R="4f56c";class S extends s{constructor(){super(),this.canOfficielle=!1,this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=c.clavierDeBaseAvecFractionPuissanceCrochets,this.compare=a}nouvelleVersion(){let e,i;this.canOfficielle?(e=-3,i=4):(e=r(-9,9,0),i=r(-9,9,0)),this.reponse=`x${t(e)}`,this.question=`$f(x)=\\dfrac{1}{2}x^2${o(e)}x${t(i)}$<br>
+    $f'(x)=$`,this.correction=` On détermine la fonction dérivée :<br>
+      $\\begin{aligned}
+      f'(x)&=\\dfrac{1}{2}\\times 2x ${t(i)}\\\\
+      &=${n(`x${t(e)}`)}     
+      \\end{aligned}$`,this.canEnonce=`$f(x)=\\dfrac{1}{2}x^2${o(e)}${t(i)}$`,this.canReponseACompleter="$f'(x)=\\ldots$",this.interactif||(this.question+=" $\\ldots$")}}export{S as default,D as interactifReady,O as interactifType,A as titre,R as uuid};

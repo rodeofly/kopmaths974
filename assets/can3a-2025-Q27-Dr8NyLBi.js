@@ -1,0 +1,6 @@
+import n from"./ExerciceSimple-CWWOU0FG.js";import{r as c,a as m,e,m as a}from"./embellissements-BYV7mIDn.js";import{K as l}from"./Exercice-DtXhjCyI.js";import o from"decimal.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"earcut";import"roughjs";const T="Mltiplier astucieusement",V=!0,g="mathLive",C="71b1f",q={"fr-fr":[""],"fr-ch":[]};class w extends n{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=l.clavierDeBase,this.canOfficielle=!0,this.optionsChampTexte={texteAvant:"$=$",texteApres:""}}nouvelleVersion(){const t=(this.canOfficielle,4),s=this.canOfficielle?.47:new o(c(15,49,[20,30,40])).div(100),i=this.canOfficielle?2.5:m([.25,2.5,25]),r=new o(t).mul(s).mul(i);this.reponse=r,this.question=`$${e(t,2)}\\times ${e(s,2)} \\times ${e(i,2)}$ `,this.correction=`$\\begin{aligned}
+         ${e(t,2)}\\times ${e(s,2)} \\times ${e(i,2)}
+          &=\\underbrace{${e(t,2)}\\times ${e(i,2)} }_{=${e(t*i,0)}}\\times ${e(s,2)}\\\\
+          & =${e(t*i,0)}\\times ${e(s,2)}\\\\     
+          &=${a(`${e(r,2)}`)}
+          \\end{aligned}$`,this.canEnonce=this.question,this.canReponseACompleter="$\\ldots$"}}export{w as default,V as interactifReady,g as interactifType,q as refs,T as titre,C as uuid};

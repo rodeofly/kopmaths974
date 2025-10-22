@@ -1,0 +1,9 @@
+import $ from"./ExerciceSimple-CWWOU0FG.js";import{u as i,m as n,r,a as c}from"./embellissements-BYV7mIDn.js";import{K as a}from"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";const E="Résoudre une inéquation",q=!0,g="mathLive",R="f0f67";class S extends ${constructor(){super(),this.canOfficielle=!1,this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=a.clavierEnsemble}nouvelleVersion(){let s,e,t,o;this.canOfficielle?(e=8,t=-6,s="]-\\infty;-8[\\cup]6;+\\infty[",this.question=`Solutions de $(${i(1,e)})(${i(1,t)})  >0$<br>`,this.correction=`$(${i(1,e)})(${i(1,t)})$ est l'expression factorisée d'une fonction polynôme du second degré de la forme $a(x-x_1)(x-x_2)$.<br>
+    Les racines sont $x_1=${-e}$ et $x_2=${-t}$. <br>
+    Le polynôme est du signe de $a=1$ (donc positif) sauf entre ses racines.<br>
+    L'ensemble solution est donc :  $${n(s)}$.   
+     `):(e=r(-9,9,0),t=r(-9,9,[0,e]),o=c([">","<"]),o===">"?s=-e>-t?`]-\\infty;${-t}[\\cup]${-e};+\\infty[`:`]-\\infty;${-e}[\\cup]${-t};+\\infty[`:s=-e>-t?`]${-t}\\,;\\,${-e}[`:`]${-e}\\,;\\,${-t}[`,this.question=`Solutions de $(${i(1,e)})(${i(1,t)})  ${o} 0$<br>`,this.correction=`$(${i(1,e)})(${i(1,t)})$ est l'expression factorisée d'une fonction polynôme du second degré de la forme $a(x-x_1)(x-x_2)$.<br>
+    Les racines sont $x_1=${-e}$ et $x_2=${-t}$. <br>
+    Le polynôme est du signe de $a=1$ (donc positif) sauf entre ses racines.<br>
+    L'ensemble solution est donc :  $${n(s)}$.   
+     `),this.reponse={reponse:{value:s,options:{intervalle:!0}}},this.canEnonce=this.question,this.canReponseACompleter=""}}export{S as default,q as interactifReady,g as interactifType,E as titre,R as uuid};

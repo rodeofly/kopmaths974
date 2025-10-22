@@ -1,0 +1,8 @@
+import{K as o}from"./Exercice-DtXhjCyI.js";import{a as i,ax as n,a2 as a}from"./embellissements-BYV7mIDn.js";import{s as c}from"./deprecatedFractions-D2cbyAQf.js";import s from"./ExerciceSimple-CWWOU0FG.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"katex";import"mathjs";import"crypto-js";import"seedrandom";import"decimal.js";import"earcut";import"roughjs";import"./colors-bl7PrqSM.js";const T="Calculer la différence de fractions à dénominateurs compatibles",E=!0,q="mathLive",D=!0,R="AMCNum",K="da898",L={"fr-fr":["can4C07"],"fr-ch":[]};class P extends s{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1,this.formatChampTexte=o.clavierDeBaseAvecFraction,this.optionsChampTexte={texteAvant:"<br>"}}nouvelleVersion(){const e=i(n()),r=i([2,3]),t=a(1,e.d*r);this.question=`Calculer $${e.texFraction} - ${t.texFraction}$.`,this.correction=`Pour soustraire des fractions, on les met au même dénominateur.<br>
+    <br>
+    Pour écrire $${e.texFraction}$ avec le même dénominateur que $${t.texFraction}$,
+    on multiplie son numérateur et son dénominateur par $${r}$.<br><br>
+    Ainsi,
+    $${e.texFraction} - ${t.texFraction}=
+   \\dfrac{${e.n}\\times ${r}}{${e.d}\\times ${r}}- ${t.texFraction}
+    =${e.reduire(r).texFraction} - ${t.texFraction}=\\dfrac{${e.n*r}-${t.n}}{${t.d}}=\\dfrac{${e.n*r-t.n}}{${t.d}}${c(e.n*r-t.n,t.d)}$`,this.reponse=e.differenceFraction(t).simplifie(),this.canEnonce=this.question,this.canReponseACompleter=""}}export{D as amcReady,R as amcType,P as default,E as interactifReady,q as interactifType,L as refs,T as titre,K as uuid};

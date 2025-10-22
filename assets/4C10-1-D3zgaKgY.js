@@ -1,0 +1,4 @@
+import t from"./4C10-0-BKX5uizG.js";import"./embellissements-BYV7mIDn.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Relatif-Cbr50-hq.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";import"./qcm-BQR8Ns0N.js";const g="Donner le signe d'un produit de nombres relatifs",y=!0,R="qcm",b=!0,q="qcmMono",x="4fd42",N={"fr-fr":["4C10-1"],"fr-ch":["10NO4-3"]};class C extends t{constructor(){super(),this.exo="4C10-1",this.sup=4,this.nbQuestions=3,this.besoinFormulaireNumerique=["Niveau de difficulté",4,`1 : 2 facteurs
+2 : 3 facteurs
+3 : 4 facteurs
+4 : Mélange`]}}export{b as amcReady,q as amcType,C as default,y as interactifReady,R as interactifType,N as refs,g as titre,x as uuid};

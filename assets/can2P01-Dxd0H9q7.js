@@ -1,0 +1,13 @@
+import{r as n,a as s,F as o}from"./embellissements-BYV7mIDn.js";import{s as a}from"./deprecatedFractions-D2cbyAQf.js";import l from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./colors-bl7PrqSM.js";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const C="Calculer une probabilité",P=!0,k="mathLive",A=!0,L="AMCNum",Q="763d3",S={"fr-fr":["can2P01"],"fr-ch":[]};class v extends l{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1}nouvelleVersion(){const e=n(2,4),i=s([2,3]),t=s([2,3,11,12]),r=[1,2,3,4,5,6,5,4,3,2,1];switch(s(["a","b","b","b","c","c","d","d","d"])){case"a":this.question=`On lance deux fois de suite un dé équilibré.<br>
+        
+        Quelle est la probabilité d’obtenir deux fois le même nombre ?
+        <br>
+        Donner le résultat sous la forme d'une fraction irréductible.`,this.correction="Sur $36$ cas possibles équiprobables, il y en a $6$ qui sont des doubles. Donc la probabilité d'obtenir deux fois le même nombre est $\\dfrac{6}{36}=\\dfrac{1}{6}$.",this.reponse=new o(1,6);break;case"b":this.question=`Si on lance une pièce $${e}$ fois de suite, quelle est la probabilité d'obtenir PILE $${e}$ fois ?<br>Donner le résultat sous la forme d'une fraction irréductible.`,this.correction=`A chaque lancer, la probabilité d'obtenir PILE est $\\dfrac{1}{2}$, donc si on lance $${e}$ fois la pièce, la probabilité d'obtenir $${e}$ fois PILE est $\\left(\\dfrac{1}{2}\\right)^${e}=\\dfrac{1}{${2**e}}$.`,this.reponse=new o(1,2**e);break;case"c":this.question=`On lance un dé cubique équilibré.<br>
+        
+        Quelle est la probabilité d’obtenir un multiple de $${i}$ ?<br>
+        
+        Donner le résultat sous la forme d'une fraction irréductible.`,this.correction=`Comme il y a $${5-i}$ multiples de $${i}$, la probabilité d'obtenir un multiple de $${i}$ est $\\dfrac{${5-i}}{6}=\\dfrac{1}{${i}}$.`,this.reponse=new o(1,i);break;case"d":this.question=`On lance deux dés cubiques équilibrés.<br>
+        
+        Quelle est la probabilité d’obtenir un total de $${t}$ ?<br>
+        
+        Donner le résultat sous la forme d'une fraction irréductible.`,this.correction=`Sur $36$ cas possibles équiprobables, il y en a $${r[t-2]}$ qui donnent une somme de $${t}$. Donc la probabilité d'obtenir un total de $${t}$ est $\\dfrac{${r[t-2]}}{36}${a(r[t-2],36)}$.`,this.reponse=new o(r[t-2],36);break}this.canEnonce=this.question,this.canReponseACompleter=""}}export{A as amcReady,L as amcType,v as default,P as interactifReady,k as interactifType,S as refs,C as titre,Q as uuid};

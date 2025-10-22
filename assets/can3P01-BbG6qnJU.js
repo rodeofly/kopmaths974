@@ -1,0 +1,5 @@
+import{r as o,s as n,u as r,Y as c}from"./embellissements-BYV7mIDn.js";import a from"./ExerciceSimple-CWWOU0FG.js";import"mathjs";import"decimal.js";import"katex";import"earcut";import"roughjs";import"./Exercice-DtXhjCyI.js";import"./exerciseMethods-CtbYPwln.js";import"./index-BUDQz6-w.js";import"crypto-js";import"seedrandom";const g="Utiliser la proportionnalité sur une expression algébrique",v=!0,y="mathLive",A="25/10/2021",S="9734b",C={"fr-fr":["can3P01"],"fr-ch":[]};class R extends a{constructor(){super(),this.typeExercice="simple",this.nbQuestions=1}nouvelleVersion(){const e=o(-3,3,0),i=o(-5,5,0),s=o(-5,5,0),t=o(-7,-1);this.question=`Si ${n(1)}  $${r(e,i)}=${s}$, quelle est la valeur de  ${n(1)} $${r(t*e,t*i)}$ ?
+      
+      `,this.correction=`Comme ${n(1)} $${r(t*e,t*i)}=${t}\\times (${r(e,i)})$, <br>
+     alors${n(1)}
+      $${r(t*e,t*i)}=${t}\\times ${c(s)}=${t*s}$`,this.reponse=t*s,this.canEnonce=this.question,this.canReponseACompleter=""}}export{A as dateDePublication,R as default,v as interactifReady,y as interactifType,C as refs,g as titre,S as uuid};
