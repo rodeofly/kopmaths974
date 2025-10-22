@@ -1,4 +1,4 @@
-import GlisseNombreElement from 'glisse-nombre'
+import GlisseNombreElement from '../../lib/apps/GlisseNombreElement'
 import { choice } from '../../lib/outils/arrayOutils'
 import { texFractionFromString } from '../../lib/outils/deprecatedFractions'
 import { texNombre } from '../../lib/outils/texNombre'
