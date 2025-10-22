@@ -62,6 +62,7 @@ const delimiters = [
 
 const DEBUG_PREFIX = "[KopMaths]";
 const DEBUG_APP_PREFIX = `${DEBUG_PREFIX}[App]`;
+const DEBUG_CSS_PREFIX = `${DEBUG_PREFIX}[CSS]`;
 
 function debugLog(...args: unknown[]): void {
   if (typeof console !== "undefined" && typeof console.debug === "function") {
@@ -90,6 +91,12 @@ function startDebugTimer(label: string): void {
 function endDebugTimer(label: string): void {
   if (typeof console !== "undefined" && typeof console.timeEnd === "function") {
     console.timeEnd(label);
+  }
+}
+
+function debugCss(label: string, details: unknown): void {
+  if (typeof console !== "undefined" && typeof console.debug === "function") {
+    console.debug(DEBUG_CSS_PREFIX, label, details);
   }
 }
 
@@ -1002,13 +1009,53 @@ function App() {
     }));
   }, []);
 
+  const mainClassName = "min-h-screen bg-slate-100 text-slate-900";
+  const layoutContainerClassName = "mx-auto flex max-w-6xl flex-col gap-6 p-6";
+  const asidePanelClassName = "space-y-4 self-start lg:sticky lg:top-28";
+  const catalogueCardClassName = "rounded-lg bg-white p-4 shadow";
+  const treeScrollContainerClassName = "mt-4 max-h-[60vh] overflow-y-auto pr-1";
+  const treeListClassName = "space-y-2";
+
+  useEffect(() => {
+    debugCss("layout-classes", {
+      main: mainClassName,
+      layout: layoutContainerClassName,
+      aside: asidePanelClassName,
+      catalogueCard: catalogueCardClassName,
+      treeScrollContainer: treeScrollContainerClassName,
+      treeList: treeListClassName
+    });
+  }, [
+    mainClassName,
+    layoutContainerClassName,
+    asidePanelClassName,
+    catalogueCardClassName,
+    treeScrollContainerClassName,
+    treeListClassName
+  ]);
+
+  useEffect(() => {
+    debugCss("tree-mode", hasSearch ? "search-results" : "navigation-tree");
+  }, [hasSearch]);
+
+  useEffect(() => {
+    debugCss("expanded-categories", {
+      expanded: expandedCategoryCount,
+      total: allCategoryPaths.length
+    });
+  }, [expandedCategoryCount, allCategoryPaths]);
+
+  useEffect(() => {
+    debugCss("selected-exercise", selectedExerciseId ?? "none");
+  }, [selectedExerciseId]);
+
   const renderTree = useCallback(
-    (nodes: Record<string, ExerciseNode>, depth = 0): JSX.Element | null => {
+    (nodes: Record<string, ExerciseNode>): JSX.Element | null => {
       const entries = getSortedChildren(nodes);
       if (entries.length === 0) return null;
 
       return (
-        <ul className={depth === 0 ? "space-y-2" : "space-y-2"}>
+        <ul className={treeListClassName}>
           {entries.map(node => {
             if (node.type === "category") {
               const expanded = expandedCategories[node.fullPath] ?? false;
@@ -1045,7 +1092,7 @@ function App() {
                       </span>
                     </summary>
                     <div className="ml-4 mt-2 border-l border-slate-200 pl-3">
-                      {renderTree(node.children, depth + 1)}
+                      {renderTree(node.children)}
                     </div>
                   </details>
                 </li>
@@ -1105,13 +1152,14 @@ function App() {
       exerciseTitles,
       handleSelectExercise,
       handleToggleCategory,
-      selectedExerciseId
+      selectedExerciseId,
+      treeListClassName
     ]
   );
 
   return (
-    <main id="main-content" className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 p-6">
+    <main id="main-content" className={mainClassName}>
+      <div className={layoutContainerClassName}>
         <header>
           <h1 className="text-3xl font-bold">Kop Maths 974</h1>
           <p className="text-slate-600">
@@ -1120,8 +1168,8 @@ function App() {
         </header>
 
         <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
-          <aside className="space-y-4 self-start lg:sticky lg:top-28">
-            <div className="rounded-lg bg-white p-4 shadow">
+          <aside className={asidePanelClassName}>
+            <div className={catalogueCardClassName}>
               <h2 className="text-lg font-semibold">Catalogue d'exercices</h2>
               <label className="mt-4 block text-sm font-medium text-slate-700">
                 Rechercher un exercice
@@ -1149,7 +1197,7 @@ function App() {
                   </span>
                 </div>
               )}
-              <div className="mt-4 max-h-[60vh] overflow-y-auto pr-1">
+              <div className={treeScrollContainerClassName}>
                 {hasSearch ? (
                   <ul className="space-y-2">
                     {filteredExercises.map(exercise => {
