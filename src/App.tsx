@@ -342,15 +342,7 @@ function App() {
   const [exerciseSummary, setExerciseSummary] = useState<
     { title?: string; consigne?: string } | null
   >(null);
-  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
-    () => {
-      const entries: [string, boolean][] = [];
-      DEFAULT_EXPANDED_CATEGORIES.forEach(id => {
-        entries.push([id, true]);
-      });
-      return Object.fromEntries(entries);
-    }
-  );
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [copyFeedback, setCopyFeedback] = useState<
     Partial<Record<CopyKey, "copied" | "error">>
   >({});
@@ -373,6 +365,25 @@ function App() {
   }, [searchTerm, exerciseTitles]);
 
   const hasSearch = searchTerm.trim().length > 0;
+
+  const allCategoryPaths = useMemo(() => Array.from(DEFAULT_EXPANDED_CATEGORIES), []);
+  const expandedCategoryCount = useMemo(() => {
+    return allCategoryPaths.reduce((count, path) => {
+      return count + (expandedCategories[path] ? 1 : 0);
+    }, 0);
+  }, [allCategoryPaths, expandedCategories]);
+  const allCategoriesExpanded =
+    allCategoryPaths.length > 0 && expandedCategoryCount === allCategoryPaths.length;
+
+  const handleToggleAllCategories = useCallback(() => {
+    if (allCategoriesExpanded) {
+      setExpandedCategories({});
+      return;
+    }
+
+    const nextEntries = Object.fromEntries(allCategoryPaths.map(path => [path, true] as const));
+    setExpandedCategories(nextEntries);
+  }, [allCategoriesExpanded, allCategoryPaths]);
 
   const displayedCorrections = useMemo(() => {
     const seen = new Set<string>();
@@ -735,6 +746,14 @@ function App() {
 
   const handleSelectExercise = useCallback(
     (definition: ExerciseDefinition) => {
+      setExpandedCategories(prev => {
+        const next = { ...prev };
+        definition.categories.forEach((_, index) => {
+          const path = definition.categories.slice(0, index + 1).join("/");
+          next[path] = true;
+        });
+        return next;
+      });
       loadExercise(definition, { applyOverrides: false, withNewSeed: true });
     },
     [loadExercise]
@@ -940,7 +959,10 @@ function App() {
         <ul className={depth === 0 ? "space-y-2" : "space-y-2"}>
           {entries.map(node => {
             if (node.type === "category") {
-              const expanded = expandedCategories[node.fullPath] ?? true;
+              const expanded = expandedCategories[node.fullPath] ?? false;
+              const displayTitle =
+                node.title && node.title.trim().length > 0 ? node.title : node.id;
+              const showIdentifier = node.id && node.id !== displayTitle;
               return (
                 <li key={node.fullPath}>
                   <details
@@ -957,17 +979,17 @@ function App() {
                         </span>
                         <span className="flex flex-col text-left">
                           <span className="font-semibold tracking-wide">
-                            {node.id}
+                            {displayTitle}
                           </span>
-                          {node.title && (
+                          {showIdentifier && (
                             <span className="text-xs font-normal text-slate-500">
-                              {node.title}
+                              {node.id}
                             </span>
                           )}
                         </span>
                       </span>
                       <span className="text-[10px] uppercase tracking-wide text-slate-400">
-                        {expanded ? "Masquer" : "Voir"}
+                        {expanded ? "Masquer" : "Afficher"}
                       </span>
                     </summary>
                     <div className="ml-4 mt-2 border-l border-slate-200 pl-3">
@@ -989,6 +1011,11 @@ function App() {
               definition.label ??
               `Exercice ${node.definitionId}`;
             const isActive = node.definitionId === selectedExerciseId;
+            const themeTrail = definition.categoryTitles
+              .slice(1)
+              .map(part => part.trim())
+              .filter(Boolean)
+              .join(" · ");
 
             return (
               <li key={node.fullPath}>
@@ -1007,6 +1034,11 @@ function App() {
                     </span>
                     <span>
                       <span className="block font-semibold">{title}</span>
+                      {themeTrail && (
+                        <span className="mt-1 block text-xs text-slate-500">
+                          {themeTrail}
+                        </span>
+                      )}
                       <span className="mt-1 block text-xs text-slate-500">
                         ID : {definition.id} · Niveau : {definition.niveau}
                       </span>
@@ -1052,6 +1084,22 @@ function App() {
                 placeholder="Titre, niveau ou identifiant"
                 className="mt-2 w-full rounded border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
+              {!hasSearch && (
+                <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+                  <button
+                    type="button"
+                    onClick={handleToggleAllCategories}
+                    className="inline-flex items-center gap-1 rounded px-2 py-1 font-semibold text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  >
+                    {allCategoriesExpanded ? "Tout masquer" : "Tout afficher"}
+                  </button>
+                  <span>
+                    {allCategoryPaths.length === 0
+                      ? "Aucune catégorie"
+                      : `${expandedCategoryCount}/${allCategoryPaths.length} ouverts`}
+                  </span>
+                </div>
+              )}
               <div className="mt-4 max-h-[60vh] overflow-y-auto pr-1">
                 {hasSearch ? (
                   <ul className="space-y-2">
@@ -1062,6 +1110,11 @@ function App() {
                         exercise.label ??
                         `Exercice ${exercise.id}`;
                       const isActive = exercise.id === selectedExerciseId;
+                      const themeTrail = exercise.categoryTitles
+                        .slice(1)
+                        .map(part => part.trim())
+                        .filter(Boolean)
+                        .join(" · ");
                       return (
                         <li key={exercise.id}>
                           <button
@@ -1079,6 +1132,11 @@ function App() {
                               </span>
                               <span>
                                 <span className="block font-semibold">{title}</span>
+                                {themeTrail && (
+                                  <span className="mt-1 block text-xs text-slate-500">
+                                    {themeTrail}
+                                  </span>
+                                )}
                                 <span className="mt-1 block text-xs text-slate-500">
                                   ID : {exercise.id} · Niveau : {exercise.niveau}
                                 </span>
@@ -1116,6 +1174,15 @@ function App() {
                           selectedDefinition.title ??
                           `Exercice ${selectedDefinition.id}`}
                       </h2>
+                      {selectedDefinition.categoryTitles.slice(1).some(part => part.trim()) && (
+                        <p className="mt-1 text-xs uppercase tracking-wide text-slate-500">
+                          {selectedDefinition.categoryTitles
+                            .slice(1)
+                            .map(part => part.trim())
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </p>
+                      )}
                       <p className="mt-1 text-sm text-slate-600">
                         ID : {selectedDefinition.id} · Niveau : {selectedDefinition.niveau}
                       </p>
