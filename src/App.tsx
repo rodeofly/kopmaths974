@@ -40,24 +40,194 @@ type ExerciseDefinition = {
   id: string;
   niveau: string;
   path: string;
+  label?: string;
 };
 
+type ExerciseTreeNode =
+  | {
+      type: "category";
+      id: string;
+      title: string;
+      children: ExerciseTreeNode[];
+    }
+  | {
+      type: "exercise";
+      id: string;
+      definition: ExerciseDefinition;
+    };
+
 const EXERCISES: ExerciseDefinition[] = [
-  { id: "CM1M1", niveau: "CM1", path: "@mathalea/exercices/cm1/CM1M1" },
-  { id: "CM1M3", niveau: "CM1", path: "@mathalea/exercices/cm1/CM1M3" },
-  { id: "CM1N3", niveau: "CM1", path: "@mathalea/exercices/cm1/CM1N3" },
-  { id: "CM2D1", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2D1" },
-  { id: "CM2D3n", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2D3n" },
-  { id: "CM2G2", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2G2" },
-  { id: "CM2G3", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2G3" },
-  { id: "CM2G5", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2G5" },
-  { id: "CM2I1", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2I1" },
-  { id: "CM2N1", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2N1" },
-  { id: "CM2N2", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2N2" },
-  { id: "CM2N3", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2N3" },
-  { id: "CM2N4", niveau: "CM2", path: "@mathalea/exercices/cm2/CM2N4" },
-  { id: "6N5-3", niveau: "6e", path: "@mathalea/exercices/6e/6N5-3" }
+  {
+    id: "CM1M1",
+    niveau: "CM1",
+    path: "@mathalea/exercices/cm1/CM1M1",
+    label: "CM1 · Grandeurs et mesures"
+  },
+  {
+    id: "CM1M3",
+    niveau: "CM1",
+    path: "@mathalea/exercices/cm1/CM1M3",
+    label: "CM1 · Grandeurs et mesures"
+  },
+  {
+    id: "CM1N3",
+    niveau: "CM1",
+    path: "@mathalea/exercices/cm1/CM1N3",
+    label: "CM1 · Nombres et calculs"
+  },
+  {
+    id: "CM2D1",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2D1",
+    label: "CM2 · Organisation et gestion de données"
+  },
+  {
+    id: "CM2D3n",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2D3n",
+    label: "CM2 · Organisation et gestion de données"
+  },
+  {
+    id: "CM2G2",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2G2",
+    label: "CM2 · Espace et géométrie"
+  },
+  {
+    id: "CM2G3",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2G3",
+    label: "CM2 · Espace et géométrie"
+  },
+  {
+    id: "CM2G5",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2G5",
+    label: "CM2 · Espace et géométrie"
+  },
+  {
+    id: "CM2I1",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2I1",
+    label: "CM2 · Algorithmique et logique"
+  },
+  {
+    id: "CM2N1",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2N1",
+    label: "CM2 · Nombres et calculs"
+  },
+  {
+    id: "CM2N2",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2N2",
+    label: "CM2 · Nombres et calculs"
+  },
+  {
+    id: "CM2N3",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2N3",
+    label: "CM2 · Nombres et calculs"
+  },
+  {
+    id: "CM2N4",
+    niveau: "CM2",
+    path: "@mathalea/exercices/cm2/CM2N4",
+    label: "CM2 · Nombres et calculs"
+  },
+  {
+    id: "6N5-3",
+    niveau: "6e",
+    path: "@mathalea/exercices/6e/6N5-3",
+    label: "6e · Nombres et calculs"
+  }
 ];
+
+const EXERCISES_BY_ID = new Map(EXERCISES.map(exercise => [exercise.id, exercise]));
+
+function buildExerciseTree(): ExerciseTreeNode[] {
+  const leaves = (ids: string[]): ExerciseTreeNode[] =>
+    ids
+      .map(id => EXERCISES_BY_ID.get(id))
+      .filter((definition): definition is ExerciseDefinition => Boolean(definition))
+      .map(definition => ({
+        type: "exercise" as const,
+        id: definition.id,
+        definition
+      }));
+
+  const branch = (
+    id: string,
+    title: string,
+    children: ExerciseTreeNode[]
+  ): ExerciseTreeNode => ({
+    type: "category",
+    id,
+    title,
+    children
+  });
+
+  const cm1Branches: ExerciseTreeNode[] = [];
+  const cm1Grandeurs = leaves(["CM1M1", "CM1M3"]);
+  if (cm1Grandeurs.length > 0) {
+    cm1Branches.push(branch("cm1-grandeurs", "Grandeurs et mesures", cm1Grandeurs));
+  }
+  const cm1Nombres = leaves(["CM1N3"]);
+  if (cm1Nombres.length > 0) {
+    cm1Branches.push(branch("cm1-nombres", "Nombres et calculs", cm1Nombres));
+  }
+
+  const cm2Branches: ExerciseTreeNode[] = [];
+  const cm2Donnees = leaves(["CM2D1", "CM2D3n"]);
+  if (cm2Donnees.length > 0) {
+    cm2Branches.push(
+      branch("cm2-donnees", "Organisation et gestion de données", cm2Donnees)
+    );
+  }
+  const cm2Geometrie = leaves(["CM2G2", "CM2G3", "CM2G5"]);
+  if (cm2Geometrie.length > 0) {
+    cm2Branches.push(branch("cm2-geometrie", "Espace et géométrie", cm2Geometrie));
+  }
+  const cm2Logique = leaves(["CM2I1"]);
+  if (cm2Logique.length > 0) {
+    cm2Branches.push(branch("cm2-logique", "Algorithmique et logique", cm2Logique));
+  }
+  const cm2Nombres = leaves(["CM2N1", "CM2N2", "CM2N3", "CM2N4"]);
+  if (cm2Nombres.length > 0) {
+    cm2Branches.push(branch("cm2-nombres", "Nombres et calculs", cm2Nombres));
+  }
+
+  const tree: ExerciseTreeNode[] = [];
+  const cm1Node = cm1Branches.length > 0 ? branch("cm1", "CM1", cm1Branches) : null;
+  const cm2Node = cm2Branches.length > 0 ? branch("cm2", "CM2", cm2Branches) : null;
+  const cm1cm2Children = [cm1Node, cm2Node].filter(
+    (child): child is ExerciseTreeNode => child !== null
+  );
+  if (cm1cm2Children.length > 0) {
+    tree.push(branch("cm1-cm2", "CM1 / CM2", cm1cm2Children));
+  }
+
+  const sixiemeLeaves = leaves(["6N5-3"]);
+  if (sixiemeLeaves.length > 0) {
+    tree.push(branch("6e", "Sixième", sixiemeLeaves));
+  }
+
+  return tree;
+}
+
+const EXERCISE_TREE = buildExerciseTree();
+
+function collectCategoryIds(nodes: ExerciseTreeNode[], acc: Set<string> = new Set()) {
+  nodes.forEach(node => {
+    if (node.type === "category") {
+      acc.add(node.id);
+      collectCategoryIds(node.children, acc);
+    }
+  });
+  return acc;
+}
+
+const DEFAULT_EXPANDED_CATEGORIES = collectCategoryIds(EXERCISE_TREE);
 
 const delimiters = [
   { left: "$$", right: "$$", display: true },
@@ -235,6 +405,15 @@ function App() {
   const [exerciseSummary, setExerciseSummary] = useState<
     { title?: string; consigne?: string } | null
   >(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
+    () => {
+      const entries: [string, boolean][] = [];
+      DEFAULT_EXPANDED_CATEGORIES.forEach(id => {
+        entries.push([id, true]);
+      });
+      return Object.fromEntries(entries);
+    }
+  );
 
   const updateParameterValues = useCallback((map: ParameterValueMap) => {
     parameterValuesRef.current = map;
@@ -246,13 +425,17 @@ function App() {
     if (!term) return EXERCISES;
     return EXERCISES.filter(exercise => {
       const title = exerciseTitles[exercise.id]?.toLowerCase() ?? "";
+      const label = exercise.label?.toLowerCase() ?? "";
       return (
         exercise.id.toLowerCase().includes(term) ||
         exercise.niveau.toLowerCase().includes(term) ||
-        title.includes(term)
+        title.includes(term) ||
+        label.includes(term)
       );
     });
   }, [searchTerm, exerciseTitles]);
+
+  const hasSearch = searchTerm.trim().length > 0;
 
   const displayedCorrections = useMemo(() => {
     const seen = new Set<string>();
@@ -496,8 +679,94 @@ function App() {
 
   const selectedDefinition = useMemo(
     () =>
-      EXERCISES.find(exercise => exercise.id === selectedExerciseId) ?? null,
+      (selectedExerciseId
+        ? EXERCISES_BY_ID.get(selectedExerciseId) ?? null
+        : null),
     [selectedExerciseId]
+  );
+
+  const toggleCategory = useCallback((id: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [id]: !(prev[id] ?? false)
+    }));
+  }, []);
+
+  const renderTree = useCallback(
+    (nodes: ExerciseTreeNode[], depth = 0): JSX.Element | null => {
+      if (nodes.length === 0) return null;
+
+      return (
+        <ul
+          className={
+            depth === 0
+              ? "space-y-1"
+              : "space-y-1 border-l border-slate-200 pl-3"
+          }
+        >
+          {nodes.map(node => {
+            if (node.type === "category") {
+              const expanded = expandedCategories[node.id] ?? false;
+              return (
+                <li key={node.id}>
+                  <button
+                    type="button"
+                    onClick={() => toggleCategory(node.id)}
+                    className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span
+                        aria-hidden="true"
+                        className="text-xs text-slate-500"
+                      >
+                        {expanded ? "▾" : "▸"}
+                      </span>
+                      {node.title}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wide text-slate-400">
+                      {expanded ? "Masquer" : "Voir"}
+                    </span>
+                  </button>
+                  {expanded && renderTree(node.children, depth + 1)}
+                </li>
+              );
+            }
+
+            const { definition } = node;
+            const title =
+              exerciseTitles[definition.id] ??
+              definition.label ??
+              `Exercice ${definition.id}`;
+            const isActive = definition.id === selectedExerciseId;
+            return (
+              <li key={definition.id}>
+                <button
+                  type="button"
+                  onClick={() => handleSelectExercise(definition)}
+                  className={`mt-1 w-full rounded border px-3 py-2 text-left text-sm transition-colors ${
+                    isActive
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
+                  }`}
+                >
+                  <span className="block font-semibold">{title}</span>
+                  <span className="mt-1 block text-xs text-slate-500">
+                    ID : {definition.id} · Niveau : {definition.niveau}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      );
+    },
+    [
+      exerciseTitles,
+      expandedCategories,
+      handleSelectExercise,
+      selectedExerciseId,
+      toggleCategory
+    ]
   );
 
   return (
@@ -524,31 +793,41 @@ function App() {
                 placeholder="Titre, niveau ou identifiant"
                 className="mt-2 w-full rounded border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
-              <ul className="mt-4 max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-                {filteredExercises.map(exercise => {
-                  const title =
-                    exerciseTitles[exercise.id] ?? `Exercice ${exercise.id}`;
-                  const isActive = exercise.id === selectedExerciseId;
-                  return (
-                    <li key={exercise.id}>
-                      <button
-                        type="button"
-                        onClick={() => handleSelectExercise(exercise)}
-                        className={`w-full rounded border px-3 py-2 text-left text-sm transition-colors ${
-                          isActive
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
-                        }`}
-                      >
-                        <span className="block font-semibold">{title}</span>
-                        <span className="mt-1 block text-xs text-slate-500">
-                          ID : {exercise.id} · Niveau : {exercise.niveau}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              <div className="mt-4 max-h-[60vh] overflow-y-auto pr-1">
+                {hasSearch ? (
+                  <ul className="space-y-2">
+                    {filteredExercises.map(exercise => {
+                      const title =
+                        exerciseTitles[exercise.id] ??
+                        exercise.label ??
+                        `Exercice ${exercise.id}`;
+                      const isActive = exercise.id === selectedExerciseId;
+                      return (
+                        <li key={exercise.id}>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectExercise(exercise)}
+                            className={`w-full rounded border px-3 py-2 text-left text-sm transition-colors ${
+                              isActive
+                                ? "border-slate-900 bg-slate-900 text-white"
+                                : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
+                            }`}
+                          >
+                            <span className="block font-semibold">{title}</span>
+                            <span className="mt-1 block text-xs text-slate-500">
+                              ID : {exercise.id} · Niveau : {exercise.niveau}
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className="space-y-2">
+                    {renderTree(EXERCISE_TREE)}
+                  </div>
+                )}
+              </div>
             </div>
           </aside>
 
