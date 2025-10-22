@@ -1,18 +1,3 @@
-<<<<<<< Updated upstream
-import { choice, combinaisonListes } from '../../lib/outils/arrayOutils'
-import { miseEnEvidence } from '../../lib/outils/embellissements'
-import { pgcd } from '../../lib/outils/primalite'
-import Exercice from '../Exercice'
-import { context } from '../../modules/context'
-import { listeQuestionsToContenu, randint } from '../../modules/outils'
-import { ajouteChampTexteMathLive } from '../../lib/interactif/questionMathLive'
-import FractionEtendue from '../../modules/FractionEtendue'
-import { propositionsQcm } from '../../lib/interactif/qcm'
-import { handleAnswers } from '../../lib/interactif/gestionInteractif'
-import { texNombre } from '../../lib/outils/texNombre'
-import { sp } from '../../lib/outils/outilString'
-import { ecritureParentheseSiNegatif } from '../../lib/outils/ecritures'
-=======
 import { handleAnswers } from '../../lib/interactif/gestionInteractif'
 import { propositionsQcm } from '../../lib/interactif/qcm'
 import { ajouteChampTexteMathLive } from '../../lib/interactif/questionMathLive'
@@ -26,7 +11,6 @@ import FractionEtendue from '../../modules/FractionEtendue'
 import { context } from '../../modules/context'
 import { listeQuestionsToContenu, randint } from '../../modules/outils'
 import Exercice from '../Exercice'
->>>>>>> Stashed changes
 export const dateDeModifImportante = '21/04/2025'
 export const amcReady = true
 export const amcType = 'qcmMono'
@@ -144,13 +128,8 @@ export default class ExerciceAdditionnerSoustraireFractions5ebis extends Exercic
         c = randint(1, 19, d) * (cNegatif ? -1 : 1)
       }
 
-<<<<<<< Updated upstream
-      const f1 = new FractionEtendue(a, b)
-      const f2 = new FractionEtendue(c, d)
-=======
       let f1 = new FractionEtendue(a, b)
       let f2 = new FractionEtendue(c, d)
->>>>>>> Stashed changes
 
       if (listeTypeDeQuestions[i] === '+') {
         // une addition
@@ -216,18 +195,6 @@ export default class ExerciceAdditionnerSoustraireFractions5ebis extends Exercic
         if (ordreDesFractions === 1) {
           texteCorr = `$${f1.texFraction}+${f2.texFraction}=`
           texte = `$${f1.texFraction}+${f2.texFraction}$`
-<<<<<<< Updated upstream
-          if (this.level !== 6) {
-            texteCorr += `\\dfrac{${a}${miseEnEvidence('\\times ' + k, 'blue')}}{${b}${miseEnEvidence('\\times ' + k, 'blue')}}+${f2.texFraction}=${new FractionEtendue(a * k, b * k).texFraction}+${f2.texFraction}=`
-          }
-          texteCorr += `\\dfrac{${a * k}+${ecritureParentheseSiNegatif(c)}}{${d}}=${new FractionEtendue(a * k + c, d).texFraction}`
-        } else {
-          texteCorr = `$${f2.texFraction}+${f1.texFraction}=`
-          texte = `$${f2.texFraction}+${f1.texFraction}$`
-          if (this.level !== 6) {
-            texteCorr += `${f2.texFraction}+\\dfrac{${a}${miseEnEvidence('\\times ' + k, 'blue')}}{${b}${miseEnEvidence('\\times ' + k, 'blue')}}=${f2.texFraction}+${new FractionEtendue(a * k, b * k).texFraction}=`
-          }
-=======
           if (this.level !== 6 && this.sup !== 1)  {
             texteCorr += `\\dfrac{${a}${miseEnEvidence('\\times ' + k, 'blue')}}{${b}${miseEnEvidence('\\times ' + k, 'blue')}}+${f2.texFraction}=${new FractionEtendue(a * k, b * k).texFraction}+${f2.texFraction}=`
           }
@@ -240,7 +207,6 @@ export default class ExerciceAdditionnerSoustraireFractions5ebis extends Exercic
             texteCorr += `${f2.texFraction}+\\dfrac{${a}${miseEnEvidence('\\times ' + k, 'blue')}}{${b}${miseEnEvidence('\\times ' + k, 'blue')}}=${f2.texFraction}+${new FractionEtendue(a * k, b * k).texFraction}=`
           }
 
->>>>>>> Stashed changes
           texteCorr += `\\dfrac{${c}+${ecritureParentheseSiNegatif(a * k)}}{${d}}=${new FractionEtendue(a * k + c, d).texFraction}`
         }
         texteCorr +=
@@ -327,23 +293,15 @@ export default class ExerciceAdditionnerSoustraireFractions5ebis extends Exercic
           /*********************************************************************************/
         }
 
-<<<<<<< Updated upstream
-        // On ne vérifie plus si a/b > c/d car on accepte les fractions négatives comme résultat
-=======
         // S'il y a 0% de numérateur négatifs alors la 
         if (this.sup5 === 0 && f2.superieurstrict(f1)) {
           [f2, f1] = [f1, f2]
         }
->>>>>>> Stashed changes
         texte = `$${f1.texFraction}-${f2.texFraction}$`
         const reponse = new FractionEtendue(a * k - c, d).toLatex()
 
         texteCorr = `$${f1.texFraction}-${f2.texFraction}=`
-<<<<<<< Updated upstream
-        if (this.level !== 6) {
-=======
         if (this.level !== 6 && this.sup !== 1) {
->>>>>>> Stashed changes
           texteCorr += `\\dfrac{${a}${miseEnEvidence('\\times ' + k, 'blue')}}{${b}${miseEnEvidence('\\times ' + k, 'blue')}}-${f2.texFraction}=${new FractionEtendue(a * k, b * k).texFraction}-${f2.texFraction}=`
         }
         texteCorr += `\\dfrac{${a * k}-${ecritureParentheseSiNegatif(c)}}{${d}}=${new FractionEtendue(a * k - c, d).texFraction}`

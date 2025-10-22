@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf node_modules .vite dist",
-    "update:mathalea": "node scripts/update-mathalea.js"
+    "update:mathalea": "node scripts/update-mathalea.js",
+    "release": "node scripts/release.js"
   },
   "dependencies": {
     "@cortex-js/compute-engine": "^0.30.2",

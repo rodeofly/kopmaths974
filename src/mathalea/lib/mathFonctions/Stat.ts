@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import {
   colorToLatexOrHTML,
   fixeBordures,
@@ -14,7 +12,6 @@ import { segment } from '../2d/segmentsVecteurs'
 import { latex2d } from '../2d/textes'
 import { texNombre } from '../outils/texNombre'
 
->>>>>>> Stashed changes
 /**
  * Classe pour les statistiques descriptives
  * Accepte une série de nombres ou une série de paires [valeur, effectif]
@@ -99,8 +96,6 @@ export default class Stat {
     return this.ecartType() / this.moyenne()
   }
 
-<<<<<<< Updated upstream
-=======
   quartiles(): { q1: number; q2: number; q3: number } {
     return Stat.quartiles(this.serie)
   }
@@ -193,7 +188,6 @@ export default class Stat {
     }
   }
 
->>>>>>> Stashed changes
   // Méthodes statiques
   // ex : const moy = Stat.moyenne([1,2,3])
   static moyenne(tableau: number[]): number {
@@ -250,8 +244,6 @@ export default class Stat {
   static coefVariation(tableau: number[]): number {
     return Stat.ecartType(tableau) / Stat.moyenne(tableau)
   }
-<<<<<<< Updated upstream
-=======
 
   static quartiles(tableau: number[]): { q1: number; q2: number; q3: number } {
     if (!tableau || tableau.length === 0) {
@@ -583,5 +575,4 @@ export default class Stat {
 
     return serie
   }
->>>>>>> Stashed changes
 }

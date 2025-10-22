@@ -1,5 +1,3 @@
-<<<<<<< Updated upstream
-=======
 import { cercle } from '../../lib/2d/cercle'
 import { codageSegments, placeLatexSurSegment } from '../../lib/2d/codages'
 import { droite } from '../../lib/2d/droites'
@@ -13,20 +11,16 @@ import {
 import { segment } from '../../lib/2d/segmentsVecteurs'
 import { labelPoint } from '../../lib/2d/textes'
 import { rotation } from '../../lib/2d/transformations'
->>>>>>> Stashed changes
 import { KeyboardType } from '../../lib/interactif/claviers/keyboard'
 import { handleAnswers } from '../../lib/interactif/gestionInteractif'
 import { ajouteChampTexteMathLive } from '../../lib/interactif/questionMathLive'
 import { combinaisonListes } from '../../lib/outils/arrayOutils'
 import { creerNomDePolygone } from '../../lib/outils/outilString'
-<<<<<<< Updated upstream
-=======
 import {
   fixeBordures,
   mathalea2d,
   type NestedObjetMathalea2dArray,
 } from '../../modules/2dGeneralites'
->>>>>>> Stashed changes
 import { listeQuestionsToContenu, randint } from '../../modules/outils'
 import Exercice from '../Exercice'
 
@@ -37,10 +31,7 @@ export const interactifReady = true
 export const interactifType = 'mathLive'
 export const amcType = 'AMCNum'
 export const dateDePublication = '08/10/2025'
-<<<<<<< Updated upstream
-=======
 export const dateDeModificationImportante = '19/10/2025'
->>>>>>> Stashed changes
 
 /**
  * Calculer un rayon quand on connaît un diamètre, et inversement
@@ -62,11 +53,8 @@ export default class RayonDiametreMilieu extends Exercice {
       '1: Avec rayon et diamètre\n2: Avec un milieu\n3: Mélange',
     ]
     this.sup = 1
-<<<<<<< Updated upstream
-=======
     this.besoinFormulaire2CaseACocher = ['Avec un schéma', false]
     this.sup2 = false
->>>>>>> Stashed changes
   }
 
   nouvelleVersion() {
@@ -89,28 +77,6 @@ export default class RayonDiametreMilieu extends Exercice {
       let texteCorr = ''
       const [lettre1, lettre2, lettre3] = Array.from(creerNomDePolygone(3))
       const longueurSegment = randint(11, 49)
-<<<<<<< Updated upstream
-      switch (listeTypeDeQuestions[i]) {
-        case 1: // Diamètre
-          texte = `Si le rayon d'un cercle mesure $${longueurSegment}$ cm, alors son diamètre mesure`
-          texteCorr = `Si le rayon d'un cercle mesure $${longueurSegment}$ cm alors son diamètre mesure $${longueurSegment * 2}$ cm.`
-          reponse = longueurSegment * 2
-          break
-        case 3: // La moitié à partir du segment
-          texte = `Si $${lettre1}$ est le milieu de $[${lettre2}${lettre3}]$ et $${lettre2}${lettre3}=${longueurSegment * 2}$ cm, alors  $[${lettre2}${lettre1}]$ mesure`
-          texteCorr = `Si $${lettre1}$ est le milieu de $[${lettre2}${lettre3}]$ et $${lettre2}${lettre3}=${longueurSegment * 2}$ cm, alors  $[${lettre2}${lettre1}]$ mesure $${longueurSegment}$ cm.`
-          reponse = longueurSegment
-          break
-        case 4: // Le segment à partir de sa moitié
-          texte = `$${lettre1}$ est le milieu de $[${lettre2}${lettre3}]$ et $${lettre2}${lettre1}=${longueurSegment}$ cm, alors $[${lettre2}${lettre3}]$ mesure`
-          reponse = longueurSegment * 2
-          texteCorr = `$${lettre1}$ est le milieu de $[${lettre2}${lettre3}]$ et $${lettre2}${lettre1}=${longueurSegment}$ cm, alors $[${lettre2}${lettre3}]$ mesure $${longueurSegment * 2}$ cm.`
-          break
-        default: // case 2 Rayon
-          texte = `Si le diamètre d'un cercle mesure $${longueurSegment * 2}$ cm, alors son rayon mesure`
-          texteCorr = `Si le diamètre d'un cercle mesure $${longueurSegment * 2}$ cm, alors son rayon mesure $${longueurSegment}$ cm.`
-          reponse = longueurSegment
-=======
       const fig: NestedObjetMathalea2dArray = []
       switch (listeTypeDeQuestions[i]) {
         case 1: // Diamètre
@@ -242,7 +208,6 @@ export default class RayonDiametreMilieu extends Exercice {
               tracePointSurDroite(centre, droite(point1, point2)),
             )
           }
->>>>>>> Stashed changes
           break
       }
       if (!this.interactif) {
@@ -256,15 +221,12 @@ export default class RayonDiametreMilieu extends Exercice {
       }
       if (this.listeQuestions.indexOf(texte) === -1) {
         this.listeQuestions[i] = texte
-<<<<<<< Updated upstream
-=======
         if (fig.length > 0 && this.sup2) {
           this.listeQuestions[i] += mathalea2d(
             Object.assign({}, fixeBordures(fig)),
             fig,
           )
         }
->>>>>>> Stashed changes
         this.listeCorrections[i] = texteCorr
         i++
       }
