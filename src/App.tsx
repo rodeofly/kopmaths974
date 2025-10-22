@@ -11,6 +11,14 @@ import {
   type ParameterField,
   type ParameterValueMap
 } from "./utils/exerciseParameters";
+import {
+  collectCategoryPaths,
+  getExerciseLoader,
+  getSortedChildren,
+  loadExerciseTree,
+  type ExerciseDefinition,
+  type ExerciseNode
+} from "./utils/exerciseTree";
 
 type ExerciceInstance = {
   applyNewSeed?: () => void;
@@ -36,225 +44,11 @@ type ExerciceModule = {
   default: new () => ExerciceInstance;
 };
 
-type ExerciseDefinition = {
-  id: string;
-  niveau: string;
-  moduleId: string;
-  importPath: string;
-  relativePath: string;
-  categories: string[];
-  label: string;
-};
-
-type ExerciseTreeNode =
-  | {
-      type: "category";
-      id: string;
-      title: string;
-      children: ExerciseTreeNode[];
-    }
-  | {
-      type: "exercise";
-      id: string;
-      definition: ExerciseDefinition;
-    };
-
-const exerciseModuleLoaders = import.meta.glob<ExerciceModule>("@exos/**/*.ts");
-
-const CATEGORY_NAME_OVERRIDES: Record<string, string> = {
-  cm1: "CM1",
-  cm2: "CM2",
-  ce1: "CE1",
-  ce2: "CE2",
-  cp: "CP",
-  "6e": "6e",
-  "5e": "5e",
-  "4e": "4e",
-  "3e": "3e",
-  "2nde": "2nde",
-  "2de": "2de",
-  seconde: "Seconde",
-  "1re": "1re",
-  premiere: "Première",
-  term: "Terminale",
-  terminale: "Terminale",
-  lycee: "Lycée",
-  college: "Collège",
-  cycle3: "Cycle 3",
-  cycle4: "Cycle 4"
-};
-
-function extractRelativeExercisePath(moduleId: string): string | null {
-  const normalized = moduleId.replace(/\\/g, "/");
-  const marker = "/exercices/";
-  const markerIndex = normalized.lastIndexOf(marker);
-  if (markerIndex !== -1) {
-    return normalized.slice(markerIndex + marker.length);
-  }
-  const aliasPrefix = "@exos/";
-  if (normalized.startsWith(aliasPrefix)) {
-    return normalized.slice(aliasPrefix.length);
-  }
-  return null;
-}
-
-function formatSegmentName(segment: string): string {
-  const cleaned = segment.replace(/\.ts$/i, "").replace(/[_-]+/g, " ").trim();
-  if (!cleaned) return "";
-  const lower = cleaned.toLowerCase();
-  const override = CATEGORY_NAME_OVERRIDES[lower];
-  if (override) return override;
-
-  const words = cleaned.split(/\s+/).map(word => {
-    const lowerWord = word.toLowerCase();
-    if (CATEGORY_NAME_OVERRIDES[lowerWord]) {
-      return CATEGORY_NAME_OVERRIDES[lowerWord];
-    }
-    if (/^[a-z]{1,3}\d?$/i.test(lowerWord)) {
-      return lowerWord.toUpperCase();
-    }
-    return word.charAt(0).toUpperCase() + word.slice(1);
-  });
-
-  return words.join(" ");
-}
-
-function formatNiveau(segment: string): string {
-  if (!segment) return "Autre";
-  const formatted = formatSegmentName(segment);
-  return formatted || segment;
-}
-
-function formatExerciseLabel(segments: string[]): string {
-  if (segments.length === 0) return "";
-  const parts = segments
-    .map(segment => formatSegmentName(segment))
-    .filter(Boolean);
-  return parts.join(" · ");
-}
-
-function createExerciseDefinition(moduleId: string): ExerciseDefinition | null {
-  const relativePath = extractRelativeExercisePath(moduleId);
-  if (!relativePath || !relativePath.endsWith(".ts")) {
-    return null;
-  }
-
-  const segments = relativePath
-    .replace(/^\.\//, "")
-    .split("/")
-    .filter(Boolean);
-  if (segments.length === 0) {
-    return null;
-  }
-
-  const fileName = segments[segments.length - 1];
-  const id = fileName.replace(/\.ts$/i, "");
-  if (!id) {
-    return null;
-  }
-
-  const categories = segments.slice(0, -1);
-  const niveau = formatNiveau(categories[0] ?? "");
-  const cleanedRelativePath = segments.join("/");
-  const label = formatExerciseLabel([...categories, fileName]) || id;
-  const importPath = `@exos/${cleanedRelativePath.replace(/\.ts$/i, "")}`;
-
-  return {
-    id,
-    niveau,
-    moduleId,
-    importPath,
-    relativePath: cleanedRelativePath,
-    categories,
-    label
-  };
-}
-
-const EXERCISES: ExerciseDefinition[] = Object.keys(exerciseModuleLoaders)
-  .map(createExerciseDefinition)
-  .filter(
-    (definition): definition is ExerciseDefinition => definition !== null
-  )
-  .sort((a, b) => {
-    const labelComparison = a.label.localeCompare(b.label, "fr", {
-      sensitivity: "base"
-    });
-    if (labelComparison !== 0) {
-      return labelComparison;
-    }
-    return a.id.localeCompare(b.id, "fr", { sensitivity: "base" });
-  });
-
-const EXERCISES_BY_ID = new Map(EXERCISES.map(exercise => [exercise.id, exercise]));
-
-function sortTree(nodes: ExerciseTreeNode[]) {
-  nodes.sort((a, b) => {
-    if (a.type === "category" && b.type === "exercise") return -1;
-    if (a.type === "exercise" && b.type === "category") return 1;
-    const labelA = a.type === "category" ? a.title : a.definition.label;
-    const labelB = b.type === "category" ? b.title : b.definition.label;
-    return labelA.localeCompare(labelB, "fr", { sensitivity: "base" });
-  });
-
-  nodes.forEach(node => {
-    if (node.type === "category") {
-      sortTree(node.children);
-    }
-  });
-}
-
-function buildExerciseTree(definitions: ExerciseDefinition[]): ExerciseTreeNode[] {
-  const tree: ExerciseTreeNode[] = [];
-  const categoryMap = new Map<string, Extract<ExerciseTreeNode, { type: "category" }>>();
-
-  const sortedDefinitions = [...definitions].sort((a, b) =>
-    a.relativePath.localeCompare(b.relativePath, "fr", { sensitivity: "base" })
-  );
-
-  sortedDefinitions.forEach(definition => {
-    const categorySegments = definition.categories;
-    let children = tree;
-
-    categorySegments.forEach((segment, index) => {
-      const categoryId = categorySegments.slice(0, index + 1).join("/");
-      let categoryNode = categoryMap.get(categoryId);
-      if (!categoryNode) {
-        categoryNode = {
-          type: "category",
-          id: categoryId,
-          title: formatSegmentName(segment),
-          children: []
-        };
-        categoryMap.set(categoryId, categoryNode);
-        children.push(categoryNode);
-      }
-      children = categoryNode.children;
-    });
-
-    children.push({
-      type: "exercise",
-      id: definition.id,
-      definition
-    });
-  });
-
-  sortTree(tree);
-  return tree;
-}
-
-const EXERCISE_TREE = buildExerciseTree(EXERCISES);
-
-function collectCategoryIds(nodes: ExerciseTreeNode[], acc: Set<string> = new Set()) {
-  nodes.forEach(node => {
-    if (node.type === "category") {
-      acc.add(node.id);
-      collectCategoryIds(node.children, acc);
-    }
-  });
-  return acc;
-}
-
-const DEFAULT_EXPANDED_CATEGORIES = collectCategoryIds(EXERCISE_TREE);
+const TREE_DATA = loadExerciseTree();
+const EXERCISE_TREE = TREE_DATA.tree;
+const EXERCISES = TREE_DATA.definitions;
+const EXERCISES_BY_ID = TREE_DATA.definitionMap;
+const DEFAULT_EXPANDED_CATEGORIES = collectCategoryPaths(EXERCISE_TREE);
 
 const delimiters = [
   { left: "$$", right: "$$", display: true },
@@ -452,16 +246,9 @@ function App() {
     if (!term) return EXERCISES;
     return EXERCISES.filter(exercise => {
       const title = exerciseTitles[exercise.id]?.toLowerCase() ?? "";
-      const label = exercise.label.toLowerCase();
-      const relativePath = exercise.relativePath.toLowerCase();
-      const importPath = exercise.importPath.toLowerCase();
       return (
-        exercise.id.toLowerCase().includes(term) ||
-        exercise.niveau.toLowerCase().includes(term) ||
-        title.includes(term) ||
-        label.includes(term) ||
-        relativePath.includes(term) ||
-        importPath.includes(term)
+        exercise.searchableTitle.includes(term) ||
+        title.includes(term)
       );
     });
   }, [searchTerm, exerciseTitles]);
@@ -513,16 +300,25 @@ function App() {
       const requestId = ++requestIdRef.current;
 
       try {
-        const cacheKey = definition.moduleId;
+        const cacheKey = definition.relativePath;
         let module = moduleCacheRef.current.get(cacheKey);
         if (!module) {
-          const loader = exerciseModuleLoaders[cacheKey];
-          if (!loader) {
-            throw new Error(
-              `Impossible de charger l'exercice ${definition.importPath}`
-            );
+          const loader = getExerciseLoader(definition.relativePath) as
+            | (() => Promise<ExerciceModule>)
+            | undefined;
+          if (loader) {
+            module = await loader();
+          } else {
+            try {
+              module = (await import(
+                /* @vite-ignore */ definition.importPath
+              )) as ExerciceModule;
+            } catch (dynamicImportError) {
+              throw new Error(
+                `Impossible de charger l'exercice ${definition.importPath}`
+              );
+            }
           }
-          module = await loader();
           if (requestId !== requestIdRef.current) return;
           moduleCacheRef.current.set(cacheKey, module);
         }
@@ -723,61 +519,74 @@ function App() {
     [selectedExerciseId]
   );
 
-  const toggleCategory = useCallback((id: string) => {
+  const handleToggleCategory = useCallback((fullPath: string, nextOpen: boolean) => {
     setExpandedCategories(prev => ({
       ...prev,
-      [id]: !(prev[id] ?? false)
+      [fullPath]: nextOpen
     }));
   }, []);
 
   const renderTree = useCallback(
-    (nodes: ExerciseTreeNode[], depth = 0): JSX.Element | null => {
-      if (nodes.length === 0) return null;
+    (nodes: Record<string, ExerciseNode>, depth = 0): JSX.Element | null => {
+      const entries = getSortedChildren(nodes);
+      if (entries.length === 0) return null;
 
       return (
-        <ul
-          className={
-            depth === 0
-              ? "space-y-1"
-              : "space-y-1 border-l border-slate-200 pl-3"
-          }
-        >
-          {nodes.map(node => {
+        <ul className={depth === 0 ? "space-y-2" : "space-y-2"}>
+          {entries.map(node => {
             if (node.type === "category") {
-              const expanded = expandedCategories[node.id] ?? false;
+              const expanded = expandedCategories[node.fullPath] ?? true;
               return (
-                <li key={node.id}>
-                  <button
-                    type="button"
-                    onClick={() => toggleCategory(node.id)}
-                    className="flex w-full items-center justify-between rounded px-2 py-1 text-left text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100"
+                <li key={node.fullPath}>
+                  <details
+                    open={expanded}
+                    className="group"
+                    onToggle={event =>
+                      handleToggleCategory(node.fullPath, event.currentTarget.open)
+                    }
                   >
-                    <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden="true"
-                        className="text-xs text-slate-500"
-                      >
-                        {expanded ? "▾" : "▸"}
+                    <summary className="flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100">
+                      <span className="flex items-center gap-2">
+                        <span aria-hidden="true" className="text-base leading-none">
+                          📁
+                        </span>
+                        <span className="flex flex-col text-left">
+                          <span className="font-semibold tracking-wide">
+                            {node.id}
+                          </span>
+                          {node.title && (
+                            <span className="text-xs font-normal text-slate-500">
+                              {node.title}
+                            </span>
+                          )}
+                        </span>
                       </span>
-                      {node.title}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-wide text-slate-400">
-                      {expanded ? "Masquer" : "Voir"}
-                    </span>
-                  </button>
-                  {expanded && renderTree(node.children, depth + 1)}
+                      <span className="text-[10px] uppercase tracking-wide text-slate-400">
+                        {expanded ? "Masquer" : "Voir"}
+                      </span>
+                    </summary>
+                    <div className="ml-4 mt-2 border-l border-slate-200 pl-3">
+                      {renderTree(node.children, depth + 1)}
+                    </div>
+                  </details>
                 </li>
               );
             }
 
-            const { definition } = node;
+            const definition = EXERCISES_BY_ID.get(node.definitionId);
+            if (!definition) {
+              return null;
+            }
+
             const title =
-              exerciseTitles[definition.id] ??
+              exerciseTitles[node.definitionId] ??
+              definition.title ??
               definition.label ??
-              `Exercice ${definition.id}`;
-            const isActive = definition.id === selectedExerciseId;
+              `Exercice ${node.definitionId}`;
+            const isActive = node.definitionId === selectedExerciseId;
+
             return (
-              <li key={definition.id}>
+              <li key={node.fullPath}>
                 <button
                   type="button"
                   onClick={() => handleSelectExercise(definition)}
@@ -787,9 +596,16 @@ function App() {
                       : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
                   }`}
                 >
-                  <span className="block font-semibold">{title}</span>
-                  <span className="mt-1 block text-xs text-slate-500">
-                    ID : {definition.id} · Niveau : {definition.niveau}
+                  <span className="flex items-center gap-2">
+                    <span aria-hidden="true" className="text-base leading-none">
+                      📘
+                    </span>
+                    <span>
+                      <span className="block font-semibold">{title}</span>
+                      <span className="mt-1 block text-xs text-slate-500">
+                        ID : {definition.id} · Niveau : {definition.niveau}
+                      </span>
+                    </span>
                   </span>
                 </button>
               </li>
@@ -799,11 +615,11 @@ function App() {
       );
     },
     [
-      exerciseTitles,
       expandedCategories,
+      exerciseTitles,
       handleSelectExercise,
-      selectedExerciseId,
-      toggleCategory
+      handleToggleCategory,
+      selectedExerciseId
     ]
   );
 
@@ -837,6 +653,7 @@ function App() {
                     {filteredExercises.map(exercise => {
                       const title =
                         exerciseTitles[exercise.id] ??
+                        exercise.title ??
                         exercise.label ??
                         `Exercice ${exercise.id}`;
                       const isActive = exercise.id === selectedExerciseId;
@@ -851,9 +668,16 @@ function App() {
                                 : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
                             }`}
                           >
-                            <span className="block font-semibold">{title}</span>
-                            <span className="mt-1 block text-xs text-slate-500">
-                              ID : {exercise.id} · Niveau : {exercise.niveau}
+                            <span className="flex items-center gap-2">
+                              <span aria-hidden="true" className="text-base leading-none">
+                                📘
+                              </span>
+                              <span>
+                                <span className="block font-semibold">{title}</span>
+                                <span className="mt-1 block text-xs text-slate-500">
+                                  ID : {exercise.id} · Niveau : {exercise.niveau}
+                                </span>
+                              </span>
                             </span>
                           </button>
                         </li>
@@ -884,6 +708,7 @@ function App() {
                       <h2 className="text-2xl font-semibold">
                         {exerciseSummary?.title ??
                           exerciseTitles[selectedDefinition.id] ??
+                          selectedDefinition.title ??
                           `Exercice ${selectedDefinition.id}`}
                       </h2>
                       <p className="mt-1 text-sm text-slate-600">
