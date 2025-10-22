@@ -1,23 +1,31 @@
 import { defineConfig } from "vite";
+import path from "path";
 import react from "@vitejs/plugin-react";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
-import path from "path";
+
+// 🧩 Désactive complètement LightningCSS (utile pour Vite >=5, mais inoffensif sur Vite 4)
+process.env.VITE_NO_LIGHTNINGCSS = "true";
+process.env.TAILWIND_DISABLE_LIGHTNINGCSS = "true";
 
 export default defineConfig({
   plugins: [
     react(),
     svelte({
-      preprocess: sveltePreprocess({ typescript: true, postcss: true }),
+      preprocess: sveltePreprocess({
+        typescript: true,
+        postcss: true,
+      }),
       compilerOptions: { dev: true },
     }),
   ],
+
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
-      "@mathalea": path.resolve(__dirname, "./src/mathalea"),
-      "@exos": path.resolve(__dirname, "./src/mathalea/exercices"),
-      "apigeom": path.resolve(__dirname, "node_modules/apigeom"),
+      "@mathalea": path.resolve(__dirname, "../mathalea/src"),
+      "@exos": path.resolve(__dirname, "../mathalea/src/exercices"),
+      apigeom: path.resolve(__dirname, "node_modules/apigeom"),
     },
     extensions: [".ts", ".js", ".svelte"],
   },
@@ -25,7 +33,7 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       "svelte",
-      "@sveltejs/vite-plugin-svelte",    
+      "@sveltejs/vite-plugin-svelte",
       "decimal.js",
       "mathjs",
       "crypto-js",
@@ -33,27 +41,33 @@ export default defineConfig({
       "katex",
       "earcut",
       "roughjs",
-      "@mathalea/modules/2dGeneralites"
+      "@mathalea/modules/2dGeneralites",
     ],
     esbuildOptions: {
-      target: "esnext", // ✅ idem pour la phase dev
-    }
+      target: "esnext",
+    },
   },
 
   server: {
     fs: {
       allow: [
-        path.resolve(__dirname, ".."), // autorise l’accès au parent
-        path.resolve(__dirname, "src/mathalea"), // autorise l’accès à MathALEA local
+        path.resolve(__dirname, ".."),
+        path.resolve(__dirname, "../mathalea/src"),
         path.resolve(__dirname, "node_modules"),
       ],
     },
   },
 
+  css: {
+    // ⚙️ Assure explicitement que Vite utilise PostCSS au lieu de LightningCSS
+    transformer: "postcss",
+    postcss: "./postcss.config.cjs",
+  },
+
   build: {
     target: "esnext",
     chunkSizeWarningLimit: 2000,
-    reportCompressedSize: false, // ✅ empêche le calcul gzip (source du crash)
+    reportCompressedSize: false,
     rollupOptions: {
       input: path.resolve(__dirname, "index.html"),
       external: [
