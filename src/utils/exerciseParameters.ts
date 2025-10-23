@@ -617,6 +617,24 @@ function buildParameterFields(
     orderMap.set(field.path, order);
   };
 
+  const nbQuestionsRaw = getValueAtPath(exercice, "nbQuestions");
+  const nbQuestionsValue =
+    typeof nbQuestionsRaw === "number" && Number.isFinite(nbQuestionsRaw)
+      ? nbQuestionsRaw
+      : Number.isFinite(Number(nbQuestionsRaw))
+        ? Number(nbQuestionsRaw)
+        : 10;
+
+  addField(
+    {
+      path: "nbQuestions",
+      label: "Nombre de questions",
+      type: "number",
+      value: nbQuestionsValue
+    },
+    0
+  );
+
   FORM_PARAMETER_FLAG_KEYS.forEach(flag => {
     const descriptor = (exercice as Record<string, unknown>)[flag];
     if (!descriptor) return;
