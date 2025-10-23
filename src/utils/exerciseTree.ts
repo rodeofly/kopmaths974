@@ -447,6 +447,15 @@ function convertTags(value: unknown): string[] {
   return tags;
 }
 
+function isExerciseRecord(value: JsonObject): boolean {
+  if (!isPlainObject(value)) {
+    return false;
+  }
+
+  const url = value.url;
+  return typeof url === "string" && url.trim().length > 0;
+}
+
 function convertUrlToTsPath(url: string): { normalizedTsPath: string; normalizedJsPath: string } {
   const normalized = normalizeRelativePath(url);
   const tsPath = normalized.replace(/\.jsx?$/i, ".ts");
@@ -553,21 +562,21 @@ function buildDefinitions(): {
   readJsonObject("uuidsRessources.json");
   readJsonObject("referentielBibliotheque.json");
 
-  const levelStructureMap: LevelThemeStructureMap = new Map();
-
-  const levelStructureSources: Array<[string, string]> = [
-    ["2e", "2ndeAvecSousThemes.json"],
-    ["3e", "3eAvecSousThemes.json"],
-    ["4e", "4eAvecSousThemes.json"],
-    ["5e", "5eAvecSousThemes.json"],
-    ["6e", "6emeAvecSousTheme.json"]
-  ];
-
-  levelStructureSources.forEach(([levelCode, fileName]) => {
-    const raw = readJsonObject(fileName) as RawLevelStructure | null;
-    const themes = buildThemeStructure(levelCode, raw, themeTitleLookup);
-    if (themes.length > 0) {
-      levelStructureMap.set(levelCode, themes);
+  const categoryTitleLookup = new Map<string, string>();
+  levelTitles.forEach((value, key) => {
+    if (typeof value === "string") {
+      const normalized = normalizeWhitespace(value);
+      if (normalized) {
+        categoryTitleLookup.set(key, normalized);
+      }
+    }
+  });
+  themeTitleLookup.forEach((value, key) => {
+    if (typeof value === "string") {
+      const normalized = normalizeWhitespace(value);
+      if (normalized) {
+        categoryTitleLookup.set(key, normalized);
+      }
     }
   });
 
@@ -578,147 +587,135 @@ function buildDefinitions(): {
   );
 
   const availableModules = new Set(modulePaths);
-  const definitions: ExerciseDefinition[] = [];
   const categoryRegistry: CategoryRegistry = new Map();
 
   const fingerprintSegments: string[] = Array.from(jsonFingerprint.entries())
     .sort((a, b) => a[0].localeCompare(b[0], "fr", { sensitivity: "base" }))
     .map(([path, checksum]) => `${path}:${checksum}`);
 
-  if (!allExercice) {
+  if (!allExercice || !isPlainObject(allExercice)) {
     treeWarn("Fichier allExercice.json introuvable – catalogue vide");
-    return { definitions, categoryRegistry, fingerprintSegments };
+    return { definitions: [], categoryRegistry, fingerprintSegments };
   }
 
-  const levelOrderMap = new Map<string, number>();
-  const themeOrderMap = new Map<string, number>();
-  const subThemeOrderMap = new Map<string, number>();
+  type DefinitionWithOrder = { definition: ExerciseDefinition; orderTrail: number[] };
 
-  Object.entries(allExercice).forEach(([levelCode, rawLevel], levelIndex) => {
-    if (!isPlainObject(rawLevel)) {
-      return;
+  const definitionsWithOrder: DefinitionWithOrder[] = [];
+
+  const resolveCategoryTitleForPath = (pathSegments: string[]): string => {
+    if (pathSegments.length === 0) {
+      return "";
     }
 
-    const levelTitle = levelTitles.get(levelCode) ?? formatSegmentNameFallback(levelCode);
-    if (!levelTitles.has(levelCode)) {
-      logMissingKey(levelCode);
+    const segment = pathSegments[pathSegments.length - 1];
+    if (!segment) {
+      return "";
     }
 
-    levelOrderMap.set(levelCode, levelIndex);
-    registerCategoryMetadata(categoryRegistry, [levelCode], levelCode, levelTitle, levelIndex, [levelTitle]);
+    const normalizedSegment = segment.trim();
+    if (!normalizedSegment) {
+      return formatSegmentNameFallback(segment);
+    }
 
-    const themeStructures = levelStructureMap.get(levelCode) ?? [];
-    const themeStructureByCode = new Map(themeStructures.map(structure => [structure.code, structure]));
+    const attempts = new Set<string>();
+    attempts.add(normalizedSegment);
+    attempts.add(normalizedSegment.toLowerCase());
+    attempts.add(normalizedSegment.toUpperCase());
 
-    Object.entries(rawLevel).forEach(([themeCode, rawTheme], themeIndex) => {
-      if (!isPlainObject(rawTheme)) {
+    const sanitized = normalizedSegment.replace(/[-_.]/g, "");
+    if (sanitized && sanitized !== normalizedSegment) {
+      attempts.add(sanitized);
+    }
+
+    const levelSegment = pathSegments[0];
+    if (levelSegment) {
+      attempts.add(`${levelSegment}${normalizedSegment}`);
+      attempts.add(`${levelSegment}-${normalizedSegment}`);
+      if (sanitized) {
+        attempts.add(`${levelSegment}${sanitized}`);
+      }
+    }
+
+    if (levelSegment === "CAN") {
+      const prefixed = normalizedSegment.startsWith("can")
+        ? normalizedSegment
+        : `can${normalizedSegment}`;
+      attempts.add(prefixed);
+      if (pathSegments.length >= 2) {
+        attempts.add(`can${pathSegments.slice(1).join("")}`);
+      }
+    }
+
+    for (const candidate of attempts) {
+      const title = candidate ? categoryTitleLookup.get(candidate) : undefined;
+      if (title && title.trim()) {
+        return title.trim();
+      }
+    }
+
+    return ensureTitle(categoryTitleLookup, normalizedSegment);
+  };
+
+  const traverseNode = (
+    node: JsonObject,
+    pathSegments: string[],
+    titleTrail: string[],
+    orderTrail: number[]
+  ) => {
+    Object.entries(node).forEach(([key, value], index) => {
+      if (!isPlainObject(value)) {
         return;
       }
 
-      const structure = themeStructureByCode.get(themeCode);
-      const themeOrder = structure?.order ?? themeIndex;
-      themeOrderMap.set(`${levelCode}/${themeCode}`, themeOrder);
+      const record = value as JsonObject;
 
-      const themeTitle = structure?.title ?? themeTitleLookup.get(themeCode) ?? formatSegmentNameFallback(themeCode);
-      if (!structure && !themeTitleLookup.has(themeCode)) {
-        logMissingKey(themeCode);
-      }
-
-      registerCategoryMetadata(
-        categoryRegistry,
-        [levelCode, themeCode],
-        themeCode,
-        themeTitle,
-        themeOrder,
-        [levelTitle, themeTitle]
-      );
-
-      const subThemesKnown = new Map<string, SubThemeStructure>();
-      structure?.subThemes.forEach(subTheme => {
-        subThemeOrderMap.set(`${levelCode}/${themeCode}/${subTheme.code}`, subTheme.order);
-        subThemesKnown.set(subTheme.code, subTheme);
-        registerCategoryMetadata(
-          categoryRegistry,
-          [levelCode, themeCode, subTheme.code],
-          subTheme.code,
-          subTheme.title,
-          subTheme.order,
-          [levelTitle, themeTitle, subTheme.title]
-        );
-      });
-
-      Object.entries(rawTheme).forEach(([exerciseKey, rawExercise], exerciseIndex) => {
-        if (!isPlainObject(rawExercise)) {
-          return;
-        }
-
-        const record = rawExercise as JsonObject;
-        const idValue = typeof record.ref === "string" && record.ref.trim() ? record.ref.trim() : exerciseKey;
-        const titleValue = typeof record.titre === "string" ? normalizeWhitespace(record.titre) : "";
+      if (isExerciseRecord(record)) {
+        const idValue =
+          typeof record.ref === "string" && record.ref.trim() ? record.ref.trim() : key;
+        const titleValue =
+          typeof record.titre === "string" ? normalizeWhitespace(record.titre) : "";
         const urlValue = typeof record.url === "string" ? record.url : "";
         if (!urlValue) {
-          treeWarn("Exercice sans chemin d'accès", { levelCode, themeCode, exerciseKey });
+          treeWarn("Exercice sans chemin d'accès", { path: [...pathSegments, key].join("/") });
           return;
         }
 
         const { normalizedTsPath, normalizedJsPath } = convertUrlToTsPath(urlValue);
-        const subThemeCode = inferSubThemeCode(idValue, themeCode, new Set(subThemesKnown.keys()));
-
-        if (!subThemesKnown.has(subThemeCode)) {
-          const inferredTitle = themeTitleLookup.get(subThemeCode) ?? formatSegmentNameFallback(subThemeCode);
-          if (!themeTitleLookup.has(subThemeCode)) {
-            logMissingKey(subThemeCode);
-          }
-          const order = subThemesKnown.size;
-          const subTheme: SubThemeStructure = {
-            code: subThemeCode,
-            title: inferredTitle,
-            order
-          };
-          subThemesKnown.set(subThemeCode, subTheme);
-          subThemeOrderMap.set(`${levelCode}/${themeCode}/${subThemeCode}`, order);
-          registerCategoryMetadata(
-            categoryRegistry,
-            [levelCode, themeCode, subThemeCode],
-            subThemeCode,
-            inferredTitle,
-            order,
-            [levelTitle, themeTitle, inferredTitle]
-          );
-        }
-
-        const subTheme = subThemesKnown.get(subThemeCode);
-        const subThemeTitle = subTheme?.title ?? ensureTitle(themeTitleLookup, subThemeCode);
         const tags = convertTags(record.tags);
         const uuid = typeof record.uuid === "string" ? record.uuid.trim() : undefined;
+
+        const categories = [...pathSegments];
+        const categoryTitles = [...titleTrail];
+        const niveauTitle =
+          categoryTitles[0] && categoryTitles[0].trim()
+            ? categoryTitles[0]
+            : categories[0]
+              ? resolveCategoryTitleForPath([categories[0]])
+              : formatSegmentNameFallback("Divers");
 
         const searchableParts: string[] = [
           idValue,
           titleValue,
           normalizedTsPath,
           normalizedJsPath,
-          levelCode,
-          levelTitle,
-          themeCode,
-          themeTitle,
-          subThemeCode,
-          subThemeTitle,
+          ...categories,
+          ...categoryTitles,
           uuid ?? ""
         ];
         tags.forEach(tag => searchableParts.push(tag));
 
         const definition: ExerciseDefinition = {
           id: idValue,
-          niveau: levelTitle,
+          niveau: niveauTitle,
           importPath: `@exos/${normalizedTsPath}`,
           relativePath: normalizedTsPath,
-          categories: [levelCode, themeCode, subThemeCode],
-          categoryTitles: [levelTitle, themeTitle, subThemeTitle],
+          categories,
+          categoryTitles,
           tags,
           label: titleValue || idValue,
           title: titleValue || idValue,
           searchableTitle: computeSearchable(searchableParts),
-          order: exerciseIndex,
+          order: index,
           uuid
         };
 
@@ -730,46 +727,53 @@ function buildDefinitions(): {
         }
 
         if (!exercicesSet.has(normalizedTsPath) && !exercicesSet.has(normalizedJsPath)) {
-          treeWarn("Chemin absent de exercicesList.json", {
-            relativePath: normalizedTsPath
-          });
+          treeWarn("Chemin absent de exercicesList.json", { relativePath: normalizedTsPath });
         }
 
-        definitions.push(definition);
-      });
+        definitionsWithOrder.push({ definition, orderTrail: [...orderTrail, index] });
+        return;
+      }
+
+      const childPath = [...pathSegments, key];
+      const childOrderTrail = [...orderTrail, index];
+      const childTitle = resolveCategoryTitleForPath(childPath);
+      const childTitleTrail = [...titleTrail, childTitle];
+
+      registerCategoryMetadata(
+        categoryRegistry,
+        childPath,
+        key,
+        childTitle,
+        index,
+        childTitleTrail
+      );
+
+      traverseNode(record, childPath, childTitleTrail, childOrderTrail);
     });
+  };
+
+  traverseNode(allExercice as JsonObject, [], [], []);
+
+  definitionsWithOrder.sort((a, b) => {
+    const length = Math.max(a.orderTrail.length, b.orderTrail.length);
+    for (let position = 0; position < length; position += 1) {
+      const valueA = a.orderTrail[position] ?? Number.MAX_SAFE_INTEGER;
+      const valueB = b.orderTrail[position] ?? Number.MAX_SAFE_INTEGER;
+      if (valueA !== valueB) {
+        return valueA - valueB;
+      }
+    }
+
+    return a.definition.id.localeCompare(b.definition.id, "fr", { sensitivity: "base" });
   });
 
-  definitions.sort((a, b) => {
-    const levelA = a.categories[0];
-    const levelB = b.categories[0];
-    const levelOrderA = levelOrderMap.get(levelA) ?? Number.MAX_SAFE_INTEGER;
-    const levelOrderB = levelOrderMap.get(levelB) ?? Number.MAX_SAFE_INTEGER;
-    if (levelOrderA !== levelOrderB) {
-      return levelOrderA - levelOrderB;
+  const definitions = definitionsWithOrder.map(entry => {
+    const trail = entry.orderTrail;
+    const lastOrder = trail[trail.length - 1];
+    if (typeof lastOrder === "number") {
+      entry.definition.order = lastOrder;
     }
-
-    const themeKeyA = `${a.categories[0] ?? ""}/${a.categories[1] ?? ""}`;
-    const themeKeyB = `${b.categories[0] ?? ""}/${b.categories[1] ?? ""}`;
-    const themeOrderA = themeOrderMap.get(themeKeyA) ?? Number.MAX_SAFE_INTEGER;
-    const themeOrderB = themeOrderMap.get(themeKeyB) ?? Number.MAX_SAFE_INTEGER;
-    if (themeOrderA !== themeOrderB) {
-      return themeOrderA - themeOrderB;
-    }
-
-    const subKeyA = `${a.categories[0] ?? ""}/${a.categories[1] ?? ""}/${a.categories[2] ?? ""}`;
-    const subKeyB = `${b.categories[0] ?? ""}/${b.categories[1] ?? ""}/${b.categories[2] ?? ""}`;
-    const subOrderA = subThemeOrderMap.get(subKeyA) ?? Number.MAX_SAFE_INTEGER;
-    const subOrderB = subThemeOrderMap.get(subKeyB) ?? Number.MAX_SAFE_INTEGER;
-    if (subOrderA !== subOrderB) {
-      return subOrderA - subOrderB;
-    }
-
-    if (a.order !== b.order) {
-      return a.order - b.order;
-    }
-
-    return a.id.localeCompare(b.id, "fr", { sensitivity: "base" });
+    return entry.definition;
   });
 
   return { definitions, categoryRegistry, fingerprintSegments };
