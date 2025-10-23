@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
 import App from "./App.tsx";
-import Flashcards from "./pages/Flashcards.tsx";
 import "./index.css";
 import "katex/dist/katex.min.css";
 import "./vendor/mathlive/mathlive-static.css";
@@ -42,12 +41,6 @@ function Navigation() {
           >
             Catalogue
           </NavLink>
-          <NavLink
-            to="/flashcards"
-            className={({ isActive }) => navLinkClasses(isActive)}
-          >
-            Flashcards
-          </NavLink>
         </div>
       </nav>
     </header>
@@ -67,7 +60,6 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <Navigation />
         <Routes>
           <Route path="/" element={<App />} />
-          <Route path="/flashcards" element={<Flashcards />} />
         </Routes>
       </div>
     </BrowserRouter>

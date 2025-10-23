@@ -78,7 +78,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@mathalea": path.resolve(__dirname, "./src/mathalea"),
-      "@exos": path.resolve(__dirname, "./src/mathalea/exercices"),
+      "@exos": path.resolve(__dirname, "./src/mathalea/src/exercices"),
       apigeom: path.resolve(__dirname, "node_modules/apigeom"),
     },
     extensions: [".ts", ".js", ".jsx", ".tsx", ".svelte"],
