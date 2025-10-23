@@ -147,9 +147,6 @@ export function translateLatexToHtml(value: string): string {
     return applySimpleStyle(acc, command, tag);
   }, result);
 
-  const apercuFinal = finalResult.length > 120 ? `${finalResult.slice(0, 117)}…` : finalResult;
-  latexInfo("Conversion LaTeX → HTML terminée", { longueur: finalResult.length, apercu: apercuFinal });
-
   return finalResult;
 }
 
