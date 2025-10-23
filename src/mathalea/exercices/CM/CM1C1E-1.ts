@@ -1,10 +1,14 @@
 import GlisseNombreElement from 'glisse-nombre'
 import { choice } from '../../lib/outils/arrayOutils'
 import { texFractionFromString } from '../../lib/outils/deprecatedFractions'
-import { texNombre } from '../../lib/outils/texNombre'
+import { texNombre, texNombre2 } from '../../lib/outils/texNombre'
 import { context } from '../../modules/context'
 import { listeQuestionsToContenu, randint } from '../../modules/outils'
 import Exercice from '../Exercice'
+
+function formatGlisseNombreValue(nombre: number): string {
+  return texNombre2(nombre).replace(/\\\\,/g, ' ')
+}
 
 /**
  * Définit le customElement glisse-nombre
@@ -65,7 +69,7 @@ export default class ExerciceMultiplierOuDiviserUnNombreEntierPar101001000 exten
           texNombre(a / b) +
           ' $'
         if (context.isHtml && i === 0) {
-          this.introduction = `<glisse-nombre number="${texNombre(a / b)}"/>`
+          this.introduction = `<glisse-nombre number="${formatGlisseNombreValue(a / b)}"/>`
         }
       } else {
         texte = '$ ' + texNombre(a) + '\\times' + texNombre(b) + ' =  $'
@@ -78,7 +82,7 @@ export default class ExerciceMultiplierOuDiviserUnNombreEntierPar101001000 exten
           texNombre(a * b) +
           ' $'
         if (context.isHtml && i === 0) {
-          this.introduction = `<glisse-nombre number="${a}"/>`
+          this.introduction = `<glisse-nombre number="${formatGlisseNombreValue(a)}"/>`
         }
       }
 

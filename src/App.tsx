@@ -27,6 +27,7 @@ type ExerciceInstance = {
   listeQuestions?: string[];
   correction?: string;
   contenuCorrige?: string;
+  contenuCorrection?: string;
   listeCorrections?: string[];
   autoCorrection?: unknown;
   autocorrection?: unknown;
@@ -318,6 +319,11 @@ function buildQuestionContent(exercice: ExerciceInstance): OrderedListContent {
       )
     : [];
 
+  const latexSource =
+    typeof exercice.contenu === "string" && exercice.contenu.trim().length > 0
+      ? exercice.contenu
+      : "";
+
   debugLog("Construction du contenu d'énoncé", {
     mode: questions.length > 0 ? "liste" : "contenu",
     questionCount: questions.length,
@@ -325,18 +331,20 @@ function buildQuestionContent(exercice: ExerciceInstance): OrderedListContent {
   });
 
   if (questions.length > 0) {
-    return buildOrderedListContent(questions);
+    const listContent = buildOrderedListContent(questions);
+    return {
+      ...listContent,
+      latex: latexSource || listContent.latex
+    };
   }
 
-  const contenu =
-    typeof exercice.contenu === "string" ? exercice.contenu : "";
-  if (!contenu) {
+  if (!latexSource) {
     debugWarn("Aucun contenu d'énoncé détecté", { clefs: Object.keys(exercice) });
   }
   return {
-    rawHtml: contenu,
-    html: translateLatexToHtml(contenu),
-    latex: contenu
+    rawHtml: latexSource,
+    html: translateLatexToHtml(latexSource),
+    latex: latexSource
   };
 }
 
@@ -624,6 +632,32 @@ function App() {
         }
         const exercice = new ExerciseClass();
 
+        const moduleExports = module as Record<string, unknown>;
+        const overrideKeys = [
+          "titre",
+          "amcReady",
+          "amcType",
+          "interactifType",
+          "interactifReady",
+          "interactifObligatoire"
+        ] as const;
+
+        overrideKeys.forEach(key => {
+          const value = moduleExports[key];
+          if (value !== undefined) {
+            (exercice as Record<string, unknown>)[key] = value;
+          }
+        });
+
+        (exercice as Record<string, unknown>).id = definition.id;
+
+        if (
+          typeof (exercice as Record<string, unknown>).numeroExercice !==
+          "number"
+        ) {
+          (exercice as Record<string, unknown>).numeroExercice = 1;
+        }
+
         debugLog("Instance d'exercice initialisée", {
           clefs: Object.keys(exercice as Record<string, unknown>),
           titre: extractExerciseTitle(exercice)
@@ -718,12 +752,18 @@ function App() {
 
         exerciceRef.current = exercice;
         setIsInteractive(Boolean((exercice as Record<string, unknown>).interactif));
+        const latexCorrections =
+          typeof exercice.contenuCorrection === "string" &&
+          exercice.contenuCorrection.trim().length > 0
+            ? [exercice.contenuCorrection.trim()]
+            : rawCorrections;
+
         setQuestionRawHtml(questionContent.rawHtml);
         setQuestionHtml(questionContent.html);
         setQuestionLatex(questionContent.latex ?? "");
         setCorrectionItems(corrections);
         setAutoCorrectionItems(autoCorrections);
-        setCorrectionLatexItems(rawCorrections);
+        setCorrectionLatexItems(latexCorrections);
         setAutoCorrectionLatexItems(rawAutoCorrections);
         setCopyFeedback({});
         setShowCorrection(!shouldActivate);
