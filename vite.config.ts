@@ -5,11 +5,13 @@ import tailwindcss from "@tailwindcss/vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 import sveltePreprocess from "svelte-preprocess";
 
+/* ------------------------- CSS DEBUG PLUGIN ------------------------- */
 const CSS_DEBUG_PREFIX = "[KopMaths][DevServer][CSS]";
 
 function createCssDebugPlugin() {
   return {
     name: "kopmaths-css-debug",
+
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
         if (req.url?.includes(".css")) {
@@ -18,12 +20,14 @@ function createCssDebugPlugin() {
         next();
       });
     },
+
     handleHotUpdate(context) {
       if (context.file.endsWith(".css")) {
         const relativePath = path.relative(process.cwd(), context.file);
         console.info(CSS_DEBUG_PREFIX, "HMR", relativePath);
       }
     },
+
     transform(code, id) {
       if (id.endsWith(".css")) {
         const filePath = path.relative(process.cwd(), id.split("?")[0]);
@@ -33,9 +37,13 @@ function createCssDebugPlugin() {
       }
       return null;
     },
+
     generateBundle(_, bundle) {
       const cssAssets = Object.entries(bundle)
-        .filter(([, output]) => output.type === "asset" && output.fileName.endsWith(".css"))
+        .filter(
+          ([, output]) =>
+            output.type === "asset" && output.fileName.endsWith(".css")
+        )
         .map(([fileName]) => fileName);
 
       if (cssAssets.length > 0) {
@@ -45,10 +53,14 @@ function createCssDebugPlugin() {
   };
 }
 
-// 🚫 Désactivation unique de LightningCSS (inutile avec Tailwind 4)
+/* ---------------------- GLOBAL ENV SETTINGS ---------------------- */
+// Désactive LightningCSS (inutile avec Tailwind 4)
 process.env.TAILWIND_DISABLE_LIGHTNINGCSS = "true";
 
+/* --------------------------- VITE CONFIG --------------------------- */
 export default defineConfig({
+  base: "/kopmaths974/", // ✅ essentiel pour GitHub Pages
+
   plugins: [
     tailwindcss(),
     react(),
@@ -99,7 +111,7 @@ export default defineConfig({
   },
 
   css: {
-    // Tailwind 4 gère tout seul PostCSS, inutile de le préciser
+    // Tailwind 4 gère PostCSS automatiquement
     transformer: "postcss",
   },
 

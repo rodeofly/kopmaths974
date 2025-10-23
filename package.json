@@ -9,8 +9,10 @@
     "preview": "vite preview",
     "clean": "rm -rf node_modules .vite dist",
     "update:mathalea": "node scripts/update-mathalea.js",
-    "release": "node scripts/release.js"
-  },
+    "release": "node scripts/release.js",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },  
   "dependencies": {
     "@bugsnag/js": "^8.6.0",
     "@cortex-js/compute-engine": "^0.30.2",
@@ -64,6 +66,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.21",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.5.6",
     "sass-embedded": "^1.77.8",
     "svelte": "^4.2.20",
