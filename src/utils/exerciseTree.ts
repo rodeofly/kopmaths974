@@ -4,9 +4,8 @@
  * structure.
  */
 
-import referentiel2022FR from "@mathalea/json/referentiel2022FR.json";
-import codeToLevelList from "@mathalea/json/codeToLevelList.json";
-import levelsThemesList from "@mathalea/json/levelsThemesList.json";
+import codeToLevelList from "@mathalea/src/json/codeToLevelList.json";
+import levelsThemesList from "@mathalea/src/json/levelsThemesList.json";
 import { isJSONReferentielEnding } from "@mathalea/lib/types/referentiels";
 
 const DEBUG_PREFIX = "[KopMaths][ExerciseTree]";
@@ -162,6 +161,151 @@ if (modulePaths.length === 0) {
   });
 }
 
+type JsonObject = Record<string, unknown>;
+
+function isPlainObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function extractModuleDefault(module: unknown): unknown {
+  if (
+    module &&
+    typeof module === "object" &&
+    "default" in (module as Record<string, unknown>) &&
+    (module as Record<string, unknown>).default !== undefined
+  ) {
+    return (module as Record<string, unknown>).default;
+  }
+  return module;
+}
+
+function stableSerialize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(item => stableSerialize(item)).join(",")}]`;
+  }
+
+  if (isPlainObject(value)) {
+    const entries = Object.entries(value).sort((a, b) =>
+      a[0].localeCompare(b[0], "fr", { sensitivity: "base" })
+    );
+    return `{${entries
+      .map(([key, val]) => `${JSON.stringify(key)}:${stableSerialize(val)}`)
+      .join(",")}}`;
+  }
+
+  const serialized = JSON.stringify(value);
+  return typeof serialized === "string" ? serialized : "null";
+}
+
+function computeChecksum(value: unknown): string {
+  const serialized = stableSerialize(value);
+  let hash = 0;
+
+  for (let index = 0; index < serialized.length; index += 1) {
+    hash = (hash * 31 + serialized.charCodeAt(index)) >>> 0;
+  }
+
+  return hash.toString(16);
+}
+
+function looksLikeReferentielFragment(value: unknown, depth = 0): value is JsonObject {
+  if (!isPlainObject(value)) {
+    return false;
+  }
+
+  const entries = Object.values(value);
+  if (entries.length === 0) {
+    return false;
+  }
+
+  if (entries.some(entry => isJSONReferentielEnding(entry))) {
+    return true;
+  }
+
+  if (depth >= 12) {
+    return false;
+  }
+
+  return entries.some(entry => looksLikeReferentielFragment(entry, depth + 1));
+}
+
+function mergeReferentielNodes(
+  target: JsonObject,
+  source: JsonObject,
+  path: string[] = []
+): void {
+  Object.entries(source).forEach(([key, value]) => {
+    const nextPath = [...path, key];
+
+    if (!isPlainObject(value) || isJSONReferentielEnding(value)) {
+      target[key] = value;
+      return;
+    }
+
+    const existing = target[key];
+
+    if (!isPlainObject(existing)) {
+      if (typeof existing !== "undefined") {
+        treeWarn("Conflit de fusion pour un fragment de référentiel", {
+          chemin: nextPath.join("/"),
+          typeExistant: typeof existing
+        });
+      }
+      target[key] = {};
+    }
+
+    mergeReferentielNodes(target[key] as JsonObject, value, nextPath);
+  });
+}
+
+function assembleReferentielFragments(): {
+  root: JsonObject;
+  fingerprintSegments: string[];
+} {
+  const fragmentGlob = import.meta.glob("@mathalea/src/json/**/*.json", { eager: true });
+  const fragments: { path: string; data: JsonObject; checksum: string }[] = [];
+
+  Object.entries(fragmentGlob).forEach(([path, module]) => {
+    const candidate = extractModuleDefault(module);
+
+    if (!looksLikeReferentielFragment(candidate)) {
+      return;
+    }
+
+    fragments.push({
+      path,
+      data: candidate as JsonObject,
+      checksum: computeChecksum(candidate)
+    });
+  });
+
+  fragments.sort((a, b) => a.path.localeCompare(b.path, "fr", { sensitivity: "base" }));
+
+  const root: JsonObject = {};
+
+  fragments.forEach(fragment => {
+    mergeReferentielNodes(root, fragment.data);
+  });
+
+  if (fragments.length === 0) {
+    treeWarn("Aucun fragment de référentiel détecté dans MathALEA");
+  } else {
+    treeInfo("Fragments de référentiel MathALEA assemblés", {
+      fragments: fragments.length,
+      premier: fragments[0]?.path,
+      dernier: fragments[fragments.length - 1]?.path
+    });
+  }
+
+  return {
+    root,
+    fingerprintSegments: fragments.map(fragment => `${fragment.path}:${fragment.checksum}`)
+  };
+}
+
+const { root: referentielRootNode, fingerprintSegments: referentielFingerprintSegments } =
+  assembleReferentielFragments();
+
 let runtimeCache: ExerciseTreeData | null = null;
 
 function normalizeWhitespace(value: string): string {
@@ -187,8 +331,6 @@ export function extractRelativeExercisePath(moduleId: string): string | null {
 
   return null;
 }
-
-type JsonObject = Record<string, unknown>;
 
 interface ReferentielExerciseMetadata {
   id: string;
@@ -263,8 +405,11 @@ function registerReferentielCategory(
   referentielCategoryOrderTrailByPath.set(fullPath, [...orderTrail]);
 }
 
-function buildReferentielMetadata(): void {
-  const rootNode = referentiel2022FR as JsonObject;
+function buildReferentielMetadata(rootNode: JsonObject): void {
+  referentielExerciseMetadataByPath.clear();
+  referentielCategoryTitleByPath.clear();
+  referentielCategorySearchByPath.clear();
+  referentielCategoryOrderTrailByPath.clear();
 
   function traverse(
     node: JsonObject,
@@ -327,9 +472,9 @@ function buildReferentielMetadata(): void {
   traverse(rootNode, [], [], []);
 }
 
-buildReferentielMetadata();
+buildReferentielMetadata(referentielRootNode);
 
-treeInfo("Métadonnées du référentiel 2022 chargées", {
+treeInfo("Métadonnées du référentiel MathALEA chargées", {
   exercices: referentielExerciseMetadataByPath.size,
   categories: referentielCategoryTitleByPath.size
 });
@@ -597,8 +742,8 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
   return root;
 }
 
-function computeFingerprint(paths: string[]): string {
-  return paths.join("|");
+function computeFingerprint(paths: string[], referentielSegments: string[]): string {
+  return [...paths, ...referentielSegments].join("|");
 }
 
 function readCache(fingerprint: string): ExerciseTreeCache | null {
@@ -642,7 +787,7 @@ export function loadExerciseTree(): ExerciseTreeData {
     return runtimeCache;
   }
 
-  const fingerprint = computeFingerprint(modulePaths);
+  const fingerprint = computeFingerprint(modulePaths, referentielFingerprintSegments);
   treeInfo("Construction du catalogue d'exercices", {
     fingerprint,
     moduleCount: modulePaths.length
