@@ -6,7 +6,7 @@
 
 import codeToLevelList from "@mathalea/src/json/codeToLevelList.json";
 import levelsThemesList from "@mathalea/src/json/levelsThemesList.json";
-import { isJSONReferentielEnding } from "@mathalea/lib/types/referentiels";
+import { isJSONReferentielEnding } from "@mathalea/src/lib/types/referentiels";
 
 const DEBUG_PREFIX = "[KopMaths][ExerciseTree]";
 
