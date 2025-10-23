@@ -1,4 +1,7 @@
-const PARAMETER_FLAG_KEYS = [
+const FORM_PARAMETER_FLAG_KEYS = [
+  "besoinFormulaireCaseACocher",
+  "besoinFormulaireNumerique",
+  "besoinFormulaireTexte",
   "besoinFormulaire2CaseACocher",
   "besoinFormulaire2Numerique",
   "besoinFormulaire2Texte",
@@ -6,18 +9,24 @@ const PARAMETER_FLAG_KEYS = [
   "besoinFormulaire3Numerique",
   "besoinFormulaire3Texte",
   "besoinFormulaire4CaseACocher",
+  "besoinFormulaire4Numerique",
   "besoinFormulaire4Texte",
   "besoinFormulaire5CaseACocher",
   "besoinFormulaire5Numerique",
-  "besoinFormulaire5Texte",
-  "besoinFormulaireCaseACocher",
-  "besoinFormulaireNumerique",
-  "besoinFormulaireTexte",
+  "besoinFormulaire5Texte"
+] as const;
+
+const GENERIC_FORM_FLAG_KEYS = [
   "besoinFormulaire",
   "besoinFormulaire2",
   "besoinFormulaire3",
   "besoinFormulaire4",
   "besoinFormulaire5"
+] as const;
+
+const PARAMETER_FLAG_KEYS = [
+  ...FORM_PARAMETER_FLAG_KEYS,
+  ...GENERIC_FORM_FLAG_KEYS
 ] as const;
 
 const LABEL_KEYS = [
@@ -82,6 +91,8 @@ const SECONDARY_VALUE_KEYS = [
   "amount"
 ];
 
+type FormParameterFlagKey = (typeof FORM_PARAMETER_FLAG_KEYS)[number];
+type GenericFormFlagKey = (typeof GENERIC_FORM_FLAG_KEYS)[number];
 type ParameterFlagKey = (typeof PARAMETER_FLAG_KEYS)[number];
 
 type ParameterFieldType = "text" | "number" | "boolean" | "select";
@@ -89,6 +100,12 @@ type ParameterFieldType = "text" | "number" | "boolean" | "select";
 type ParameterOption = {
   label: string;
   value: string;
+};
+
+type FormParameterConfig = {
+  path: string;
+  order: number;
+  type: ParameterFieldType;
 };
 
 type ParameterField = {
@@ -105,6 +122,39 @@ type ParameterValueMap = Record<string, string | number | boolean>;
 type TraversalContext = {
   label?: string;
   help?: string;
+};
+
+const FORM_PARAMETER_CONFIG: Record<FormParameterFlagKey, FormParameterConfig> = {
+  besoinFormulaireCaseACocher: { path: "sup", order: 1, type: "boolean" },
+  besoinFormulaireNumerique: { path: "sup", order: 1, type: "number" },
+  besoinFormulaireTexte: { path: "sup", order: 1, type: "text" },
+  besoinFormulaire2CaseACocher: { path: "sup2", order: 2, type: "boolean" },
+  besoinFormulaire2Numerique: { path: "sup2", order: 2, type: "number" },
+  besoinFormulaire2Texte: { path: "sup2", order: 2, type: "text" },
+  besoinFormulaire3CaseACocher: { path: "sup3", order: 3, type: "boolean" },
+  besoinFormulaire3Numerique: { path: "sup3", order: 3, type: "number" },
+  besoinFormulaire3Texte: { path: "sup3", order: 3, type: "text" },
+  besoinFormulaire4CaseACocher: { path: "sup4", order: 4, type: "boolean" },
+  besoinFormulaire4Numerique: { path: "sup4", order: 4, type: "number" },
+  besoinFormulaire4Texte: { path: "sup4", order: 4, type: "text" },
+  besoinFormulaire5CaseACocher: { path: "sup5", order: 5, type: "boolean" },
+  besoinFormulaire5Numerique: { path: "sup5", order: 5, type: "number" },
+  besoinFormulaire5Texte: { path: "sup5", order: 5, type: "text" }
+};
+
+const DEFAULT_FORM_LABELS: Record<string, string> = {
+  sup: "Paramètre 1",
+  sup2: "Paramètre 2",
+  sup3: "Paramètre 3",
+  sup4: "Paramètre 4",
+  sup5: "Paramètre 5"
+};
+
+type FormFieldMetadata = {
+  label: string;
+  help?: string;
+  options?: ParameterOption[];
+  valueOverride?: string | number | boolean;
 };
 
 function isPrimitive(value: unknown): value is string | number | boolean {
@@ -199,6 +249,103 @@ function findValueKey(obj: Record<string, unknown>): string | undefined {
     }
   }
   return undefined;
+}
+
+function extractFormFieldMetadata(
+  flagValue: unknown,
+  fallbackLabel: string,
+  expectedType: ParameterFieldType
+): FormFieldMetadata {
+  let label = fallbackLabel;
+  const helpParts: string[] = [];
+  let options: ParameterOption[] | undefined;
+  let valueOverride: string | number | boolean | undefined;
+
+  const recordHelp = (text: string | undefined) => {
+    if (!text) return;
+    const trimmed = text.trim();
+    if (trimmed.length > 0) {
+      helpParts.push(trimmed);
+    }
+  };
+
+  if (Array.isArray(flagValue)) {
+    if (flagValue.length > 0) {
+      const [rawLabel] = flagValue;
+      if (typeof rawLabel === "string" && rawLabel.trim().length > 0) {
+        label = rawLabel.trim();
+      }
+    }
+
+    flagValue.slice(1).forEach(entry => {
+      if (typeof entry === "string") {
+        recordHelp(entry);
+        return;
+      }
+      if (typeof entry === "number") {
+        if (expectedType === "number") {
+          recordHelp(`Valeur maximale : ${entry}`);
+        }
+        return;
+      }
+      if (typeof entry === "boolean") {
+        if (expectedType === "boolean") {
+          valueOverride = entry;
+        }
+        return;
+      }
+      if (Array.isArray(entry)) {
+        const detected = findOptions(entry);
+        if (detected.length > 0) {
+          options = detected;
+        }
+        return;
+      }
+      if (isPlainObject(entry)) {
+        const nestedLabel = findFirstString(entry, LABEL_KEYS);
+        if (nestedLabel) {
+          label = nestedLabel;
+        }
+        recordHelp(findFirstString(entry, HELP_KEYS));
+        const nestedOptions = detectOptions(entry);
+        if (nestedOptions.length > 0) {
+          options = nestedOptions;
+        }
+        const valueKey = findValueKey(entry);
+        if (valueKey && valueKey in entry) {
+          valueOverride = (entry as Record<string, unknown>)[valueKey] as
+            | string
+            | number
+            | boolean;
+        }
+      }
+    });
+  } else if (typeof flagValue === "string") {
+    const trimmed = flagValue.trim();
+    if (trimmed.length > 0) {
+      label = trimmed;
+    }
+  } else if (isPlainObject(flagValue)) {
+    const candidateLabel = findFirstString(flagValue, LABEL_KEYS);
+    if (candidateLabel) {
+      label = candidateLabel;
+    }
+    recordHelp(findFirstString(flagValue, HELP_KEYS));
+    const nestedOptions = detectOptions(flagValue);
+    if (nestedOptions.length > 0) {
+      options = nestedOptions;
+    }
+    const valueKey = findValueKey(flagValue);
+    if (valueKey && valueKey in flagValue) {
+      valueOverride = (flagValue as Record<string, unknown>)[valueKey] as
+        | string
+        | number
+        | boolean;
+    }
+  }
+
+  const help = helpParts.length > 0 ? helpParts.join("\n\n") : undefined;
+  return { label, help, options, valueOverride };
 }
 
 function determineFieldType(
@@ -370,6 +517,36 @@ function parsePath(path: string): Array<string | number> {
   return segments;
 }
 
+function getValueAtPath(target: Record<string, unknown>, path: string): unknown {
+  const segments = parsePath(path);
+  if (segments.length === 0) {
+    return undefined;
+  }
+
+  let current: unknown = target;
+  for (const segment of segments) {
+    if (typeof segment === "number") {
+      if (!Array.isArray(current) || segment < 0 || segment >= current.length) {
+        return undefined;
+      }
+      current = current[segment];
+      continue;
+    }
+
+    if (!current || typeof current !== "object") {
+      return undefined;
+    }
+
+    if (!(segment in (current as Record<string, unknown>))) {
+      return undefined;
+    }
+
+    current = (current as Record<string, unknown>)[segment];
+  }
+
+  return current;
+}
+
 function setValueAtPath(
   target: Record<string, unknown>,
   path: string,
@@ -429,9 +606,60 @@ function ensureValueType(
 function buildParameterFields(
   exercice: Record<string, unknown>
 ): ParameterField[] {
-  const accumulator = new Map<string, ParameterField>();
+  const fieldMap = new Map<string, ParameterField>();
+  const orderMap = new Map<string, number>();
 
-  PARAMETER_FLAG_KEYS.forEach(flag => {
+  const addField = (field: ParameterField, order: number) => {
+    if (fieldMap.has(field.path)) {
+      return;
+    }
+    fieldMap.set(field.path, field);
+    orderMap.set(field.path, order);
+  };
+
+  FORM_PARAMETER_FLAG_KEYS.forEach(flag => {
+    const descriptor = (exercice as Record<string, unknown>)[flag];
+    if (!descriptor) return;
+
+    const config = FORM_PARAMETER_CONFIG[flag];
+    const path = config.path;
+    if (fieldMap.has(path)) return;
+
+    const fallbackLabel =
+      DEFAULT_FORM_LABELS[path] ?? createLabelFromKey(path);
+    const metadata = extractFormFieldMetadata(
+      descriptor,
+      fallbackLabel,
+      config.type
+    );
+    const fieldType: ParameterFieldType =
+      metadata.options && metadata.options.length > 0
+        ? "select"
+        : config.type;
+
+    const rawValue = getValueAtPath(exercice, path);
+    const valueToUse =
+      rawValue !== undefined ? rawValue : metadata.valueOverride;
+    const normalizedValue = normalizeValue(valueToUse, fieldType);
+
+    const field: ParameterField = {
+      path,
+      label: metadata.label,
+      type: fieldType,
+      value: normalizedValue
+    };
+
+    if (metadata.help) {
+      field.help = metadata.help;
+    }
+    if (metadata.options && metadata.options.length > 0) {
+      field.options = metadata.options;
+    }
+
+    addField(field, config.order);
+  });
+
+  GENERIC_FORM_FLAG_KEYS.forEach(flag => {
     if (!exercice[flag]) return;
     const formKey = resolveFormKey(flag);
     const value = exercice[formKey];
@@ -442,12 +670,24 @@ function buildParameterFields(
         ? String(exercice[`${formKey}Aide`])
         : undefined;
 
-    collectFields(value, formKey, { help: helpCandidate }, accumulator);
+    const fallbackAccumulator = new Map<string, ParameterField>();
+    collectFields(value, formKey, { help: helpCandidate }, fallbackAccumulator);
+    fallbackAccumulator.forEach(field => {
+      addField(field, Number.POSITIVE_INFINITY);
+    });
   });
 
-  return Array.from(accumulator.values()).sort((a, b) =>
-    a.label.localeCompare(b.label, "fr")
-  );
+  const fields = Array.from(fieldMap.values());
+  fields.sort((a, b) => {
+    const orderA = orderMap.get(a.path) ?? Number.POSITIVE_INFINITY;
+    const orderB = orderMap.get(b.path) ?? Number.POSITIVE_INFINITY;
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+    return a.label.localeCompare(b.label, "fr");
+  });
+
+  return fields;
 }
 
 function createValueMap(fields: ParameterField[]): ParameterValueMap {
