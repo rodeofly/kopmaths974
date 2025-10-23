@@ -1,0 +1,3 @@
+[submodule "src/mathalea"]
+	path = src/mathalea
+	url = https://forge.apps.education.fr/coopmaths/mathalea.git
