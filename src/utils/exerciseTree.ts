@@ -4,10 +4,6 @@
  * structure.
  */
 
-import codeToLevelList from "@mathalea/src/json/codeToLevelList.json";
-import levelsThemesList from "@mathalea/src/json/levelsThemesList.json";
-import { isJSONReferentielEnding } from "@mathalea/src/lib/types/referentiels";
-
 const DEBUG_PREFIX = "[KopMaths][ExerciseTree]";
 
 function treeDebug(...args: unknown[]): void {
@@ -38,9 +34,9 @@ const CATEGORY_NAME_OVERRIDES: Record<string, string> = {
   "5e": "5e",
   "4e": "4e",
   "3e": "3e",
+  "2e": "2nde",
   "2nde": "2nde",
-  "2de": "2de",
-  seconde: "Seconde",
+  "1e": "1re",
   "1re": "1re",
   premiere: "Première",
   term: "Terminale",
@@ -64,6 +60,8 @@ export interface ExerciseDefinition {
   label: string;
   title: string;
   searchableTitle: string;
+  order: number;
+  uuid?: string;
 }
 
 interface ExerciseNodeBase {
@@ -107,16 +105,15 @@ type ExerciseTreeCache = {
   definitions: ExerciseDefinition[];
 };
 
-const CACHE_KEY = "mathalea.exerciseTree.v1";
+const CACHE_KEY = "mathalea.exerciseTree.v2";
 const CACHE_VERSION = 1;
+
+export function normalizeRelativePath(path: string): string {
+  return path.replace(/\\/g, "/").replace(/^\.\/+/, "").replace(/^\//, "");
+}
 
 const moduleGlob = import.meta.glob("@exos/**/*.ts");
 const moduleIds = Object.keys(moduleGlob);
-
-treeInfo("Initialisation des modules Vite", {
-  total: moduleIds.length,
-  apercu: moduleIds.slice(0, 5)
-});
 
 if (moduleIds.length === 0) {
   treeWarn("Aucun module d'exercice détecté via import.meta.glob");
@@ -133,10 +130,6 @@ Object.entries(moduleGlob).forEach(([moduleId, loader]) => {
   }
 
   if (!relativePath.endsWith(".ts")) {
-    treeDebug("Module ignoré car l'extension n'est pas .ts", {
-      moduleId,
-      relativePath
-    });
     return;
   }
 
@@ -144,28 +137,28 @@ Object.entries(moduleGlob).forEach(([moduleId, loader]) => {
   if (!loaderMap.has(normalized)) {
     loaderMap.set(normalized, loader);
     modulePaths.push(normalized);
-  } else {
-    treeDebug("Module déjà présent dans la carte des loaders", { normalized });
   }
 });
 
 modulePaths.sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }));
 
-if (modulePaths.length === 0) {
-  treeWarn("Aucun chemin d'exercice disponible après normalisation");
-} else {
-  treeInfo("Chemins d'exercices normalisés", {
-    total: modulePaths.length,
-    premier: modulePaths[0],
-    dernier: modulePaths[modulePaths.length - 1]
-  });
-}
+const jsonModules = import.meta.glob("@mathalea/src/json/**/*.json", { eager: true });
 
 type JsonObject = Record<string, unknown>;
 
-function isPlainObject(value: unknown): value is JsonObject {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+type JsonModuleEntry = {
+  sourcePath: string;
+  normalizedPath: string;
+  data: unknown;
+};
+
+const jsonEntries: JsonModuleEntry[] = Object.entries(jsonModules).map(([path, module]) => ({
+  sourcePath: path,
+  normalizedPath: normalizeRelativePath(path),
+  data: extractModuleDefault(module)
+}));
+
+const jsonFingerprint = new Map<string, string>();
 
 function extractModuleDefault(module: unknown): unknown {
   if (
@@ -176,7 +169,12 @@ function extractModuleDefault(module: unknown): unknown {
   ) {
     return (module as Record<string, unknown>).default;
   }
+
   return module;
+}
+
+function isPlainObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function stableSerialize(value: unknown): string {
@@ -208,112 +206,54 @@ function computeChecksum(value: unknown): string {
   return hash.toString(16);
 }
 
-function looksLikeReferentielFragment(value: unknown, depth = 0): value is JsonObject {
-  if (!isPlainObject(value)) {
-    return false;
+function readJsonModule(fileName: string): JsonModuleEntry | null {
+  const normalizedTarget = normalizeRelativePath(fileName);
+  const entry = jsonEntries.find(candidate =>
+    candidate.normalizedPath.endsWith(normalizedTarget)
+  );
+
+  if (!entry) {
+    treeWarn("Fichier JSON introuvable", { file: fileName });
+    return null;
   }
 
-  const entries = Object.values(value);
-  if (entries.length === 0) {
-    return false;
+  if (!jsonFingerprint.has(entry.normalizedPath)) {
+    jsonFingerprint.set(entry.normalizedPath, computeChecksum(entry.data));
   }
 
-  if (entries.some(entry => isJSONReferentielEnding(entry))) {
-    return true;
-  }
-
-  if (depth >= 12) {
-    return false;
-  }
-
-  return entries.some(entry => looksLikeReferentielFragment(entry, depth + 1));
+  return entry;
 }
 
-function mergeReferentielNodes(
-  target: JsonObject,
-  source: JsonObject,
-  path: string[] = []
-): void {
-  Object.entries(source).forEach(([key, value]) => {
-    const nextPath = [...path, key];
-
-    if (!isPlainObject(value) || isJSONReferentielEnding(value)) {
-      target[key] = value;
-      return;
-    }
-
-    const existing = target[key];
-
-    if (!isPlainObject(existing)) {
-      if (typeof existing !== "undefined") {
-        treeWarn("Conflit de fusion pour un fragment de référentiel", {
-          chemin: nextPath.join("/"),
-          typeExistant: typeof existing
-        });
-      }
-      target[key] = {};
-    }
-
-    mergeReferentielNodes(target[key] as JsonObject, value, nextPath);
-  });
-}
-
-function assembleReferentielFragments(): {
-  root: JsonObject;
-  fingerprintSegments: string[];
-} {
-  const fragmentGlob = import.meta.glob("@mathalea/src/json/**/*.json", { eager: true });
-  const fragments: { path: string; data: JsonObject; checksum: string }[] = [];
-
-  Object.entries(fragmentGlob).forEach(([path, module]) => {
-    const candidate = extractModuleDefault(module);
-
-    if (!looksLikeReferentielFragment(candidate)) {
-      return;
-    }
-
-    fragments.push({
-      path,
-      data: candidate as JsonObject,
-      checksum: computeChecksum(candidate)
-    });
-  });
-
-  fragments.sort((a, b) => a.path.localeCompare(b.path, "fr", { sensitivity: "base" }));
-
-  const root: JsonObject = {};
-
-  fragments.forEach(fragment => {
-    mergeReferentielNodes(root, fragment.data);
-  });
-
-  if (fragments.length === 0) {
-    treeWarn("Aucun fragment de référentiel détecté dans MathALEA");
-  } else {
-    treeInfo("Fragments de référentiel MathALEA assemblés", {
-      fragments: fragments.length,
-      premier: fragments[0]?.path,
-      dernier: fragments[fragments.length - 1]?.path
-    });
+function readJsonObject(fileName: string): JsonObject | null {
+  const entry = readJsonModule(fileName);
+  if (!entry) {
+    return null;
   }
 
-  return {
-    root,
-    fingerprintSegments: fragments.map(fragment => `${fragment.path}:${fragment.checksum}`)
-  };
+  if (!isPlainObject(entry.data)) {
+    treeWarn("Fichier JSON mal formé", { file: fileName });
+    return null;
+  }
+
+  return entry.data;
 }
 
-const { root: referentielRootNode, fingerprintSegments: referentielFingerprintSegments } =
-  assembleReferentielFragments();
+function readJsonArray(fileName: string): unknown[] | null {
+  const entry = readJsonModule(fileName);
+  if (!entry) {
+    return null;
+  }
 
-let runtimeCache: ExerciseTreeData | null = null;
+  if (!Array.isArray(entry.data)) {
+    treeWarn("Fichier JSON mal formé", { file: fileName });
+    return null;
+  }
+
+  return entry.data;
+}
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
-}
-
-export function normalizeRelativePath(path: string): string {
-  return path.replace(/\\/g, "/").replace(/^\.\/+/, "").replace(/^\//, "");
 }
 
 export function extractRelativeExercisePath(moduleId: string): string | null {
@@ -331,153 +271,6 @@ export function extractRelativeExercisePath(moduleId: string): string | null {
 
   return null;
 }
-
-interface ReferentielExerciseMetadata {
-  id: string;
-  title: string;
-  relativePath: string;
-  categoryCodes: string[];
-  categoryTitles: string[];
-  tags: string[];
-  uuid?: string;
-  orderTrail: number[];
-}
-
-const LEVEL_TITLE_LOOKUP = codeToLevelList as Record<string, string | undefined>;
-const THEME_TITLE_LOOKUP = levelsThemesList as Record<string, { titre?: string } | undefined>;
-
-const referentielExerciseMetadataByPath = new Map<string, ReferentielExerciseMetadata>();
-const referentielCategoryTitleByPath = new Map<string, string>();
-const referentielCategorySearchByPath = new Map<string, string>();
-const referentielCategoryOrderTrailByPath = new Map<string, number[]>();
-
-function resolveCategoryTitleFromCode(code: string): string {
-  const trimmed = code.trim();
-  if (!trimmed) {
-    return "";
-  }
-
-  const levelTitle = LEVEL_TITLE_LOOKUP[trimmed];
-  if (typeof levelTitle === "string" && levelTitle.trim()) {
-    return levelTitle.trim();
-  }
-
-  const themeEntry = THEME_TITLE_LOOKUP[trimmed];
-  if (themeEntry && typeof themeEntry.titre === "string" && themeEntry.titre.trim()) {
-    return themeEntry.titre.trim();
-  }
-
-  return formatSegmentNameFallback(trimmed);
-}
-
-function buildCategorySearchableTokens(
-  code: string,
-  title: string,
-  pathCodes: string[],
-  pathTitles: string[]
-): string {
-  const tokens = new Set<string>();
-  tokens.add(code);
-  tokens.add(title);
-  pathCodes.forEach(token => tokens.add(token));
-  pathTitles.forEach(token => tokens.add(token));
-
-  return Array.from(tokens)
-    .map(token => normalizeWhitespace(String(token)).toLowerCase())
-    .filter(Boolean)
-    .join(" ");
-}
-
-function registerReferentielCategory(
-  pathCodes: string[],
-  pathTitles: string[],
-  code: string,
-  title: string,
-  orderTrail: number[]
-): void {
-  const fullCodes = [...pathCodes, code];
-  const fullPath = fullCodes.join("/");
-  referentielCategoryTitleByPath.set(fullPath, title);
-  referentielCategorySearchByPath.set(
-    fullPath,
-    buildCategorySearchableTokens(code, title, fullCodes, [...pathTitles, title])
-  );
-  referentielCategoryOrderTrailByPath.set(fullPath, [...orderTrail]);
-}
-
-function buildReferentielMetadata(rootNode: JsonObject): void {
-  referentielExerciseMetadataByPath.clear();
-  referentielCategoryTitleByPath.clear();
-  referentielCategorySearchByPath.clear();
-  referentielCategoryOrderTrailByPath.clear();
-
-  function traverse(
-    node: JsonObject,
-    pathCodes: string[],
-    pathTitles: string[],
-    orderTrail: number[]
-  ): void {
-    const entries = Object.entries(node);
-    entries.forEach(([key, value], index) => {
-      if (!value || typeof value !== "object") {
-        return;
-      }
-
-      const nextOrderTrail = [...orderTrail, index];
-
-      if (isJSONReferentielEnding(value)) {
-        const relativePath = normalizeRelativePath(String((value as JsonObject).url ?? ""));
-        if (!relativePath) {
-          return;
-        }
-
-        const titleValue = (value as JsonObject).titre;
-        const idValue = (value as JsonObject).id;
-        const tagsValue = (value as JsonObject).tags;
-        const uuidValue = (value as JsonObject).uuid;
-        const categoryTitles = [...pathTitles];
-
-        referentielExerciseMetadataByPath.set(relativePath, {
-          id: typeof idValue === "string" && idValue.trim() ? idValue.trim() : key,
-          title:
-            typeof titleValue === "string" && titleValue.trim()
-              ? titleValue.trim()
-              : typeof idValue === "string" && idValue.trim()
-                ? idValue.trim()
-                : key,
-          relativePath,
-          categoryCodes: [...pathCodes],
-          categoryTitles,
-          tags: Array.isArray(tagsValue)
-            ? (tagsValue.filter(tag => typeof tag === "string") as string[])
-            : [],
-          uuid: typeof uuidValue === "string" && uuidValue.trim() ? uuidValue.trim() : undefined,
-          orderTrail: nextOrderTrail
-        });
-        return;
-      }
-
-      const childNode = value as JsonObject;
-      const title = resolveCategoryTitleFromCode(key);
-      registerReferentielCategory(pathCodes, pathTitles, key, title, nextOrderTrail);
-      traverse(
-        childNode,
-        [...pathCodes, key],
-        [...pathTitles, title],
-        nextOrderTrail
-      );
-    });
-  }
-
-  traverse(rootNode, [], [], []);
-}
-
-buildReferentielMetadata(referentielRootNode);
-
-treeInfo("Métadonnées du référentiel MathALEA chargées", {
-  exercices: referentielExerciseMetadataByPath.size,
-  categories: referentielCategoryTitleByPath.size
-});
 
 function formatSegmentNameFallback(segment: string): string {
   const cleaned = segment.replace(/\.ts$/i, "").replace(/[_-]+/g, " ").trim();
@@ -501,187 +294,491 @@ function formatSegmentNameFallback(segment: string): string {
   return words.join(" ");
 }
 
-function formatNiveau(segment: string): string {
-  if (!segment) return "Autre";
-  const formatted = resolveCategoryTitleFromCode(segment);
-  return formatted || segment;
+type ThemeStructure = {
+  code: string;
+  title: string;
+  order: number;
+  subThemes: SubThemeStructure[];
+};
+
+type SubThemeStructure = {
+  code: string;
+  title: string;
+  order: number;
+};
+
+type CategoryMetadata = {
+  code: string;
+  title: string;
+  order: number;
+  searchableTitle: string;
+};
+
+const missingKeys = new Set<string>();
+
+function logMissingKey(key: string): void {
+  if (missingKeys.has(key)) {
+    return;
+  }
+  missingKeys.add(key);
+  treeWarn(`Missing key: ${key}`);
 }
 
-function formatExerciseLabel(segments: string[]): string {
-  if (segments.length === 0) return "";
-  const parts = segments
-    .map(segment => resolveCategoryTitleFromCode(segment))
-    .filter(Boolean);
-  return parts.join(" · ");
-}
-
-function buildDefinition(
-  path: string,
-  metadataOverride?: ReferentielExerciseMetadata
-): ExerciseDefinition | null {
-  const normalizedPath = normalizeRelativePath(path);
-  if (!normalizedPath.endsWith(".ts")) {
-    return null;
+function buildTitleLookup(record: JsonObject | null): Map<string, string> {
+  const lookup = new Map<string, string>();
+  if (!record) {
+    return lookup;
   }
 
-  const segments = normalizedPath.split("/").filter(Boolean);
-  if (segments.length === 0) {
-    return null;
-  }
-
-  const fileName = segments[segments.length - 1];
-  const id = fileName.replace(/\.ts$/i, "");
-  if (!id) {
-    return null;
-  }
-
-  const fallbackCategories = segments.slice(0, -1);
-  const metadata = metadataOverride ?? referentielExerciseMetadataByPath.get(normalizedPath);
-
-  const categories = (metadata?.categoryCodes.length ? metadata.categoryCodes : fallbackCategories).map(code =>
-    normalizeRelativePath(code)
-  );
-  const categoryTitles = metadata?.categoryTitles.length
-    ? metadata.categoryTitles.map((title, index) => {
-        if (title && title.trim()) {
-          return title.trim();
-        }
-        const code = metadata?.categoryCodes[index];
-        return code ? resolveCategoryTitleFromCode(code) : "";
-      })
-    : fallbackCategories.map(segment => resolveCategoryTitleFromCode(segment));
-
-  const niveau = metadata?.categoryTitles[0]?.trim()
-    ? metadata.categoryTitles[0].trim()
-    : formatNiveau(categories[0] ?? "");
-
-  const title = (metadata?.title ?? formatExerciseLabel([...fallbackCategories, fileName])) || id;
-  const label = metadata
-    ? (() => {
-        const parts = [...categoryTitles.slice(1), metadata.title];
-        return parts.map(part => part.trim()).filter(Boolean).join(" · ") || metadata.title;
-      })()
-    : formatExerciseLabel([...fallbackCategories, fileName]) || id;
-
-  const tags = metadata?.tags ?? [];
-  const importPath = `@exos/${normalizedPath}`;
-
-  const searchableParts = new Set<string>();
-  searchableParts.add(id);
-  searchableParts.add(label);
-  searchableParts.add(title);
-  searchableParts.add(importPath);
-  searchableParts.add(normalizedPath);
-  searchableParts.add(niveau);
-  categories.forEach(segment => {
-    searchableParts.add(segment);
-    searchableParts.add(resolveCategoryTitleFromCode(segment));
+  Object.entries(record).forEach(([key, value]) => {
+    if (isPlainObject(value) && typeof value.titre === "string" && value.titre.trim()) {
+      lookup.set(key, normalizeWhitespace(value.titre));
+    }
   });
-  categoryTitles.forEach(part => searchableParts.add(part));
-  tags.forEach(tag => searchableParts.add(tag));
-  if (metadata?.uuid) {
-    searchableParts.add(metadata.uuid);
-  }
 
-  const searchableTitle = Array.from(searchableParts)
-    .map(part => normalizeWhitespace(part).toLowerCase())
-    .filter(Boolean)
-    .join(" ");
-
-  return {
-    id,
-    niveau,
-    importPath,
-    relativePath: normalizedPath,
-    categories,
-    categoryTitles,
-    tags,
-    label,
-    title,
-    searchableTitle
-  };
+  return lookup;
 }
 
-function toOrderKey(trail?: number[]): string {
-  if (!trail || trail.length === 0) {
-    return "";
+function registerLevelTitles(target: Map<string, string>, record: JsonObject | null): void {
+  if (!record) {
+    return;
   }
-  return trail.map(index => index.toString().padStart(4, "0")).join("-");
+
+  Object.entries(record).forEach(([code, value]) => {
+    if (typeof value === "string" && value.trim()) {
+      target.set(code, normalizeWhitespace(value));
+    }
+  });
 }
 
-function buildDefinitionsFromMetadata(): ExerciseDefinition[] {
-  const definitions: ExerciseDefinition[] = [];
-  const availableModules = new Set(modulePaths);
+type LevelThemeStructureMap = Map<string, ThemeStructure[]>;
 
-  referentielExerciseMetadataByPath.forEach(metadata => {
-    const definition = buildDefinition(metadata.relativePath, metadata);
-    if (!definition) {
-      treeWarn("Définition invalide lors de la construction du catalogue", {
-        path: metadata.relativePath,
-        id: metadata.id
-      });
+type RawThemeStructure = {
+  titre?: unknown;
+  sousThemes?: Record<string, unknown>;
+};
+
+type RawLevelStructure = Record<string, RawThemeStructure>;
+
+function buildThemeStructure(
+  levelCode: string,
+  raw: RawLevelStructure | null,
+  titleLookup: Map<string, string>
+): ThemeStructure[] {
+  if (!raw) {
+    return [];
+  }
+
+  const themes: ThemeStructure[] = [];
+  Object.entries(raw).forEach(([themeCode, value], index) => {
+    if (!isPlainObject(value)) {
       return;
     }
 
-    if (!availableModules.has(definition.relativePath)) {
-      treeWarn("Exercice référencé introuvable dans les modules disponibles", {
-        relativePath: definition.relativePath,
-        id: metadata.id,
-        titre: metadata.title
+    const rawTheme = value as RawThemeStructure;
+    const titleCandidate = typeof rawTheme.titre === "string" ? rawTheme.titre : undefined;
+    const title = titleCandidate && titleCandidate.trim()
+      ? normalizeWhitespace(titleCandidate)
+      : titleLookup.get(themeCode) ?? formatSegmentNameFallback(themeCode);
+    if (!titleLookup.has(themeCode) && !titleCandidate) {
+      logMissingKey(themeCode);
+    }
+
+    const subThemes: SubThemeStructure[] = [];
+    if (isPlainObject(rawTheme.sousThemes)) {
+      Object.entries(rawTheme.sousThemes).forEach(([subCode, subValue], subIndex) => {
+        if (typeof subValue !== "string") {
+          return;
+        }
+        const cleaned = normalizeWhitespace(subValue);
+        const resolvedTitle = cleaned || titleLookup.get(subCode) || formatSegmentNameFallback(subCode);
+        if (!cleaned && !titleLookup.has(subCode)) {
+          logMissingKey(subCode);
+        }
+        subThemes.push({
+          code: subCode,
+          title: resolvedTitle,
+          order: subIndex
+        });
       });
     }
 
-    definitions.push(definition);
+    themes.push({
+      code: themeCode,
+      title,
+      order: index,
+      subThemes
+    });
   });
 
-  definitions.sort((a, b) => {
-    const metadataA = referentielExerciseMetadataByPath.get(a.relativePath);
-    const metadataB = referentielExerciseMetadataByPath.get(b.relativePath);
-    const keyA = toOrderKey(metadataA?.orderTrail);
-    const keyB = toOrderKey(metadataB?.orderTrail);
+  treeDebug("Structure des thèmes chargée", { levelCode, themes: themes.length });
+  return themes;
+}
 
-    if (keyA && keyB && keyA !== keyB) {
-      return keyA.localeCompare(keyB);
-    }
-    if (keyA && !keyB) {
-      return -1;
-    }
-    if (!keyA && keyB) {
-      return 1;
-    }
+function convertTags(value: unknown): string[] {
+  if (!isPlainObject(value)) {
+    return [];
+  }
 
-    return a.relativePath.localeCompare(b.relativePath, "fr", { sensitivity: "base" });
+  const tags: string[] = [];
+  Object.entries(value).forEach(([key, tagValue]) => {
+    if (!tagValue) {
+      return;
+    }
+    if (tagValue === true) {
+      tags.push(key);
+      return;
+    }
+    if (typeof tagValue === "string" || typeof tagValue === "number") {
+      tags.push(`${key}:${tagValue}`);
+      return;
+    }
+    if (Array.isArray(tagValue)) {
+      tagValue.forEach(entry => {
+        if (typeof entry === "string" || typeof entry === "number") {
+          tags.push(`${key}:${entry}`);
+        }
+      });
+      return;
+    }
+    tags.push(`${key}:${JSON.stringify(tagValue)}`);
   });
 
-  return definitions;
+  return tags;
 }
 
-function getCategoryDisplayTitle(fullPath: string, segment: string): string {
-  const override = referentielCategoryTitleByPath.get(fullPath);
-  if (override && override.trim()) {
-    return override.trim();
-  }
-  return resolveCategoryTitleFromCode(segment) || segment;
+function convertUrlToTsPath(url: string): { normalizedTsPath: string; normalizedJsPath: string } {
+  const normalized = normalizeRelativePath(url);
+  const tsPath = normalized.replace(/\.jsx?$/i, ".ts");
+  return { normalizedTsPath: tsPath, normalizedJsPath: normalized };
 }
 
-function getCategorySearchableTitle(
-  fullPath: string,
-  segment: string,
-  pathSegments: string[]
-): string {
-  const override = referentielCategorySearchByPath.get(fullPath);
-  if (override) {
-    return override;
+function computeSearchable(parts: Iterable<string>): string {
+  const tokens = new Set<string>();
+  for (const part of parts) {
+    if (!part) continue;
+    tokens.add(normalizeWhitespace(part).toLowerCase());
   }
-
-  const aggregateParts = [segment, resolveCategoryTitleFromCode(segment), ...pathSegments];
-  return aggregateParts
-    .map(part => normalizeWhitespace(part).toLowerCase())
+  return Array.from(tokens)
     .filter(Boolean)
     .join(" ");
 }
 
-function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNode> {
+function inferSubThemeCode(
+  exerciseId: string,
+  themeCode: string,
+  knownCodes: Set<string>
+): string {
+  const trimmed = normalizeWhitespace(exerciseId);
+  if (!trimmed) {
+    return themeCode;
+  }
+
+  const hyphenIndex = trimmed.indexOf("-");
+  const candidate = hyphenIndex > 0 ? trimmed.slice(0, hyphenIndex) : trimmed;
+  if (knownCodes.has(candidate)) {
+    return candidate;
+  }
+  if (candidate.startsWith(themeCode)) {
+    return candidate;
+  }
+  return themeCode;
+}
+
+type CategoryRegistry = Map<string, CategoryMetadata>;
+
+function registerCategoryMetadata(
+  registry: CategoryRegistry,
+  pathSegments: string[],
+  code: string,
+  title: string,
+  order: number,
+  extraTokens: string[]
+): void {
+  const fullPath = pathSegments.join("/");
+  const normalizedTitle = title && title.trim() ? title.trim() : formatSegmentNameFallback(code);
+  const tokens = [code, normalizedTitle, ...pathSegments, ...extraTokens];
+  const searchableTitle = computeSearchable(tokens);
+
+  if (!registry.has(fullPath)) {
+    registry.set(fullPath, {
+      code,
+      title: normalizedTitle,
+      order,
+      searchableTitle
+    });
+    return;
+  }
+
+  const existing = registry.get(fullPath);
+  if (!existing) {
+    return;
+  }
+
+  if (!existing.title && normalizedTitle) {
+    existing.title = normalizedTitle;
+  }
+  existing.order = Math.min(existing.order, order);
+  existing.searchableTitle = existing.searchableTitle || searchableTitle;
+}
+
+function ensureTitle(lookup: Map<string, string>, code: string): string {
+  const title = lookup.get(code);
+  if (title && title.trim()) {
+    return title.trim();
+  }
+  logMissingKey(code);
+  return formatSegmentNameFallback(code);
+}
+
+function buildDefinitions(): {
+  definitions: ExerciseDefinition[];
+  categoryRegistry: CategoryRegistry;
+  fingerprintSegments: string[];
+} {
+  const allExercice = readJsonObject("allExercice.json");
+  const exercicesList = readJsonArray("exercicesList.json") ?? [];
+  const levelTitles = new Map<string, string>();
+  registerLevelTitles(levelTitles, readJsonObject("codeToLevelList.json"));
+  registerLevelTitles(levelTitles, readJsonObject("codeToLevelListCH.json"));
+
+  const themeTitleLookup = buildTitleLookup(readJsonObject("levelsThemesList.json"));
+  const swissThemeTitleLookup = buildTitleLookup(readJsonObject("levelsThemesListCH.json"));
+  swissThemeTitleLookup.forEach((value, key) => {
+    if (!themeTitleLookup.has(key)) {
+      themeTitleLookup.set(key, value);
+    }
+  });
+
+  readJsonObject("uuidsRessources.json");
+  readJsonObject("referentielBibliotheque.json");
+
+  const levelStructureMap: LevelThemeStructureMap = new Map();
+
+  const levelStructureSources: Array<[string, string]> = [
+    ["2e", "2ndeAvecSousThemes.json"],
+    ["3e", "3eAvecSousThemes.json"],
+    ["4e", "4eAvecSousThemes.json"],
+    ["5e", "5eAvecSousThemes.json"],
+    ["6e", "6emeAvecSousTheme.json"]
+  ];
+
+  levelStructureSources.forEach(([levelCode, fileName]) => {
+    const raw = readJsonObject(fileName) as RawLevelStructure | null;
+    const themes = buildThemeStructure(levelCode, raw, themeTitleLookup);
+    if (themes.length > 0) {
+      levelStructureMap.set(levelCode, themes);
+    }
+  });
+
+  const exercicesSet = new Set(
+    exercicesList
+      .map(entry => (typeof entry === "string" ? entry : String(entry)))
+      .map(entry => normalizeRelativePath(entry).replace(/\.jsx?$/i, ".ts"))
+  );
+
+  const availableModules = new Set(modulePaths);
+  const definitions: ExerciseDefinition[] = [];
+  const categoryRegistry: CategoryRegistry = new Map();
+
+  const fingerprintSegments: string[] = Array.from(jsonFingerprint.entries())
+    .sort((a, b) => a[0].localeCompare(b[0], "fr", { sensitivity: "base" }))
+    .map(([path, checksum]) => `${path}:${checksum}`);
+
+  if (!allExercice) {
+    treeWarn("Fichier allExercice.json introuvable – catalogue vide");
+    return { definitions, categoryRegistry, fingerprintSegments };
+  }
+
+  const levelOrderMap = new Map<string, number>();
+  const themeOrderMap = new Map<string, number>();
+  const subThemeOrderMap = new Map<string, number>();
+
+  Object.entries(allExercice).forEach(([levelCode, rawLevel], levelIndex) => {
+    if (!isPlainObject(rawLevel)) {
+      return;
+    }
+
+    const levelTitle = levelTitles.get(levelCode) ?? formatSegmentNameFallback(levelCode);
+    if (!levelTitles.has(levelCode)) {
+      logMissingKey(levelCode);
+    }
+
+    levelOrderMap.set(levelCode, levelIndex);
+    registerCategoryMetadata(categoryRegistry, [levelCode], levelCode, levelTitle, levelIndex, [levelTitle]);
+
+    const themeStructures = levelStructureMap.get(levelCode) ?? [];
+    const themeStructureByCode = new Map(themeStructures.map(structure => [structure.code, structure]));
+
+    Object.entries(rawLevel).forEach(([themeCode, rawTheme], themeIndex) => {
+      if (!isPlainObject(rawTheme)) {
+        return;
+      }
+
+      const structure = themeStructureByCode.get(themeCode);
+      const themeOrder = structure?.order ?? themeIndex;
+      themeOrderMap.set(`${levelCode}/${themeCode}`, themeOrder);
+
+      const themeTitle = structure?.title ?? themeTitleLookup.get(themeCode) ?? formatSegmentNameFallback(themeCode);
+      if (!structure && !themeTitleLookup.has(themeCode)) {
+        logMissingKey(themeCode);
+      }
+
+      registerCategoryMetadata(
+        categoryRegistry,
+        [levelCode, themeCode],
+        themeCode,
+        themeTitle,
+        themeOrder,
+        [levelTitle, themeTitle]
+      );
+
+      const subThemesKnown = new Map<string, SubThemeStructure>();
+      structure?.subThemes.forEach(subTheme => {
+        subThemeOrderMap.set(`${levelCode}/${themeCode}/${subTheme.code}`, subTheme.order);
+        subThemesKnown.set(subTheme.code, subTheme);
+        registerCategoryMetadata(
+          categoryRegistry,
+          [levelCode, themeCode, subTheme.code],
+          subTheme.code,
+          subTheme.title,
+          subTheme.order,
+          [levelTitle, themeTitle, subTheme.title]
+        );
+      });
+
+      Object.entries(rawTheme).forEach(([exerciseKey, rawExercise], exerciseIndex) => {
+        if (!isPlainObject(rawExercise)) {
+          return;
+        }
+
+        const record = rawExercise as JsonObject;
+        const idValue = typeof record.ref === "string" && record.ref.trim() ? record.ref.trim() : exerciseKey;
+        const titleValue = typeof record.titre === "string" ? normalizeWhitespace(record.titre) : "";
+        const urlValue = typeof record.url === "string" ? record.url : "";
+        if (!urlValue) {
+          treeWarn("Exercice sans chemin d'accès", { levelCode, themeCode, exerciseKey });
+          return;
+        }
+
+        const { normalizedTsPath, normalizedJsPath } = convertUrlToTsPath(urlValue);
+        const subThemeCode = inferSubThemeCode(idValue, themeCode, new Set(subThemesKnown.keys()));
+
+        if (!subThemesKnown.has(subThemeCode)) {
+          const inferredTitle = themeTitleLookup.get(subThemeCode) ?? formatSegmentNameFallback(subThemeCode);
+          if (!themeTitleLookup.has(subThemeCode)) {
+            logMissingKey(subThemeCode);
+          }
+          const order = subThemesKnown.size;
+          const subTheme: SubThemeStructure = {
+            code: subThemeCode,
+            title: inferredTitle,
+            order
+          };
+          subThemesKnown.set(subThemeCode, subTheme);
+          subThemeOrderMap.set(`${levelCode}/${themeCode}/${subThemeCode}`, order);
+          registerCategoryMetadata(
+            categoryRegistry,
+            [levelCode, themeCode, subThemeCode],
+            subThemeCode,
+            inferredTitle,
+            order,
+            [levelTitle, themeTitle, inferredTitle]
+          );
+        }
+
+        const subTheme = subThemesKnown.get(subThemeCode);
+        const subThemeTitle = subTheme?.title ?? ensureTitle(themeTitleLookup, subThemeCode);
+        const tags = convertTags(record.tags);
+        const uuid = typeof record.uuid === "string" ? record.uuid.trim() : undefined;
+
+        const searchableParts: string[] = [
+          idValue,
+          titleValue,
+          normalizedTsPath,
+          normalizedJsPath,
+          levelCode,
+          levelTitle,
+          themeCode,
+          themeTitle,
+          subThemeCode,
+          subThemeTitle,
+          uuid ?? ""
+        ];
+        tags.forEach(tag => searchableParts.push(tag));
+
+        const definition: ExerciseDefinition = {
+          id: idValue,
+          niveau: levelTitle,
+          importPath: `@exos/${normalizedTsPath}`,
+          relativePath: normalizedTsPath,
+          categories: [levelCode, themeCode, subThemeCode],
+          categoryTitles: [levelTitle, themeTitle, subThemeTitle],
+          tags,
+          label: titleValue || idValue,
+          title: titleValue || idValue,
+          searchableTitle: computeSearchable(searchableParts),
+          order: exerciseIndex,
+          uuid
+        };
+
+        if (!availableModules.has(normalizedTsPath)) {
+          treeWarn("Module d'exercice introuvable", {
+            relativePath: normalizedTsPath,
+            originalUrl: urlValue
+          });
+        }
+
+        if (!exercicesSet.has(normalizedTsPath) && !exercicesSet.has(normalizedJsPath)) {
+          treeWarn("Chemin absent de exercicesList.json", {
+            relativePath: normalizedTsPath
+          });
+        }
+
+        definitions.push(definition);
+      });
+    });
+  });
+
+  definitions.sort((a, b) => {
+    const levelA = a.categories[0];
+    const levelB = b.categories[0];
+    const levelOrderA = levelOrderMap.get(levelA) ?? Number.MAX_SAFE_INTEGER;
+    const levelOrderB = levelOrderMap.get(levelB) ?? Number.MAX_SAFE_INTEGER;
+    if (levelOrderA !== levelOrderB) {
+      return levelOrderA - levelOrderB;
+    }
+
+    const themeKeyA = `${a.categories[0] ?? ""}/${a.categories[1] ?? ""}`;
+    const themeKeyB = `${b.categories[0] ?? ""}/${b.categories[1] ?? ""}`;
+    const themeOrderA = themeOrderMap.get(themeKeyA) ?? Number.MAX_SAFE_INTEGER;
+    const themeOrderB = themeOrderMap.get(themeKeyB) ?? Number.MAX_SAFE_INTEGER;
+    if (themeOrderA !== themeOrderB) {
+      return themeOrderA - themeOrderB;
+    }
+
+    const subKeyA = `${a.categories[0] ?? ""}/${a.categories[1] ?? ""}/${a.categories[2] ?? ""}`;
+    const subKeyB = `${b.categories[0] ?? ""}/${b.categories[1] ?? ""}/${b.categories[2] ?? ""}`;
+    const subOrderA = subThemeOrderMap.get(subKeyA) ?? Number.MAX_SAFE_INTEGER;
+    const subOrderB = subThemeOrderMap.get(subKeyB) ?? Number.MAX_SAFE_INTEGER;
+    if (subOrderA !== subOrderB) {
+      return subOrderA - subOrderB;
+    }
+
+    if (a.order !== b.order) {
+      return a.order - b.order;
+    }
+
+    return a.id.localeCompare(b.id, "fr", { sensitivity: "base" });
+  });
+
+  return { definitions, categoryRegistry, fingerprintSegments };
+}
+
+function buildTree(
+  definitions: ExerciseDefinition[],
+  categoryRegistry: CategoryRegistry
+): Record<string, ExerciseNode> {
   const root: Record<string, ExerciseNode> = {};
   const categoryMap = new Map<string, ExerciseCategoryNode>();
 
@@ -693,47 +790,44 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
       pathSegments.push(segment);
       const fullPath = pathSegments.join("/");
       let categoryNode = categoryMap.get(fullPath);
-
       if (!categoryNode) {
-        const displayTitle = getCategoryDisplayTitle(fullPath, segment);
-        const orderTrail = referentielCategoryOrderTrailByPath.get(fullPath);
+        const metadata = categoryRegistry.get(fullPath);
+        const title = metadata?.title ?? formatSegmentNameFallback(segment);
+        const searchableTitle = metadata?.searchableTitle ?? computeSearchable([
+          segment,
+          title,
+          ...pathSegments
+        ]);
+        const order = metadata?.order ?? Number.MAX_SAFE_INTEGER;
         categoryNode = {
           id: segment,
           type: "category",
           segment,
-          title: displayTitle,
-          searchableTitle: getCategorySearchableTitle(fullPath, segment, [...pathSegments]),
+          title,
+          searchableTitle,
           fullPath,
           children: {},
-          order:
-            orderTrail && orderTrail.length > 0
-              ? orderTrail[orderTrail.length - 1]
-              : Number.MAX_SAFE_INTEGER
+          order
         };
         categoryMap.set(fullPath, categoryNode);
         children[segment] = categoryNode;
       }
-
       children = categoryNode.children;
     });
 
-    const exerciseFullPath = [...definition.categories, definition.id].join("/");
-    const metadata = referentielExerciseMetadataByPath.get(definition.relativePath);
+    const fullExercisePath = [...definition.categories, definition.id].join("/");
     const exerciseNode: ExerciseLeafNode = {
       id: definition.id,
       type: "exercise",
       title: definition.title,
       searchableTitle: definition.searchableTitle,
-      fullPath: exerciseFullPath,
+      fullPath: fullExercisePath,
       path: definition.relativePath,
       definitionId: definition.id,
       niveau: definition.niveau,
       categories: [...definition.categories],
       label: definition.label,
-      order:
-        metadata && metadata.orderTrail.length > 0
-          ? metadata.orderTrail[metadata.orderTrail.length - 1]
-          : Number.MAX_SAFE_INTEGER
+      order: definition.order
     };
 
     children[definition.id] = exerciseNode;
@@ -742,8 +836,8 @@ function buildTree(definitions: ExerciseDefinition[]): Record<string, ExerciseNo
   return root;
 }
 
-function computeFingerprint(paths: string[], referentielSegments: string[]): string {
-  return [...paths, ...referentielSegments].join("|");
+function computeFingerprint(paths: string[], segments: string[]): string {
+  return [...paths, ...segments].join("|");
 }
 
 function readCache(fingerprint: string): ExerciseTreeCache | null {
@@ -760,7 +854,7 @@ function readCache(fingerprint: string): ExerciseTreeCache | null {
     if (!parsed.tree || !parsed.definitions) return null;
     return parsed;
   } catch (error) {
-    console.warn("Impossible de lire le cache du catalogue d'exercices", error);
+    treeWarn("Impossible de lire le cache du catalogue d'exercices", error);
     return null;
   }
 }
@@ -773,10 +867,11 @@ function writeCache(cache: ExerciseTreeCache) {
   try {
     window.localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
   } catch (error) {
-    console.warn("Impossible d'enregistrer le cache du catalogue", error);
+    treeWarn("Impossible d'enregistrer le cache du catalogue", error);
   }
 }
 
+let runtimeCache: ExerciseTreeData | null = null;
 
 export function loadExerciseTree(): ExerciseTreeData {
   if (runtimeCache) {
@@ -787,13 +882,15 @@ export function loadExerciseTree(): ExerciseTreeData {
     return runtimeCache;
   }
 
-  const fingerprint = computeFingerprint(modulePaths, referentielFingerprintSegments);
+  const { definitions, categoryRegistry, fingerprintSegments } = buildDefinitions();
+  const fingerprint = computeFingerprint(modulePaths, fingerprintSegments);
   treeInfo("Construction du catalogue d'exercices", {
     fingerprint,
-    moduleCount: modulePaths.length
+    modules: modulePaths.length,
+    definitions: definitions.length
   });
-  const cached = readCache(fingerprint);
 
+  const cached = readCache(fingerprint);
   if (cached) {
     treeInfo("Catalogue chargé depuis le cache localStorage", {
       definitions: cached.definitions.length,
@@ -802,21 +899,13 @@ export function loadExerciseTree(): ExerciseTreeData {
     runtimeCache = {
       tree: cached.tree,
       definitions: cached.definitions,
-      definitionMap: new Map(
-        cached.definitions.map(definition => [definition.id, definition])
-      ),
+      definitionMap: new Map(cached.definitions.map(definition => [definition.id, definition])),
       fingerprint: cached.fingerprint
     };
     return runtimeCache;
   }
 
-  const definitions = buildDefinitionsFromMetadata();
-  const tree = buildTree(definitions);
-
-  treeInfo("Catalogue reconstruit depuis la source", {
-    definitions: definitions.length,
-    categories: Object.keys(tree).length
-  });
+  const tree = buildTree(definitions, categoryRegistry);
 
   runtimeCache = {
     tree,
@@ -842,9 +931,10 @@ export function loadExerciseTree(): ExerciseTreeData {
   return runtimeCache;
 }
 
-
-
-export function collectCategoryPaths(nodes: Record<string, ExerciseNode>, acc: Set<string> = new Set()): Set<string> {
+export function collectCategoryPaths(
+  nodes: Record<string, ExerciseNode>,
+  acc: Set<string> = new Set()
+): Set<string> {
   Object.values(nodes).forEach(node => {
     if (node.type === "category") {
       acc.add(node.fullPath);
@@ -877,4 +967,3 @@ export function getExerciseLoader(path: string): (() => Promise<unknown>) | unde
   const normalized = normalizeRelativePath(path);
   return loaderMap.get(normalized);
 }
-
