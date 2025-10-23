@@ -1,49 +1,57 @@
+// scripts/update-mathalea.js
 import { execSync } from "child_process";
-import fs from "fs";
 import path from "path";
+import fs from "fs";
 
 const projectRoot = path.resolve(process.cwd());
-const externalRepo = path.resolve(projectRoot, "../mathalea");
-const localMathalea = path.resolve(projectRoot, "src/mathalea");
-const backupDir = path.resolve(projectRoot, "backups/mathalea_" + Date.now());
+const submodulePath = path.resolve(projectRoot, "src/mathalea");
+const logDir = path.resolve(projectRoot, "logs");
+const logPath = path.join(logDir, "update-mathalea.log");
 
-// Fonction d’exécution simple
+fs.mkdirSync(logDir, { recursive: true });
+
 function run(cmd, cwd = projectRoot) {
   console.log(`> ${cmd}`);
   execSync(cmd, { stdio: "inherit", cwd });
 }
 
-// Étape 1 : Cloner ou mettre à jour le dépôt officiel
 try {
-  if (!fs.existsSync(externalRepo)) {
-    console.log("📥 Clonage initial du dépôt MathALEA...");
-    run("git clone https://forge.apps.education.fr/coopmaths/mathalea.git ../mathalea");
-  } else {
-    console.log("🔄 Mise à jour du dépôt MathALEA existant...");
-    run("git fetch --all", externalRepo);
-    run("git reset --hard origin/main", externalRepo);
+  if (!fs.existsSync(submodulePath)) {
+    console.error("❌ Le dossier src/mathalea n'existe pas ou n'est pas un sous-module !");
+    process.exit(1);
   }
+
+  console.log("🔍 Vérification du sous-module Mathalea...");
+  const gitFolder = path.join(submodulePath, ".git");
+  if (!fs.existsSync(gitFolder)) {
+    console.error("❌ src/mathalea n'est pas un sous-module Git valide !");
+    process.exit(1);
+  }
+
+  console.log("🔄 Mise à jour du sous-module Mathalea...");
+  run("git pull origin main", submodulePath);
+
+    console.log("💾 Enregistrement de la mise à jour dans le dépôt principal...");
+  run("git add src/mathalea", projectRoot);
+
+  try {
+    // On ne commit que si quelque chose a changé
+    const diff = execSync("git diff --cached --name-only", { cwd: projectRoot }).toString().trim();
+    if (diff) {
+      run('git commit -m "⬆️ Update Mathalea submodule to latest version"', projectRoot);
+      console.log("✅ Commit créé pour la mise à jour du sous-module.");
+    } else {
+      console.log("ℹ️ Aucun changement détecté dans le sous-module, aucun commit créé.");
+    }
+  } catch (commitErr) {
+    console.warn("⚠️ Impossible de committer : ", commitErr.message);
+  }
+
+
+  fs.appendFileSync(logPath, `[${new Date().toISOString()}] Mise à jour réussie.\n`);
+  console.log("✅ Mathalea mise à jour avec succès !");
 } catch (err) {
-  console.error("❌ Erreur pendant la mise à jour du dépôt :", err);
+  console.error("❌ Erreur pendant la mise à jour :", err.message);
+  fs.appendFileSync(logPath, `[${new Date().toISOString()}] ❌ ${err.message}\n`);
   process.exit(1);
 }
-
-// Étape 2 : Sauvegarde locale avant copie
-if (fs.existsSync(localMathalea)) {
-  fs.mkdirSync(path.dirname(backupDir), { recursive: true });
-  console.log(`🗂️  Sauvegarde de l’ancien src/mathalea vers : ${backupDir}`);
-  fs.renameSync(localMathalea, backupDir);
-}
-
-// Étape 3 : Copier les fichiers nécessaires
-console.log("📦 Copie des fichiers de ../mathalea vers src/mathalea...");
-fs.mkdirSync(localMathalea, { recursive: true });
-run(`cp -r ${externalRepo}/src/* ${localMathalea}/`);
-
-// Étape 4 : Journalisation
-const logDir = path.resolve(projectRoot, "logs");
-fs.mkdirSync(logDir, { recursive: true });
-const logPath = path.join(logDir, "update-mathalea.log");
-fs.writeFileSync(logPath, `[${new Date().toISOString()}] Mise à jour réussie.\n`);
-
-console.log("✅ MathALEA mis à jour avec succès !");
