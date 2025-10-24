@@ -296,9 +296,16 @@
     if (!interfaceParams) {
       return
     }
-    if (event.detail.nbQuestions) {
-      exercise.nbQuestions = event.detail.nbQuestions
-      interfaceParams.nbQuestions = exercise.nbQuestions
+    if (event.detail.nbQuestions !== undefined) {
+      const parsedNbQuestions = Number(event.detail.nbQuestions)
+      if (!Number.isNaN(parsedNbQuestions)) {
+        const normalizedNbQuestions = Math.min(
+          100,
+          Math.max(1, Math.trunc(parsedNbQuestions)),
+        )
+        exercise.nbQuestions = normalizedNbQuestions
+        interfaceParams.nbQuestions = normalizedNbQuestions
+      }
     }
     if (event.detail.duration) {
       exercise.duration = event.detail.duration
