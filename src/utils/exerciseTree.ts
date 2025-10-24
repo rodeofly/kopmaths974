@@ -27,6 +27,7 @@ function treeWarn(...args: unknown[]): void {
 const CATEGORY_NAME_OVERRIDES: Record<string, string> = {
   cm1: "CM1",
   cm2: "CM2",
+  c3: "CM1/CM2",
   ce1: "CE1",
   ce2: "CE2",
   cp: "CP",
@@ -46,7 +47,19 @@ const CATEGORY_NAME_OVERRIDES: Record<string, string> = {
   cycle3: "Cycle 3",
   cycle4: "Cycle 4",
   cm1cm2: "CM1/CM2",
-  cm1cm2cycle3: "CM1/CM2 – Cycle 3"
+  cm1cm2cycle3: "CM1/CM2 – Cycle 3",
+  c3c: "CM1C1 : Calcul mental",
+  c3c1: "CM1C1 : Calcul mental",
+  c3c2: "CM1M1 : Longueurs",
+  c3c3: "CM1M3 : Contenances",
+  c3d: "CM2D1 : Organisation et gestion de données",
+  c3i: "CM2I1 : Pensée informatique",
+  c3i1: "CM2I1 : Pensée informatique",
+  c3m: "CM1M2 : Grandeurs et mesures",
+  c3n: "CM2N1 : Nombres entiers",
+  c3n1: "CM2N1 : Nombres entiers",
+  c3n2: "CM2N2 : Fractions",
+  c3n3: "CM2N4 : Addition, soustraction, multiplication, division"
 };
 
 export interface ExerciseDefinition {
