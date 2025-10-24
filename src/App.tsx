@@ -1090,9 +1090,9 @@ function App() {
   const asidePanelClassName = "space-y-4 self-start lg:sticky lg:top-28";
   const catalogueCardClassName = "rounded-lg bg-white p-4 shadow";
   const treeScrollContainerClassName = "mt-4 max-h-[60vh] overflow-y-auto pr-1";
-  const treeListClassName = "space-y-2";
+  const treeListClassName = "space-y-1";
   const contentGridClassName =
-    "grid grid-cols-1 gap-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start";
+    "grid grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start";
 
   useEffect(() => {
     debugCss("layout-classes", {
@@ -1213,17 +1213,20 @@ function App() {
                       handleToggleCategory(node.fullPath, event.currentTarget.open)
                     }
                   >
-                    <summary className="flex cursor-pointer items-center justify-between gap-2 rounded px-2 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100">
-                      <span className="flex items-center gap-2">
-                        <span aria-hidden="true" className="text-base leading-none">
-                          📁
+                    <summary className="flex cursor-pointer items-center justify-between gap-1.5 rounded px-1.5 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100">
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-xs font-bold text-slate-600"
+                        >
+                          {expanded ? "−" : "+"}
                         </span>
-                        <span className="flex flex-col text-left">
+                        <span className="flex flex-col text-left leading-tight">
                           <span className="font-semibold tracking-wide">
                             {displayTitle}
                           </span>
                           {showIdentifier && (
-                            <span className="text-xs font-normal text-slate-500">
+                            <span className="text-[11px] font-normal text-slate-500">
                               {node.id}
                             </span>
                           )}
@@ -1233,7 +1236,7 @@ function App() {
                         {expanded ? "Masquer" : "Afficher"}
                       </span>
                     </summary>
-                    <div className="ml-4 mt-2 border-l border-slate-200 pl-3">
+                    <div className="ml-3 mt-1 border-l border-slate-200 pl-2">
                       {renderTree(node.children)}
                     </div>
                   </details>
@@ -1260,24 +1263,24 @@ function App() {
                 <button
                   type="button"
                   onClick={() => handleSelectExercise(definition)}
-                  className={`mt-1 w-full rounded border px-3 py-2 text-left text-sm transition-colors ${
+                  className={`mt-1 w-full rounded border px-2.5 py-1.5 text-left text-sm transition-colors ${
                     isActive
                       ? "border-slate-900 bg-slate-900 text-white"
                       : "border-slate-200 bg-white text-slate-800 hover:border-slate-400"
                   }`}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5">
                     <span aria-hidden="true" className="text-base leading-none">
                       📘
                     </span>
                     <span>
-                      <span className="block font-semibold">{title}</span>
+                      <span className="block font-semibold leading-tight">{title}</span>
                       {themeTrail && (
-                        <span className="mt-1 block text-xs text-slate-500">
+                        <span className="mt-0.5 block text-xs text-slate-500">
                           {themeTrail}
                         </span>
                       )}
-                      <span className="mt-1 block text-xs text-slate-500">
+                      <span className="mt-0.5 block text-xs text-slate-500">
                         ID : {definition.id} · Niveau : {definition.niveau}
                       </span>
                     </span>
