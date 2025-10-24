@@ -26,6 +26,7 @@ type StoredExerciseState = {
   exerciseId: string;
   startedAt: number;
   updatedAt: number;
+  contentSignature?: string;
   questions: Record<string, StoredQuestionState>;
 };
 
@@ -105,12 +106,15 @@ const PENDING_MESSAGE = "🕑 En attente de réponse.";
 const UNAVAILABLE_MESSAGE =
   "ℹ️ Réponse enregistrée (validation indisponible).";
 
+const HTML_SPACE_ENTITY_REGEX =
+  /&(?:nbsp|ensp|emsp|thinsp|hairsp|#160|#8194|#8195|#8201|#8203|#xA0|#x2002|#x2003|#x2004|#x2005|#x2006|#x2007|#x2008|#x2009|#x200A);/gi;
+
 function sanitizeHtml(raw: string): string {
   return raw
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
+    .replace(HTML_SPACE_ENTITY_REGEX, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -140,6 +144,32 @@ function normalizeAnswerValue(value: string): string {
   const sanitized = sanitizeHtml(value);
   const withoutLatex = stripLatexCommands(sanitized);
   return normalizeString(withoutLatex);
+}
+
+function computeExerciseSignature(
+  rawContent: string | undefined,
+  expectedAnswers: ExpectedAnswer[]
+): string {
+  const normalizedContent =
+    typeof rawContent === "string"
+      ? rawContent.replace(/\s+/g, " ").trim()
+      : "";
+
+  const normalizedExpected = expectedAnswers.map(entry => {
+    if (Array.isArray(entry)) {
+      return [...entry]
+        .map(value => normalizeAnswerValue(value))
+        .sort();
+    }
+    return normalizeAnswerValue(entry);
+  });
+
+  const base = `${normalizedContent}::${JSON.stringify(normalizedExpected)}`;
+  let hash = 0;
+  for (let index = 0; index < base.length; index += 1) {
+    hash = (hash * 31 + base.charCodeAt(index)) >>> 0;
+  }
+  return hash.toString(16);
 }
 
 function computeAttemptQuality(
@@ -1104,18 +1134,24 @@ export function initializeExerciseInteraction(
     return () => undefined;
   }
 
-  const { container, exerciseId, exercice } = options;
+  const { container, exerciseId, exercice, rawContent } = options;
   const expectedAnswers = extractExpectedAnswers(exercice);
   const questions = gatherQuestions(container, expectedAnswers, exerciseId);
+  const contentSignature = computeExerciseSignature(rawContent, expectedAnswers);
 
-  const storedState =
-    loadStoredState(exerciseId) ??
-    migrateStoredState({
+  let storedState = loadStoredState(exerciseId);
+  if (!storedState || storedState.contentSignature !== contentSignature) {
+    storedState = {
       exerciseId,
       startedAt: Date.now(),
       updatedAt: Date.now(),
+      contentSignature,
       questions: {}
-    });
+    };
+  } else {
+    storedState = migrateStoredState(storedState);
+    storedState.contentSignature = contentSignature;
+  }
 
   const sessionStart =
     typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -1124,16 +1160,8 @@ export function initializeExerciseInteraction(
   questions.forEach(question => {
     const existing = storedState.questions[question.id];
     if (existing) {
-      const lastAttempt = existing.attempts[existing.attempts.length - 1];
-      if (lastAttempt) {
-        const message =
-          lastAttempt.status === "incomplet" && lastAttempt.value
-            ? UNAVAILABLE_MESSAGE
-            : FEEDBACK_MESSAGES[lastAttempt.status] ?? PENDING_MESSAGE;
-        updateQuestionStatus(question, lastAttempt.status, message);
-      } else {
-        restoreInitialStatus(question);
-      }
+      existing.status = "incomplet";
+      restoreInitialStatus(question);
     } else {
       storedState.questions[question.id] = {
         id: question.id,
@@ -1216,6 +1244,10 @@ export function initializeExerciseInteraction(
 
     removers.push(...listeners);
   });
+
+  storedState.updatedAt = Date.now();
+  storedState.contentSignature = contentSignature;
+  saveStoredState(storedState);
 
   return () => {
     removers.forEach(remove => remove());

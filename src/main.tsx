@@ -18,7 +18,7 @@ const navLinkClasses = (isActive: boolean) =>
 
 function Navigation() {
   return (
-    <header className="bg-slate-900 text-white shadow">
+    <header className="bg-slate-900 shadow">
       <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <NavLink
           to="/"
