@@ -135,9 +135,18 @@
     }
   }
 
+  function normalizeNbQuestions(value: number): number | undefined {
+    const parsedValue = Number(value)
+    if (Number.isNaN(parsedValue)) {
+      return undefined
+    }
+    return Math.min(100, Math.max(1, Math.trunc(parsedValue)))
+  }
+
   function dispatchNewSettings() {
+    const normalizedNbQuestions = normalizeNbQuestions(nbQuestions)
     dispatch('settings', {
-      nbQuestions,
+      nbQuestions: normalizedNbQuestions,
       duration,
       sup,
       sup2,
