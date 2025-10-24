@@ -125,7 +125,7 @@ export function normalizeRelativePath(path: string): string {
   return path.replace(/\\/g, "/").replace(/^\.\/+/, "").replace(/^\//, "");
 }
 
-const moduleGlob = import.meta.glob("@exos/**/*.ts");
+const moduleGlob = import.meta.glob("@exos/**/*.{ts,js}");
 const moduleIds = Object.keys(moduleGlob);
 
 if (moduleIds.length === 0) {
@@ -133,7 +133,15 @@ if (moduleIds.length === 0) {
 }
 
 const loaderMap = new Map<string, () => Promise<unknown>>();
-const modulePaths: string[] = [];
+const modulePathSet = new Set<string>();
+
+function registerLoader(path: string, loader: () => Promise<unknown>) {
+  const normalized = normalizeRelativePath(path);
+  if (!loaderMap.has(normalized)) {
+    loaderMap.set(normalized, loader);
+  }
+  modulePathSet.add(normalized);
+}
 
 Object.entries(moduleGlob).forEach(([moduleId, loader]) => {
   const relativePath = extractRelativeExercisePath(moduleId);
@@ -142,18 +150,17 @@ Object.entries(moduleGlob).forEach(([moduleId, loader]) => {
     return;
   }
 
-  if (!relativePath.endsWith(".ts")) {
-    return;
-  }
-
   const normalized = normalizeRelativePath(relativePath);
-  if (!loaderMap.has(normalized)) {
-    loaderMap.set(normalized, loader);
-    modulePaths.push(normalized);
+  registerLoader(normalized, loader);
+
+  if (/\.jsx?$/i.test(normalized)) {
+    registerLoader(normalized.replace(/\.jsx?$/i, ".ts"), loader);
   }
 });
 
-modulePaths.sort((a, b) => a.localeCompare(b, "fr", { sensitivity: "base" }));
+const modulePaths = Array.from(modulePathSet).sort((a, b) =>
+  a.localeCompare(b, "fr", { sensitivity: "base" })
+);
 
 const jsonModules = import.meta.glob("@mathalea/src/json/**/*.json", { eager: true });
 
@@ -732,11 +739,15 @@ function buildDefinitions(): {
           uuid
         };
 
-        if (!availableModules.has(normalizedTsPath)) {
+        const hasModule =
+          availableModules.has(normalizedTsPath) || availableModules.has(normalizedJsPath);
+
+        if (!hasModule) {
           treeWarn("Module d'exercice introuvable", {
             relativePath: normalizedTsPath,
             originalUrl: urlValue
           });
+          return;
         }
 
         if (!exercicesSet.has(normalizedTsPath) && !exercicesSet.has(normalizedJsPath)) {
