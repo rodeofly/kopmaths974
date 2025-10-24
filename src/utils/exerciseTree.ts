@@ -90,6 +90,8 @@ export interface ExerciseCategoryNode extends ExerciseNodeBase {
   type: "category";
   segment: string;
   children: Record<string, ExerciseNode>;
+  descendantExerciseCount: number;
+  directExerciseCount: number;
 }
 
 export interface ExerciseLeafNode extends ExerciseNodeBase {
@@ -119,7 +121,7 @@ type ExerciseTreeCache = {
 };
 
 const CACHE_KEY = "mathalea.exerciseTree.v2";
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 
 export function normalizeRelativePath(path: string): string {
   return path.replace(/\\/g, "/").replace(/^\.\/+/, "").replace(/^\//, "");
@@ -835,7 +837,9 @@ function buildTree(
           searchableTitle,
           fullPath,
           children: {},
-          order
+          order,
+          descendantExerciseCount: 0,
+          directExerciseCount: 0
         };
         categoryMap.set(fullPath, categoryNode);
         children[segment] = categoryNode;
@@ -859,6 +863,17 @@ function buildTree(
     };
 
     children[definition.id] = exerciseNode;
+
+    for (let depth = 0; depth < pathSegments.length; depth += 1) {
+      const currentPath = pathSegments.slice(0, depth + 1).join("/");
+      const categoryNode = categoryMap.get(currentPath);
+      if (!categoryNode) continue;
+
+      categoryNode.descendantExerciseCount += 1;
+      if (depth === pathSegments.length - 1) {
+        categoryNode.directExerciseCount += 1;
+      }
+    }
   });
 
   return root;

@@ -1,6 +1,8 @@
 import { choice } from '../../../lib/outils/arrayOutils'
-import ExerciceSimple from '../../ExerciceSimple'
+import { setReponse } from '../../../lib/interactif/gestionInteractif'
 import { KeyboardType } from '../../../lib/interactif/claviers/keyboard'
+import { listeQuestionsToContenu } from '../../../modules/outils'
+import ExerciceSimple from '../../ExerciceSimple'
 export const titre = 'Déterminer un nombre à partir d’une phrase'
 export const interactifReady = true
 export const interactifType = 'mathLive'
@@ -28,31 +30,64 @@ export default class CalculsAutomatiques extends ExerciceSimple {
   }
 
   nouvelleVersion() {
-    const a = choice([50, 100, 40, 10, 20, 60, 200, 1000, 500])
-    if (choice([true, false])) {
-      switch (choice([1, 2, 3])) {
-        case 1:
-          this.reponse = a << 1
-          this.question = `Calculer le double de $${a}$. `
-          this.correction = `$${a}\\times 2 = ${a << 1}$`
-          break
-        case 2:
-          this.reponse = a * 3
-          this.question = `Calculer le triple de $${a}$.`
-          this.correction = `$${a}\\times 3 = ${a * 3}$`
-          break
-        case 3:
-          this.reponse = a * 10
-          this.question = `Quel est le nombre dix fois plus grand que $${a}$ ? `
-          this.correction = `$${a}\\times 10 = ${a * 10}$`
-          break
+    for (let i = 0, essais = 0; i < this.nbQuestions && essais < 50; ) {
+      const a = choice([50, 100, 40, 10, 20, 60, 200, 1000, 500])
+      const multiplicatif = choice([true, false])
+      let question = ''
+      let correction = ''
+      let reponse = 0
+      const signature: (string | number)[] = [a]
+
+      if (multiplicatif) {
+        const variante = choice([1, 2, 3])
+        signature.push('m', variante)
+        switch (variante) {
+          case 1:
+            reponse = a << 1
+            question = `Calculer le double de $${a}$.`
+            correction = `$${a}\\times 2 = ${a << 1}$`
+            break
+          case 2:
+            reponse = a * 3
+            question = `Calculer le triple de $${a}$.`
+            correction = `$${a}\\times 3 = ${a * 3}$`
+            break
+          default:
+            reponse = a * 10
+            question = `Quel est le nombre dix fois plus grand que $${a}$ ?`
+            correction = `$${a}\\times 10 = ${a * 10}$`
+            break
+        }
+      } else {
+        signature.push('d')
+        reponse = a >> 1
+        question = `Calculer la moitié de $${a}$.`
+        correction = `$${a}\\div 2 = ${a >> 1}$`
       }
-    } else {
-      this.question = `Calculer la moitié de $${a}$.`
-      this.reponse = a >> 1
-      this.correction = `$${a}\\div 2 = ${a >> 1}$`
+
+      if (!this.questionJamaisPosee(i, ...signature)) {
+        essais += 1
+        continue
+      }
+
+      this.listeQuestions[i] = question
+      this.listeCorrections[i] = correction
+      this.listeCanEnonces[i] = question
+      this.listeCanReponsesACompleter[i] = ''
+      setReponse(this, i, reponse, { formatInteractif: 'calcul' })
+
+      if (this.nbQuestions === 1) {
+        this.question = question
+        this.correction = correction
+        this.reponse = reponse
+        this.canEnonce = question
+        this.canReponseACompleter = ''
+      }
+
+      i += 1
+      essais += 1
     }
-    this.canEnonce = this.question
-    this.canReponseACompleter = ''
+
+    listeQuestionsToContenu(this)
   }
 }
