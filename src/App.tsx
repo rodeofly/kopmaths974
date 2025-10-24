@@ -1073,6 +1073,20 @@ function App() {
     [selectedDefinition]
   );
 
+  const selectedCategoryPathSet = useMemo(() => {
+    if (!selectedDefinition) {
+      return new Set<string>();
+    }
+
+    const set = new Set<string>();
+    selectedDefinition.categories.forEach((_, index) => {
+      const path = selectedDefinition.categories.slice(0, index + 1).join("/");
+      set.add(path);
+    });
+
+    return set;
+  }, [selectedDefinition]);
+
   const selectedThemeTrailLabel = useMemo(
     () => selectedCategoryTitles.slice(1).join(" · "),
     [selectedCategoryTitles]
@@ -1090,7 +1104,7 @@ function App() {
   const asidePanelClassName = "space-y-4 self-start lg:sticky lg:top-28";
   const catalogueCardClassName = "rounded-lg bg-white p-4 shadow";
   const treeScrollContainerClassName = "mt-4 max-h-[60vh] overflow-y-auto pr-1";
-  const treeListClassName = "space-y-1";
+  const treeListClassName = "space-y-1 list-none pl-0 ml-0";
   const contentGridClassName =
     "grid grid-cols-1 gap-6 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start";
 
@@ -1196,6 +1210,17 @@ function App() {
       const entries = getSortedChildren(nodes);
       if (entries.length === 0) return null;
 
+      const formatCountLabel = (total: number, direct: number) => {
+        if (!Number.isFinite(total) || total <= 0) {
+          return "Aucun exercice";
+        }
+        const totalLabel = `${total} exercice${total > 1 ? "s" : ""}`;
+        if (Number.isFinite(direct) && direct > 0 && direct < total) {
+          return `${totalLabel} · ${direct} direct${direct > 1 ? "s" : ""}`;
+        }
+        return totalLabel;
+      };
+
       return (
         <ul className={treeListClassName}>
           {entries.map(node => {
@@ -1204,6 +1229,26 @@ function App() {
               const displayTitle =
                 node.title && node.title.trim().length > 0 ? node.title : node.id;
               const showIdentifier = node.id && node.id !== displayTitle;
+              const isActiveBranch = selectedCategoryPathSet.has(node.fullPath);
+              const highlight = expanded || isActiveBranch;
+              const totalExercises = node.descendantExerciseCount ?? 0;
+              const directExercises = node.directExerciseCount ?? 0;
+              const countLabel = formatCountLabel(totalExercises, directExercises);
+              const summaryClasses = [
+                "flex cursor-pointer items-center justify-between gap-1.5 rounded px-1.5 py-1 text-sm font-semibold transition-colors",
+                highlight
+                  ? "bg-slate-100 text-slate-900 ring-1 ring-slate-200"
+                  : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              ].join(" ");
+              const toggleIconClasses = [
+                "flex h-5 w-5 items-center justify-center rounded border text-xs font-bold",
+                highlight ? "border-slate-400 text-slate-700" : "border-slate-300 text-slate-600"
+              ].join(" ");
+              const childContainerClasses = [
+                "ml-3 mt-1 border-l pl-2",
+                highlight ? "border-slate-300" : "border-slate-200"
+              ].join(" ");
+
               return (
                 <li key={node.fullPath}>
                   <details
@@ -1213,30 +1258,34 @@ function App() {
                       handleToggleCategory(node.fullPath, event.currentTarget.open)
                     }
                   >
-                    <summary className="flex cursor-pointer items-center justify-between gap-1.5 rounded px-1.5 py-1 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100">
+                    <summary className={summaryClasses}>
                       <span className="flex items-center gap-1.5">
-                        <span
-                          aria-hidden="true"
-                          className="flex h-5 w-5 items-center justify-center rounded border border-slate-300 text-xs font-bold text-slate-600"
-                        >
+                        <span aria-hidden="true" className={toggleIconClasses}>
                           {expanded ? "−" : "+"}
                         </span>
                         <span className="flex flex-col text-left leading-tight">
                           <span className="font-semibold tracking-wide">
                             {displayTitle}
                           </span>
+                          <span className="text-[11px] font-normal text-slate-500">
+                            {countLabel}
+                          </span>
                           {showIdentifier && (
-                            <span className="text-[11px] font-normal text-slate-500">
+                            <span className="text-[11px] font-normal text-slate-400">
                               {node.id}
                             </span>
                           )}
                         </span>
                       </span>
-                      <span className="text-[10px] uppercase tracking-wide text-slate-400">
+                      <span
+                        className={`text-[10px] uppercase tracking-wide ${
+                          highlight ? "text-slate-500" : "text-slate-400"
+                        }`}
+                      >
                         {expanded ? "Masquer" : "Afficher"}
                       </span>
                     </summary>
-                    <div className="ml-3 mt-1 border-l border-slate-200 pl-2">
+                    <div className={childContainerClasses}>
                       {renderTree(node.children)}
                     </div>
                   </details>
@@ -1297,6 +1346,7 @@ function App() {
       exerciseTitles,
       handleSelectExercise,
       handleToggleCategory,
+      selectedCategoryPathSet,
       selectedExerciseId,
       treeListClassName
     ]
@@ -1306,7 +1356,7 @@ function App() {
     <main id="main-content" className={mainClassName}>
       <div className={layoutContainerClassName}>
         <header>
-          <h1 className="text-3xl font-bold">Kop Maths 974</h1>
+          <h1 className="text-3xl font-bold text-orange-600">Kop Maths 974</h1>
           <p className="text-slate-600">
             Aperçu dynamique et interactif des exercices générés par MathALEA.
           </p>
