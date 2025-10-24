@@ -970,6 +970,10 @@ function App() {
   }, [questionHtml]);
 
   useEffect(() => {
+    if (!showCorrection) {
+      debugLog("Correction masquée, rendu LaTeX ignoré");
+      return;
+    }
     if (!correctionHtml) {
       debugLog("Aucune correction HTML à rendre");
       return;
@@ -989,9 +993,13 @@ function App() {
     } catch (renderError) {
       debugWarn("Erreur lors du rendu LaTeX de la correction", renderError);
     }
-  }, [correctionHtml]);
+  }, [correctionHtml, showCorrection]);
 
   useEffect(() => {
+    if (!showCorrection) {
+      debugLog("Auto-correction masquée, rendu LaTeX ignoré");
+      return;
+    }
     if (!autoCorrectionHtml) {
       debugLog("Aucune auto-correction HTML à rendre");
       return;
@@ -1011,7 +1019,7 @@ function App() {
     } catch (renderError) {
       debugWarn("Erreur lors du rendu LaTeX de l'auto-correction", renderError);
     }
-  }, [autoCorrectionHtml]);
+  }, [autoCorrectionHtml, showCorrection]);
 
   useEffect(() => {
     const container = questionContainerRef.current;

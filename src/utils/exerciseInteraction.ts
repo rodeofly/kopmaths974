@@ -8,6 +8,9 @@ type StoredAttempt = {
   timestamp: number;
   durationSinceStartMs: number;
   durationSinceFirstInteractionMs?: number;
+  quality: number;
+  evaluated: boolean;
+  expectedAvailable: boolean;
 };
 
 type StoredQuestionState = {
@@ -16,6 +19,7 @@ type StoredQuestionState = {
   status: InteractionStatus;
   lastValue: string | string[];
   attempts: StoredAttempt[];
+  srs?: SrsReviewState;
 };
 
 type StoredExerciseState = {
@@ -46,6 +50,15 @@ type QuestionItem = {
   firstInteractionAt?: number;
 };
 
+type SrsReviewState = {
+  easeFactor: number;
+  intervalDays: number;
+  repetitions: number;
+  nextReview: number;
+  lastReview: number;
+  lastQuality: number;
+};
+
 type EvaluationResult = {
   status: InteractionStatus;
   hasValue: boolean;
@@ -68,6 +81,10 @@ const STATUS_CLASSES: Record<InteractionStatus, string> = {
   incorrect: "mathalea-question--incorrect",
   incomplet: "mathalea-question--incomplete"
 };
+
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_EASE_FACTOR = 2.5;
+const MIN_EASE_FACTOR = 1.3;
 
 const DEBUG_INTERACTION_PREFIX = "[KopMaths][Interaction]";
 const DEBUG_INTERACTION_CSS_PREFIX = `${DEBUG_INTERACTION_PREFIX}[CSS]`;
@@ -96,6 +113,113 @@ function sanitizeHtml(raw: string): string {
     .replace(/&nbsp;/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function stripLatexCommands(value: string): string {
+  if (!value) return "";
+
+  return value
+    .replace(/\\text\*?\{([^}]*)\}/gi, "$1")
+    .replace(/\\mathrm\{([^}]*)\}/gi, "$1")
+    .replace(/\\operatorname\{([^}]*)\}/gi, "$1")
+    .replace(/\\left\s*/gi, "")
+    .replace(/\\right\s*/gi, "")
+    .replace(/\\[,;:!]/g, " ")
+    .replace(/\\times/g, "x")
+    .replace(/\\cdot/g, "·")
+    .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/gi, "$1 / $2")
+    .replace(/\\sqrt\{([^}]*)\}/gi, "sqrt($1)")
+    .replace(/\\overline\{([^}]*)\}/gi, "$1")
+    .replace(/\\underline\{([^}]*)\}/gi, "$1")
+    .replace(/\\[a-zA-Z]+/g, " ")
+    .replace(/[{}$]/g, " ");
+}
+
+function normalizeAnswerValue(value: string): string {
+  if (!value) return "";
+  const sanitized = sanitizeHtml(value);
+  const withoutLatex = stripLatexCommands(sanitized);
+  return normalizeString(withoutLatex);
+}
+
+function computeAttemptQuality(
+  status: InteractionStatus,
+  durationSinceStartMs: number,
+  durationSinceFirstInteractionMs: number | undefined,
+  evaluated: boolean
+): number {
+  if (!evaluated) {
+    return 0;
+  }
+
+  const referenceDuration =
+    durationSinceFirstInteractionMs ?? durationSinceStartMs ?? 0;
+
+  if (status === "correct") {
+    if (referenceDuration <= 8000) return 5;
+    if (referenceDuration <= 15000) return 4;
+    if (referenceDuration <= 30000) return 3;
+    if (referenceDuration <= 60000) return 2;
+    return 1;
+  }
+
+  if (status === "incorrect") {
+    return referenceDuration <= 15000 ? 1 : 0;
+  }
+
+  return 0;
+}
+
+function updateSrsStateFromAttempt(
+  current: SrsReviewState | undefined,
+  attempt: StoredAttempt
+): SrsReviewState {
+  const base: SrsReviewState = current ?? {
+    easeFactor: DEFAULT_EASE_FACTOR,
+    intervalDays: 0,
+    repetitions: 0,
+    nextReview: attempt.timestamp,
+    lastReview: attempt.timestamp,
+    lastQuality: attempt.quality
+  };
+
+  let easeFactor = base.easeFactor;
+  let repetitions = base.repetitions;
+  let intervalDays = base.intervalDays;
+
+  easeFactor += 0.1 - (5 - attempt.quality) * (0.08 + (5 - attempt.quality) * 0.02);
+  if (easeFactor < MIN_EASE_FACTOR) {
+    easeFactor = MIN_EASE_FACTOR;
+  }
+
+  if (attempt.quality < 2) {
+    repetitions = 0;
+    intervalDays = 0;
+  } else if (attempt.quality < 3) {
+    repetitions = 0;
+    intervalDays = 1;
+  } else {
+    repetitions += 1;
+    if (repetitions <= 1) {
+      intervalDays = 1;
+    } else if (repetitions === 2) {
+      intervalDays = 6;
+    } else {
+      const baseInterval = intervalDays > 0 ? intervalDays : 1;
+      intervalDays = Math.max(1, Math.round(baseInterval * easeFactor));
+    }
+  }
+
+  const nextReview = attempt.timestamp + intervalDays * DAY_IN_MS;
+
+  return {
+    easeFactor,
+    intervalDays,
+    repetitions,
+    nextReview,
+    lastReview: attempt.timestamp,
+    lastQuality: attempt.quality
+  };
 }
 
 function normalizeString(value: string): string {
@@ -384,7 +508,7 @@ function loadStoredState(exerciseId: string): StoredExerciseState | null {
     const parsed = JSON.parse(raw) as StoredExerciseState;
     if (!parsed || typeof parsed !== "object") return null;
     if (parsed.exerciseId !== exerciseId) return null;
-    return parsed;
+    return migrateStoredState(parsed);
   } catch (error) {
     console.warn("Impossible de lire l'état de l'exercice", error);
     return null;
@@ -403,9 +527,88 @@ function saveStoredState(state: StoredExerciseState) {
   }
 }
 
+function migrateStoredState(state: StoredExerciseState): StoredExerciseState {
+  const migrated = state;
+  const questionEntries = Object.values(migrated.questions ?? {});
+  questionEntries.forEach(question => {
+    if (!Array.isArray(question.attempts)) {
+      question.attempts = [];
+    }
+
+    let currentSrs: SrsReviewState | undefined = undefined;
+
+    question.attempts = question.attempts.map(rawAttempt => {
+      const normalized = normalizeStoredAttempt(rawAttempt);
+      currentSrs = updateSrsStateFromAttempt(currentSrs, normalized);
+      return normalized;
+    });
+
+    if (currentSrs) {
+      question.srs = currentSrs;
+    }
+  });
+
+  return migrated;
+}
+
+function normalizeStoredAttempt(rawAttempt: Partial<StoredAttempt>): StoredAttempt {
+  const status: InteractionStatus =
+    rawAttempt?.status === "correct" ||
+    rawAttempt?.status === "incorrect" ||
+    rawAttempt?.status === "incomplet"
+      ? rawAttempt.status
+      : "incomplet";
+  const durationSinceStartMs =
+    typeof rawAttempt.durationSinceStartMs === "number"
+      ? rawAttempt.durationSinceStartMs
+      : 0;
+  const durationSinceFirstInteractionMs =
+    typeof rawAttempt.durationSinceFirstInteractionMs === "number"
+      ? rawAttempt.durationSinceFirstInteractionMs
+      : undefined;
+  const evaluated =
+    typeof rawAttempt.evaluated === "boolean"
+      ? rawAttempt.evaluated
+      : status !== "incomplet";
+  const expectedAvailable =
+    typeof rawAttempt.expectedAvailable === "boolean"
+      ? rawAttempt.expectedAvailable
+      : evaluated;
+  const quality =
+    typeof rawAttempt.quality === "number"
+      ? rawAttempt.quality
+      : computeAttemptQuality(
+          status,
+          durationSinceStartMs,
+          durationSinceFirstInteractionMs,
+          evaluated
+        );
+
+  const value = rawAttempt.value;
+  const normalizedValue: string | string[] = Array.isArray(value)
+    ? value.map(entry => (typeof entry === "string" ? entry : String(entry)))
+    : typeof value === "string"
+      ? value
+      : "";
+
+  return {
+    value: normalizedValue,
+    status,
+    timestamp:
+      typeof rawAttempt.timestamp === "number"
+        ? rawAttempt.timestamp
+        : Date.now(),
+    durationSinceStartMs,
+    durationSinceFirstInteractionMs,
+    quality,
+    evaluated,
+    expectedAvailable
+  };
+}
+
 function compareStringValues(a: string, b: string): boolean {
-  const normalizedA = normalizeString(a);
-  const normalizedB = normalizeString(b);
+  const normalizedA = normalizeAnswerValue(a);
+  const normalizedB = normalizeAnswerValue(b);
   if (!normalizedA && !normalizedB) return true;
 
   const numberA = Number(normalizedA);
@@ -419,8 +622,8 @@ function compareStringValues(a: string, b: string): boolean {
 
 function compareArrayValues(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
-  const normalizedA = a.map(normalizeString).sort();
-  const normalizedB = b.map(normalizeString).sort();
+  const normalizedA = a.map(normalizeAnswerValue).sort();
+  const normalizedB = b.map(normalizeAnswerValue).sort();
   return normalizedA.every((value, index) => value === normalizedB[index]);
 }
 
@@ -906,12 +1109,13 @@ export function initializeExerciseInteraction(
   const questions = gatherQuestions(container, expectedAnswers, exerciseId);
 
   const storedState =
-    loadStoredState(exerciseId) ?? {
+    loadStoredState(exerciseId) ??
+    migrateStoredState({
       exerciseId,
       startedAt: Date.now(),
       updatedAt: Date.now(),
       questions: {}
-    };
+    });
 
   const sessionStart =
     typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -936,7 +1140,8 @@ export function initializeExerciseInteraction(
         order: question.order,
         status: "incomplet",
         lastValue: "",
-        attempts: []
+        attempts: [],
+        srs: undefined
       };
       restoreInitialStatus(question);
     }
@@ -950,7 +1155,7 @@ export function initializeExerciseInteraction(
       const value = getQuestionValue(question);
       const evaluation = evaluateAnswer(value, question.expected, question.type);
 
-      const hasExpected = question.expected !== undefined;
+      const hadExpected = question.expected !== undefined;
       const message = evaluation.hasValue
         ? evaluation.evaluated
           ? FEEDBACK_MESSAGES[evaluation.status]
@@ -975,17 +1180,31 @@ export function initializeExerciseInteraction(
       const questionState = storedState.questions[question.id];
       questionState.status = evaluation.status;
       questionState.lastValue = serializedValue;
-      questionState.attempts.push({
+      const attemptRecord: StoredAttempt = {
         value: serializedValue,
         status: evaluation.status,
         timestamp: Date.now(),
         durationSinceStartMs: durationSinceStart,
-        durationSinceFirstInteractionMs: durationSinceFirstInteraction
-      });
+        durationSinceFirstInteractionMs: durationSinceFirstInteraction,
+        quality: computeAttemptQuality(
+          evaluation.status,
+          durationSinceStart,
+          durationSinceFirstInteraction,
+          evaluation.evaluated
+        ),
+        evaluated: evaluation.evaluated,
+        expectedAvailable: hadExpected
+      };
+
+      questionState.attempts.push(attemptRecord);
+      questionState.srs = updateSrsStateFromAttempt(
+        questionState.srs,
+        attemptRecord
+      );
       storedState.updatedAt = Date.now();
 
       // If we still do not have an expected answer, try to infer it from the DOM once.
-      if (!hasExpected) {
+      if (!hadExpected) {
         const inferred = detectExpectedFromDom(question);
         if (inferred !== undefined) {
           question.expected = inferred;
