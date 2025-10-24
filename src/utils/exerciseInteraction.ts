@@ -121,6 +121,57 @@ function toStringValue(value: unknown): string {
   return String(value);
 }
 
+function isTruthy(value: unknown): boolean {
+  if (value === true) return true;
+  if (value === false || value == null) return false;
+  if (typeof value === "number") {
+    return Math.abs(value) > 1e-9;
+  }
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return false;
+    return ["true", "vrai", "yes", "oui", "1"].includes(normalized);
+  }
+  return Boolean(value);
+}
+
+function getChoiceText(input: HTMLInputElement): string {
+  if (input.value && input.value.trim() && input.value !== "on") {
+    return input.value.trim();
+  }
+
+  const labelledBy = input.getAttribute("aria-labelledby");
+  if (labelledBy) {
+    const label = input.ownerDocument.getElementById(labelledBy);
+    if (label) {
+      return sanitizeHtml(label.innerHTML);
+    }
+  }
+
+  const siblingLabel = input.nextElementSibling;
+  if (siblingLabel instanceof HTMLLabelElement) {
+    return sanitizeHtml(siblingLabel.innerHTML);
+  }
+
+  if (input.id) {
+    const associated = input.ownerDocument.querySelector<HTMLLabelElement>(
+      `label[for="${input.id}"]`
+    );
+    if (associated) {
+      return sanitizeHtml(associated.innerHTML);
+    }
+  }
+
+  const parentLabel = input.closest("label");
+  if (parentLabel) {
+    return sanitizeHtml(parentLabel.innerHTML);
+  }
+
+  return input.value && input.value !== "on"
+    ? input.value.trim()
+    : input.getAttribute("data-value")?.trim() ?? "";
+}
+
 function parseExpectedEntry(entry: unknown): ExpectedAnswer | undefined {
   if (entry == null) return undefined;
 
@@ -136,29 +187,69 @@ function parseExpectedEntry(entry: unknown): ExpectedAnswer | undefined {
   }
 
   if (typeof entry === "object") {
-    if ("value" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).value);
+    const record = entry as Record<string, unknown>;
+
+    if (Array.isArray(record.propositions)) {
+      const correctChoices = record.propositions
+        .map(choice => {
+          if (!choice || typeof choice !== "object") {
+            return undefined;
+          }
+          const choiceRecord = choice as Record<string, unknown>;
+          const status =
+            choiceRecord.statut ??
+            choiceRecord.status ??
+            choiceRecord.correct ??
+            choiceRecord.isCorrect;
+          if (!isTruthy(status)) {
+            return undefined;
+          }
+          const textSource =
+            choiceRecord.texte ??
+            choiceRecord.text ??
+            choiceRecord.label ??
+            choiceRecord.value ??
+            choiceRecord.valeur;
+          const parsedText = textSource != null ? toStringValue(textSource) : "";
+          return parsedText.trim() ? parsedText : undefined;
+        })
+        .filter((value): value is string => typeof value === "string" && value.trim().length > 0);
+
+      if (correctChoices.length > 0) {
+        const options = record.options;
+        const radioOption =
+          options && typeof options === "object" && options !== null
+            ? (options as Record<string, unknown>).radio
+            : undefined;
+        const expectsSingle =
+          radioOption !== undefined ? isTruthy(radioOption) : correctChoices.length === 1;
+        return expectsSingle ? correctChoices[0] : correctChoices;
+      }
     }
-    if ("texte" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).texte);
+
+    if ("value" in record) {
+      return parseExpectedEntry(record.value);
     }
-    if ("reponse" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).reponse);
+    if ("texte" in record) {
+      return parseExpectedEntry(record.texte);
     }
-    if ("reponses" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).reponses);
+    if ("reponse" in record) {
+      return parseExpectedEntry(record.reponse);
     }
-    if ("valeur" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).valeur);
+    if ("reponses" in record) {
+      return parseExpectedEntry(record.reponses);
     }
-    if ("valeurs" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).valeurs);
+    if ("valeur" in record) {
+      return parseExpectedEntry(record.valeur);
     }
-    if ("answer" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).answer);
+    if ("valeurs" in record) {
+      return parseExpectedEntry(record.valeurs);
     }
-    if ("answers" in (entry as Record<string, unknown>)) {
-      return parseExpectedEntry((entry as Record<string, unknown>).answers);
+    if ("answer" in record) {
+      return parseExpectedEntry(record.answer);
+    }
+    if ("answers" in record) {
+      return parseExpectedEntry(record.answers);
     }
   }
 
@@ -386,13 +477,27 @@ function getQuestionValue(question: QuestionItem): string | string[] {
       const input = question.elements.find(
         el => el instanceof HTMLInputElement && el.checked
       ) as HTMLInputElement | undefined;
-      return input?.value ?? "";
+      if (!input) {
+        return "";
+      }
+      const choiceValue = getChoiceText(input);
+      if (choiceValue.trim()) {
+        return choiceValue.trim();
+      }
+      return input.value ?? "";
     }
     case "multipleChoice": {
       const values: string[] = [];
       question.elements.forEach(element => {
         if (element instanceof HTMLInputElement && element.checked) {
-          values.push(element.value ?? "true");
+            const choiceValue = getChoiceText(element);
+            values.push(
+              choiceValue.trim()
+                ? choiceValue.trim()
+                : element.value && element.value !== "on"
+                  ? element.value
+                  : "true"
+            );
         }
       });
       return values;

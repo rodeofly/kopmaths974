@@ -338,13 +338,41 @@ function buildQuestionContent(exercice: ExerciceInstance): OrderedListContent {
     };
   }
 
-  if (!latexSource) {
+  const candidateSources: string[] = [];
+  if (latexSource && latexSource.trim()) {
+    candidateSources.push(latexSource);
+  }
+
+  const questionCandidate =
+    typeof exercice.question === "string" ? exercice.question.trim() : "";
+  if (questionCandidate) {
+    candidateSources.push(questionCandidate);
+  }
+
+  const canEnonceCandidate =
+    typeof exercice.canEnonce === "string" ? exercice.canEnonce.trim() : "";
+  if (canEnonceCandidate) {
+    candidateSources.push(canEnonceCandidate);
+  }
+
+  if (Array.isArray(exercice.listeCanEnonces)) {
+    exercice.listeCanEnonces.forEach(entry => {
+      if (typeof entry === "string" && entry.trim()) {
+        candidateSources.push(entry.trim());
+      }
+    });
+  }
+
+  const firstAvailable = candidateSources.find(source => source.trim().length > 0) ?? "";
+
+  if (!firstAvailable) {
     debugWarn("Aucun contenu d'énoncé détecté", { clefs: Object.keys(exercice) });
   }
+
   return {
-    rawHtml: latexSource,
-    html: translateLatexToHtml(latexSource),
-    latex: latexSource
+    rawHtml: firstAvailable,
+    html: translateLatexToHtml(firstAvailable),
+    latex: firstAvailable
   };
 }
 
@@ -1648,31 +1676,39 @@ function App() {
                 </section>
 
                 {hasLatexData && (
-                  <section className="rounded-lg bg-white p-6 shadow">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <h3 className="text-lg font-semibold">Export LaTeX</h3>
-                      <p className="text-xs text-slate-500">
-                        Copiez le contenu brut pour l'intégrer dans vos documents.
-                      </p>
-                    </div>
-                    <div className="mt-4 space-y-4">
-                      {latexExportSections.map(section => (
-                        <div key={section.key} className="space-y-2">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <h4 className="text-sm font-semibold text-slate-700">
-                              {section.label}
-                            </h4>
-                            <div className="flex items-center gap-2">
-                              {copyFeedback[section.key] === "copied" && (
-                                <span className="text-xs font-semibold text-emerald-600">
-                                  Copié !
-                                </span>
-                              )}
-                              {copyFeedback[section.key] === "error" && (
-                                <span className="text-xs font-semibold text-red-600">
-                                  Copie impossible
-                                </span>
-                              )}
+                <section className="rounded-lg bg-white p-6 shadow">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <h3 className="text-lg font-semibold">Export LaTeX</h3>
+                    <p className="text-xs text-slate-500">
+                      Copiez le contenu brut pour l'intégrer dans vos documents.
+                    </p>
+                  </div>
+                  <div className="mt-4 space-y-4">
+                    {latexExportSections.map(section => {
+                      const defaultOpen = section.key !== "question";
+                      return (
+                        <details
+                          key={section.key}
+                          className="rounded border border-slate-200 bg-slate-50"
+                          defaultOpen={defaultOpen}
+                        >
+                          <summary className="flex cursor-pointer items-center justify-between gap-2 px-4 py-2 text-sm font-semibold text-slate-700">
+                            <span>{`${section.label} LaTeX`}</span>
+                          </summary>
+                          <div className="space-y-2 border-t border-slate-200 bg-white px-4 py-3">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex items-center gap-2">
+                                {copyFeedback[section.key] === "copied" && (
+                                  <span className="text-xs font-semibold text-emerald-600">
+                                    Copié !
+                                  </span>
+                                )}
+                                {copyFeedback[section.key] === "error" && (
+                                  <span className="text-xs font-semibold text-red-600">
+                                    Copie impossible
+                                  </span>
+                                )}
+                              </div>
                               <button
                                 type="button"
                                 onClick={() => handleCopyLatex(section.key, section.value)}
@@ -1682,20 +1718,21 @@ function App() {
                                 Copier
                               </button>
                             </div>
+                            <textarea
+                              value={section.value}
+                              readOnly
+                              rows={Math.min(
+                                12,
+                                Math.max(3, section.value.split(/\n/).length + 1)
+                              )}
+                              className="w-full resize-y rounded border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-mono leading-relaxed text-slate-700 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                            />
                           </div>
-                          <textarea
-                            value={section.value}
-                            readOnly
-                            rows={Math.min(
-                              12,
-                              Math.max(3, section.value.split(/\n/).length + 1)
-                            )}
-                            className="w-full resize-y rounded border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-mono leading-relaxed text-slate-700 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </section>
+                        </details>
+                      );
+                    })}
+                  </div>
+                </section>
                 )}
               </>
             ) : (
